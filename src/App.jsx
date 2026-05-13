@@ -5,12 +5,26 @@ export default function App() {
   const [globalDiscount, setGlobalDiscount] = React.useState(10);
   const [discounts, setDiscounts] = React.useState({});
 
-  const products = [
-    { id: 1, name: "Planmeca Compact i5", category: "Dental Unit", price: 450000000, stock: 3 },
-    { id: 2, name: "Belmont Clesta eIII", category: "Dental Unit", price: 390000000, stock: 2 },
-    { id: 3, name: "Durr VS 1200", category: "Suction", price: 89000000, stock: 8 },
-    { id: 4, name: "Melag Vacuklav", category: "Sterilization", price: 125000000, stock: 4 },
-  ];
+  const [products, setProducts] = React.useState([]);
+
+  React.useEffect(() => {
+    fetch("https://opensheet.elk.sh/1HAFKnOoIs9VmdlmVuonjNSxpvKfzHlrCJ4l1zQq3HUs/products")
+      .then((res) => res.json())
+      .then((data) => {
+        const formatted = data.map((item, index) => ({
+          id: index + 1,
+          name: item.name,
+          category: item.category,
+          price: Number(item.price),
+          stock: Number(item.stock),
+        }));
+
+        setProducts(formatted);
+      })
+      .catch((err) => {
+        console.error("Google Sheet Error:", err);
+      });
+  }, []);
 
   const formatPrice = (value) => new Intl.NumberFormat("vi-VN").format(value) + " đ";
   const getDiscount = (id) => discounts[id] ?? globalDiscount;
