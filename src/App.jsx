@@ -82,6 +82,10 @@ export default function App() {
   const [globalDiscount, setGlobalDiscount] = React.useState(10);
   const [discounts, setDiscounts] = React.useState({});
   const [products, setProducts] = React.useState(DEMO_PRODUCTS);
+  const [isGroupedByCategory, setIsGroupedByCategory] = React.useState(() => {
+    return safeLocalStorageGet("seadent_group_by_category", "true") === "true";
+  });
+  const [collapsedCategories, setCollapsedCategories] = React.useState({});
 
   const [isDiscountUnlocked, setIsDiscountUnlocked] = React.useState(() => {
     return safeLocalStorageGet("seadent_discount_unlocked", "false") === "true";
@@ -104,6 +108,10 @@ export default function App() {
   React.useEffect(() => {
     safeLocalStorageSet("seadent_discount_unlocked", String(isDiscountUnlocked));
   }, [isDiscountUnlocked]);
+
+  React.useEffect(() => {
+    safeLocalStorageSet("seadent_group_by_category", String(isGroupedByCategory));
+  }, [isGroupedByCategory]);
 
   React.useEffect(() => {
     const loadProducts = async () => {
@@ -256,6 +264,32 @@ export default function App() {
     item.category?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const groupedProducts = filteredProducts.reduce((groups, product) => {
+    const category = product.category || "Uncategorized";
+    if (!groups[category]) groups[category] = [];
+    groups[category].push(product);
+    return groups;
+  }, {});
+
+  const categoryNames = Object.keys(groupedProducts).sort((a, b) => a.localeCompare(b));
+
+  const toggleCategory = (category) => {
+    setCollapsedCategories({
+      ...collapsedCategories,
+      [category]: !collapsedCategories[category],
+    });
+  };
+
+  const expandAllCategories = () => setCollapsedCategories({});
+
+  const collapseAllCategories = () => {
+    const next = {};
+    categoryNames.forEach((category) => {
+      next[category] = true;
+    });
+    setCollapsedCategories(next);
+  };
+
   const totalValue = filteredProducts.reduce((acc, item) => {
     return acc + calculateFinalPrice(item.price, getDiscount(item.id));
   }, 0);
@@ -380,6 +414,63 @@ export default function App() {
       fontWeight: 900,
       flexShrink: 0,
     },
+    groupToolbar: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 10,
+      marginTop: 14,
+      alignItems: "center",
+    },
+    groupButton: {
+      background: isGroupedByCategory ? "#f97316" : "#ffffff",
+      color: isGroupedByCategory ? "#ffffff" : "#374151",
+      border: isGroupedByCategory ? "1px solid #f97316" : "1px solid #e5e7eb",
+      borderRadius: 999,
+      padding: "10px 14px",
+      cursor: "pointer",
+      fontWeight: 900,
+      boxShadow: isGroupedByCategory ? "0 10px 24px rgba(249,115,22,0.22)" : "none",
+    },
+    smallButton: {
+      background: "#ffffff",
+      color: "#6b7280",
+      border: "1px solid #e5e7eb",
+      borderRadius: 999,
+      padding: "10px 13px",
+      cursor: "pointer",
+      fontWeight: 800,
+    },
+    categoryHeader: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 12,
+      padding: isMobile ? "13px 14px" : "15px 18px",
+      background: "linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)",
+      borderTop: "1px solid #eef0f4",
+      borderBottom: "1px solid #eef0f4",
+      cursor: "pointer",
+    },
+    categoryTitle: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      fontWeight: 900,
+      color: "#111827",
+    },
+    categoryCount: {
+      background: "#ffedd5",
+      color: "#ea580c",
+      borderRadius: 999,
+      padding: "5px 10px",
+      fontSize: 12,
+      fontWeight: 900,
+    },
+    categoryArrow: {
+      color: "#ea580c",
+      fontWeight: 900,
+      fontSize: 18,
+    },
     input: {
       width: "100%",
       background: "#f8fafc",
@@ -480,6 +571,20 @@ export default function App() {
       fontWeight: 800,
     },
     mobileList: { display: isMobile ? "grid" : "none", gap: 12 },
+    mobileCategoryHeader: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 10,
+      background: "linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)",
+      border: "1px solid #fed7aa",
+      borderRadius: 18,
+      padding: "13px 14px",
+      color: "#111827",
+      fontWeight: 900,
+      boxShadow: "0 10px 26px rgba(249,115,22,0.1)",
+      cursor: "pointer",
+    },
     productCard: {
       background: "#ffffff",
       border: "1px solid #eef0f4",
@@ -549,6 +654,22 @@ export default function App() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+
+            <div style={s.groupToolbar}>
+              <button
+                style={s.groupButton}
+                onClick={() => setIsGroupedByCategory(!isGroupedByCategory)}
+              >
+                {isGroupedByCategory ? "✓ Group by Category" : "Group by Category"}
+              </button>
+
+              {isGroupedByCategory && (
+                <>
+                  <button style={s.smallButton} onClick={expandAllCategories}>Expand all</button>
+                  <button style={s.smallButton} onClick={collapseAllCategories}>Collapse all</button>
+                </>
+              )}
+            </div>
           </div>
 
           <div style={s.card}>
@@ -600,61 +721,143 @@ export default function App() {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((item) => {
-                const discount = getDiscount(item.id);
-                const finalPrice = calculateFinalPrice(item.price, discount);
-                return (
-                  <tr key={item.id}>
-                    <td style={{ ...s.td, fontWeight: 700 }}>{item.name}</td>
-                    <td style={s.td}><span style={s.badge}>{item.category}</span></td>
-                    <td style={s.td}>{item.stock}</td>
-                    <td style={s.td}>{formatPrice(item.price)}</td>
-                    <td style={s.td}>
-                      <input
-                        style={{ ...s.miniInput, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
-                        type="number"
-                        value={discount}
-                        disabled={!isDiscountUnlocked}
-                        onChange={(e) => updateDiscount(item.id, e.target.value)}
-                      /> <span>%</span>
-                    </td>
-                    <td style={{ ...s.td, ...s.price }}>{formatPrice(finalPrice)}</td>
-                  </tr>
-                );
-              })}
+              {isGroupedByCategory ? (
+                categoryNames.map((category) => (
+                  <React.Fragment key={category}>
+                    <tr>
+                      <td colSpan="6" style={{ padding: 0 }}>
+                        <div style={s.categoryHeader} onClick={() => toggleCategory(category)}>
+                          <div style={s.categoryTitle}>
+                            <span>{collapsedCategories[category] ? "▸" : "▾"}</span>
+                            <span>{category}</span>
+                            <span style={s.categoryCount}>{groupedProducts[category].length} sản phẩm</span>
+                          </div>
+                          <div style={s.categoryArrow}>{collapsedCategories[category] ? "+" : "−"}</div>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {!collapsedCategories[category] && groupedProducts[category].map((item) => {
+                      const discount = getDiscount(item.id);
+                      const finalPrice = calculateFinalPrice(item.price, discount);
+                      return (
+                        <tr key={item.id}>
+                          <td style={{ ...s.td, fontWeight: 700 }}>{item.name}</td>
+                          <td style={s.td}><span style={s.badge}>{item.category}</span></td>
+                          <td style={s.td}>{item.stock}</td>
+                          <td style={s.td}>{formatPrice(item.price)}</td>
+                          <td style={s.td}>
+                            <input
+                              style={{ ...s.miniInput, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
+                              type="number"
+                              value={discount}
+                              disabled={!isDiscountUnlocked}
+                              onChange={(e) => updateDiscount(item.id, e.target.value)}
+                            /> <span>%</span>
+                          </td>
+                          <td style={{ ...s.td, ...s.price }}>{formatPrice(finalPrice)}</td>
+                        </tr>
+                      );
+                    })}
+                  </React.Fragment>
+                ))
+              ) : (
+                filteredProducts.map((item) => {
+                  const discount = getDiscount(item.id);
+                  const finalPrice = calculateFinalPrice(item.price, discount);
+                  return (
+                    <tr key={item.id}>
+                      <td style={{ ...s.td, fontWeight: 700 }}>{item.name}</td>
+                      <td style={s.td}><span style={s.badge}>{item.category}</span></td>
+                      <td style={s.td}>{item.stock}</td>
+                      <td style={s.td}>{formatPrice(item.price)}</td>
+                      <td style={s.td}>
+                        <input
+                          style={{ ...s.miniInput, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
+                          type="number"
+                          value={discount}
+                          disabled={!isDiscountUnlocked}
+                          onChange={(e) => updateDiscount(item.id, e.target.value)}
+                        /> <span>%</span>
+                      </td>
+                      <td style={{ ...s.td, ...s.price }}>{formatPrice(finalPrice)}</td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
         <div style={s.mobileList}>
-          {filteredProducts.map((item) => {
-            const discount = getDiscount(item.id);
-            const finalPrice = calculateFinalPrice(item.price, discount);
-            return (
-              <div style={s.productCard} key={item.id}>
-                <div style={s.productName}>{item.name}</div>
-                <div style={{ marginBottom: 8 }}><span style={s.badge}>{item.category}</span></div>
-                <div style={s.mobileRow}><span>Stock</span><strong>{item.stock}</strong></div>
-                <div style={s.mobileRow}><span>List Price</span><strong>{formatPrice(item.price)}</strong></div>
-                <div style={s.mobileRow}>
-                  <span>Discount</span>
-                  <span>
-                    <input
-                      style={{ ...s.miniInput, width: 76, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
-                      type="number"
-                      value={discount}
-                      disabled={!isDiscountUnlocked}
-                      onChange={(e) => updateDiscount(item.id, e.target.value)}
-                    /> %
-                  </span>
+          {isGroupedByCategory ? (
+            categoryNames.map((category) => (
+              <React.Fragment key={category}>
+                <div style={s.mobileCategoryHeader} onClick={() => toggleCategory(category)}>
+                  <span>{collapsedCategories[category] ? "▸" : "▾"} {category}</span>
+                  <span style={s.categoryCount}>{groupedProducts[category].length}</span>
                 </div>
-                <div style={{ ...s.mobileRow, borderBottom: "none" }}>
-                  <span>Final Price</span>
-                  <strong style={{ color: "#ea580c", fontSize: 16 }}>{formatPrice(finalPrice)}</strong>
+
+                {!collapsedCategories[category] && groupedProducts[category].map((item) => {
+                  const discount = getDiscount(item.id);
+                  const finalPrice = calculateFinalPrice(item.price, discount);
+                  return (
+                    <div style={s.productCard} key={item.id}>
+                      <div style={s.productName}>{item.name}</div>
+                      <div style={{ marginBottom: 8 }}><span style={s.badge}>{item.category}</span></div>
+                      <div style={s.mobileRow}><span>Stock</span><strong>{item.stock}</strong></div>
+                      <div style={s.mobileRow}><span>List Price</span><strong>{formatPrice(item.price)}</strong></div>
+                      <div style={s.mobileRow}>
+                        <span>Discount</span>
+                        <span>
+                          <input
+                            style={{ ...s.miniInput, width: 76, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
+                            type="number"
+                            value={discount}
+                            disabled={!isDiscountUnlocked}
+                            onChange={(e) => updateDiscount(item.id, e.target.value)}
+                          /> %
+                        </span>
+                      </div>
+                      <div style={{ ...s.mobileRow, borderBottom: "none" }}>
+                        <span>Final Price</span>
+                        <strong style={{ color: "#ea580c", fontSize: 16 }}>{formatPrice(finalPrice)}</strong>
+                      </div>
+                    </div>
+                  );
+                })}
+              </React.Fragment>
+            ))
+          ) : (
+            filteredProducts.map((item) => {
+              const discount = getDiscount(item.id);
+              const finalPrice = calculateFinalPrice(item.price, discount);
+              return (
+                <div style={s.productCard} key={item.id}>
+                  <div style={s.productName}>{item.name}</div>
+                  <div style={{ marginBottom: 8 }}><span style={s.badge}>{item.category}</span></div>
+                  <div style={s.mobileRow}><span>Stock</span><strong>{item.stock}</strong></div>
+                  <div style={s.mobileRow}><span>List Price</span><strong>{formatPrice(item.price)}</strong></div>
+                  <div style={s.mobileRow}>
+                    <span>Discount</span>
+                    <span>
+                      <input
+                        style={{ ...s.miniInput, width: 76, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
+                        type="number"
+                        value={discount}
+                        disabled={!isDiscountUnlocked}
+                        onChange={(e) => updateDiscount(item.id, e.target.value)}
+                      /> %
+                    </span>
+                  </div>
+                  <div style={{ ...s.mobileRow, borderBottom: "none" }}>
+                    <span>Final Price</span>
+                    <strong style={{ color: "#ea580c", fontSize: 16 }}>{formatPrice(finalPrice)}</strong>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         <div style={s.featureGrid}>
