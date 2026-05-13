@@ -3,130 +3,235 @@ import React from "react";
 const GOOGLE_SHEET_ID = "1HAFKnOoIs9VmdlmVuonjNSxpvKfzHlrCJ4l1zQq3HUs";
 const GOOGLE_SHEET_TAB = "products";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhp4Rv3FCzVYziwUx-og_5O47HUaazt79G_0DJsu1Oz1v2fiip1yHYxwg81spFAKRKLg/exec";
+";
+const DISCOUNT_PASSWORD = "seadent";
+
+const DEMO_PRODUCTS = [
+  { id: "1", name: "Planmeca Compact i5", category: "Dental Unit", price: 450000000, stock: 3, discount: 10 },
+  { id: "2", name: "Belmont Clesta eIII", category: "Dental Unit", price: 390000000, stock: 2, discount: 12 },
+  { id: "3", name: "Durr VS 1200", category: "Suction", price: 89000000, stock: 8, discount: 8 },
+  { id: "4", name: "Melag Vacuklav", category: "Sterilization", price: 125000000, stock: 4, discount: 15 },
+];
+
+function isBrowser() {
+  return typeof window !== "undefined";
+}
+
+function safeLocalStorageGet(key, fallback = null) {
+  if (!isBrowser()) return fallback;
+  try {
+    return window.localStorage.getItem(key) ?? fallback;
+  } catch (error) {
+    console.warn("LocalStorage read error:", error);
+    return fallback;
+  }
+}
+
+function safeLocalStorageSet(key, value) {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch (error) {
+    console.warn("LocalStorage write error:", error);
+  }
+}
+
+function toNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function formatPrice(value) {
+  return new Intl.NumberFormat("vi-VN").format(toNumber(value)) + " đ";
+}
+
+function calculateFinalPrice(price, discount) {
+  const safePrice = toNumber(price);
+  const safeDiscount = toNumber(discount);
+  return safePrice - (safePrice * safeDiscount) / 100;
+}
+
+function normalizeProduct(item, index) {
+  return {
+    id: String(item.id || item.name || index + 1),
+    name: String(item.name || "Unnamed product"),
+    category: String(item.category || "Uncategorized"),
+    price: toNumber(item.price),
+    stock: toNumber(item.stock),
+    discount: toNumber(item.discount),
+  };
+}
+
+function runDevTests() {
+  if (!isBrowser()) return;
+  if (import.meta?.env?.MODE === "production") return;
+
+  console.assert(calculateFinalPrice(1000000, 10) === 900000, "Test failed: 10% discount");
+  console.assert(calculateFinalPrice("200", "25") === 150, "Test failed: string numbers");
+  console.assert(toNumber("abc", 7) === 7, "Test failed: invalid number fallback");
+
+  const product = normalizeProduct({ id: 1, name: "Test", price: "100", stock: "2", discount: "5" }, 0);
+  console.assert(product.id === "1", "Test failed: normalize id");
+  console.assert(product.price === 100, "Test failed: normalize price");
+}
 
 export default function App() {
   const [search, setSearch] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [isDiscountUnlocked, setIsDiscountUnlocked] = React.useState(() => {
-    return localStorage.getItem("seadent_discount_unlocked") === "true";
-  });
-  const [screenWidth, setScreenWidth] = React.useState(window.innerWidth);
-
+  const [syncStatus, setSyncStatus] = React.useState("Đang tải dữ liệu...");
+  const [screenWidth, setScreenWidth] = React.useState(1200);
   const [globalDiscount, setGlobalDiscount] = React.useState(10);
-
   const [discounts, setDiscounts] = React.useState({});
+  const [products, setProducts] = React.useState(DEMO_PRODUCTS);
 
-  const [products, setProducts] = React.useState([]);
+  const [isDiscountUnlocked, setIsDiscountUnlocked] = React.useState(() => {
+    return safeLocalStorageGet("seadent_discount_unlocked", "false") === "true";
+  });
 
   React.useEffect(() => {
-    const handleResize = () => setScreenWidth(window.innerWidth);
+    runDevTests();
+  }, []);
+
+  React.useEffect(() => {
+    if (!isBrowser()) return undefined;
+
+    const handleResize = () => setScreenWidth(window.innerWidth || 1200);
+    handleResize();
+
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const isMobile = screenWidth <= 760;
-  const isTablet = screenWidth <= 1024;
+  React.useEffect(() => {
+    safeLocalStorageSet("seadent_discount_unlocked", String(isDiscountUnlocked));
+  }, [isDiscountUnlocked]);
 
   React.useEffect(() => {
-    fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const formatted = data.map((item, index) => ({
-          id: item.id || item.name || index + 1,
-          name: item.name,
-          category: item.category,
-          price: Number(item.price),
-          stock: Number(item.stock),
-          discount: Number(item.discount || 0),
-        }));
+    const loadProducts = async () => {
+      const isSheetConfigured = GOOGLE_SHEET_ID && GOOGLE_SHEET_ID !== "GOOGLE_SHEET_ID";
+
+      if (!isSheetConfigured) {
+        const demoDiscounts = {};
+        DEMO_PRODUCTS.forEach((product) => {
+          demoDiscounts[product.id] = product.discount;
+        });
+        setDiscounts(demoDiscounts);
+        setSyncStatus("Đang dùng dữ liệu demo. Hãy thay GOOGLE_SHEET_ID để đồng bộ Google Sheet.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+          throw new Error("Google Sheet response is not an array");
+        }
+
+        const formatted = data.map(normalizeProduct).filter((item) => item.name);
+
+        if (formatted.length === 0) {
+          throw new Error("No products found in Google Sheet");
+        }
 
         setProducts(formatted);
 
         const sheetDiscounts = {};
         formatted.forEach((product) => {
-          sheetDiscounts[product.id] = Number(product.discount || 0);
+          sheetDiscounts[product.id] = product.discount;
         });
+
         setDiscounts(sheetDiscounts);
-      })
-      .catch((err) => {
+        setSyncStatus("Đã đồng bộ dữ liệu từ Google Sheet");
+      } catch (err) {
         console.error("Google Sheet Error:", err);
-      });
+
+        const demoDiscounts = {};
+        DEMO_PRODUCTS.forEach((product) => {
+          demoDiscounts[product.id] = product.discount;
+        });
+
+        setProducts(DEMO_PRODUCTS);
+        setDiscounts(demoDiscounts);
+        setSyncStatus("Không tải được Google Sheet. Đang dùng dữ liệu demo để web không bị lỗi.");
+      }
+    };
+
+    loadProducts();
   }, []);
 
-  
+  const isMobile = screenWidth <= 760;
+  const isTablet = screenWidth <= 1024;
 
-  React.useEffect(() => {
-    localStorage.setItem("seadent_discount_unlocked", String(isDiscountUnlocked));
-  }, [isDiscountUnlocked]);
+  const getDiscount = (id) => discounts[String(id)] ?? 0;
 
-  const formatPrice = (value) => new Intl.NumberFormat("vi-VN").format(value || 0) + " đ";
+  const isScriptConfigured = GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "GOOGLE_APPS_SCRIPT_WEB_APP_URL";
 
-  const getDiscount = (id) => discounts[id] ?? 0;
-
-  const updateDiscount = async (id, value) => {
-    if (!isDiscountUnlocked) return;
-
-    const newDiscount = Number(value);
-    const newDiscounts = { ...discounts, [id]: newDiscount };
-    setDiscounts(newDiscounts);
-
-    const product = products.find((item) => item.id === id);
-    if (!product) return;
+  const syncDiscountToSheet = async (payload) => {
+    if (!isScriptConfigured) {
+      setSyncStatus("Chưa cấu hình GOOGLE_SCRIPT_URL. Thay đổi chỉ hiển thị trên web hiện tại.");
+      return;
+    }
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "updateDiscount",
-          id: String(product.id),
-          discount: newDiscount,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
+      setSyncStatus("Đã gửi cập nhật chiết khấu lên Google Sheet");
     } catch (error) {
       console.error("Update discount error:", error);
-      alert("Không thể đồng bộ chiết khấu lên Google Sheet");
+      setSyncStatus("Không thể đồng bộ chiết khấu lên Google Sheet");
+      if (isBrowser()) alert("Không thể đồng bộ chiết khấu lên Google Sheet");
     }
+  };
+
+  const updateDiscount = async (id, value) => {
+    if (!isDiscountUnlocked) return;
+
+    const productId = String(id);
+    const newDiscount = toNumber(value);
+    const newDiscounts = { ...discounts, [productId]: newDiscount };
+    setDiscounts(newDiscounts);
+
+    await syncDiscountToSheet({
+      action: "updateDiscount",
+      id: productId,
+      discount: newDiscount,
+    });
   };
 
   const handleGlobalDiscountChange = async (value) => {
     if (!isDiscountUnlocked) return;
 
-    const newGlobalDiscount = Number(value);
+    const newGlobalDiscount = toNumber(value);
     setGlobalDiscount(newGlobalDiscount);
 
     const newDiscounts = {};
     products.forEach((product) => {
-      newDiscounts[product.id] = newGlobalDiscount;
+      newDiscounts[String(product.id)] = newGlobalDiscount;
     });
     setDiscounts(newDiscounts);
 
-    try {
-      await fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "updateAllDiscounts",
-          discount: newGlobalDiscount,
-        }),
-      });
-    } catch (error) {
-      console.error("Update all discounts error:", error);
-      alert("Không thể đồng bộ chiết khấu chung lên Google Sheet");
-    }
+    await syncDiscountToSheet({
+      action: "updateAllDiscounts",
+      discount: newGlobalDiscount,
+    });
   };
 
   const unlockDiscount = () => {
-    if (password === "seadent") {
+    if (password === DISCOUNT_PASSWORD) {
       setIsDiscountUnlocked(true);
       setPassword("");
-    } else {
+      setSyncStatus("Đã mở khóa chỉnh sửa chiết khấu");
+    } else if (isBrowser()) {
       alert("Sai mật khẩu mở khóa chiết khấu");
     }
   };
@@ -134,13 +239,12 @@ export default function App() {
   const lockDiscount = () => {
     setIsDiscountUnlocked(false);
     setPassword("");
+    setSyncStatus("Đã khóa chỉnh sửa chiết khấu");
   };
-
-  
 
   const resetSavedDiscounts = () => {
     if (!isDiscountUnlocked) {
-      alert("Vui lòng mở khóa trước khi reset chiết khấu");
+      if (isBrowser()) alert("Vui lòng mở khóa trước khi reset chiết khấu");
       return;
     }
 
@@ -149,30 +253,37 @@ export default function App() {
   };
 
   const filteredProducts = products.filter((item) =>
-    item.name?.toLowerCase().includes(search.toLowerCase())
+    item.name?.toLowerCase().includes(search.toLowerCase()) ||
+    item.category?.toLowerCase().includes(search.toLowerCase())
   );
 
   const totalValue = filteredProducts.reduce((acc, item) => {
-    const discount = getDiscount(item.id);
-    return acc + (item.price - (item.price * discount) / 100);
+    return acc + calculateFinalPrice(item.price, getDiscount(item.id));
   }, 0);
 
   const s = {
     page: {
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #070b14 0%, #0b0f19 45%, #111827 100%)",
-      color: "#ffffff",
+      background: "linear-gradient(135deg, #ffffff 0%, #f6f7fb 45%, #fff3ea 100%)",
+      color: "#1f2937",
       fontFamily: "Arial, Helvetica, sans-serif",
-      padding: isMobile ? 14 : 28,
+      padding: isMobile ? 12 : 28,
       boxSizing: "border-box",
     },
-    container: { maxWidth: 1240, margin: "0 auto" },
+    container: { maxWidth: 1280, margin: "0 auto" },
+    hero: {
+      background: "linear-gradient(135deg, #ffffff 0%, #fff7ed 100%)",
+      border: "1px solid rgba(255, 122, 24, 0.16)",
+      borderRadius: isMobile ? 22 : 32,
+      padding: isMobile ? 16 : 28,
+      boxShadow: "0 24px 70px rgba(15, 23, 42, 0.08)",
+      marginBottom: isMobile ? 14 : 24,
+    },
     header: {
       display: "flex",
       justifyContent: "space-between",
       gap: isMobile ? 16 : 24,
       alignItems: isMobile ? "flex-start" : "center",
-      marginBottom: isMobile ? 18 : 28,
       flexWrap: "wrap",
     },
     brand: {
@@ -182,55 +293,99 @@ export default function App() {
       width: isMobile ? "100%" : "auto",
     },
     logoImage: {
-      width: isMobile ? 54 : 72,
-      height: isMobile ? 54 : 72,
-      borderRadius: isMobile ? 16 : 20,
+      width: isMobile ? 54 : 74,
+      height: isMobile ? 54 : 74,
+      borderRadius: isMobile ? 16 : 22,
       objectFit: "contain",
       background: "#ffffff",
       padding: 8,
       boxSizing: "border-box",
       flexShrink: 0,
+      boxShadow: "0 12px 28px rgba(249, 115, 22, 0.18)",
+      border: "1px solid rgba(249, 115, 22, 0.18)",
+    },
+    eyebrow: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 8,
+      background: "#fff1e7",
+      color: "#ea580c",
+      border: "1px solid rgba(249, 115, 22, 0.18)",
+      padding: "6px 10px",
+      borderRadius: 999,
+      fontSize: isMobile ? 11 : 12,
+      fontWeight: 800,
+      marginBottom: 8,
     },
     title: {
-      fontSize: isMobile ? 25 : isTablet ? 34 : 42,
-      fontWeight: 800,
+      fontSize: isMobile ? 26 : isTablet ? 36 : 46,
+      fontWeight: 900,
       margin: 0,
-      lineHeight: 1.1,
+      lineHeight: 1.05,
+      color: "#111827",
+      letterSpacing: "-0.04em",
     },
     subtitle: {
-      color: "#9ca3af",
-      marginTop: 6,
+      color: "#6b7280",
+      marginTop: 8,
       fontSize: isMobile ? 13 : 16,
-      lineHeight: 1.4,
+      lineHeight: 1.5,
     },
     statGrid: {
       display: "grid",
-      gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(2, minmax(170px, 1fr))",
-      gap: isMobile ? 10 : 16,
+      gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(2, minmax(178px, 1fr))",
+      gap: isMobile ? 10 : 14,
       width: isMobile ? "100%" : "auto",
     },
-    card: {
-      background: "rgba(20, 27, 45, 0.92)",
-      border: "1px solid rgba(255,255,255,0.08)",
+    statCard: {
+      background: "rgba(255,255,255,0.9)",
+      border: "1px solid #eef0f4",
       borderRadius: isMobile ? 18 : 24,
-      padding: isMobile ? 14 : 22,
-      boxShadow: "0 18px 40px rgba(0,0,0,0.22)",
+      padding: isMobile ? 14 : 20,
+      boxShadow: "0 16px 40px rgba(15, 23, 42, 0.06)",
       boxSizing: "border-box",
     },
-    label: { color: "#9ca3af", fontSize: isMobile ? 12 : 14, marginBottom: 8 },
-    statNumber: { fontSize: isMobile ? 22 : 30, fontWeight: 800 },
-    total: { fontSize: isMobile ? 15 : 22, fontWeight: 800, color: "#4ade80" },
+    card: {
+      background: "rgba(255,255,255,0.95)",
+      border: "1px solid #eef0f4",
+      borderRadius: isMobile ? 18 : 24,
+      padding: isMobile ? 14 : 22,
+      boxShadow: "0 16px 40px rgba(15, 23, 42, 0.06)",
+      boxSizing: "border-box",
+    },
+    label: { color: "#6b7280", fontSize: isMobile ? 12 : 14, marginBottom: 8, fontWeight: 700 },
+    statNumber: { fontSize: isMobile ? 24 : 32, fontWeight: 900, color: "#111827" },
+    total: { fontSize: isMobile ? 16 : 23, fontWeight: 900, color: "#ea580c" },
+    syncStatus: {
+      marginTop: 14,
+      color: "#6b7280",
+      fontSize: isMobile ? 12 : 13,
+      lineHeight: 1.5,
+    },
     toolbar: {
       display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr" : "1fr 320px",
+      gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr" : "1fr 360px",
       gap: isMobile ? 12 : 16,
-      marginBottom: isMobile ? 16 : 24,
+      marginBottom: isMobile ? 14 : 22,
+    },
+    searchBox: { display: "flex", alignItems: "center", gap: 12 },
+    searchIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 16,
+      background: "#fff1e7",
+      color: "#ea580c",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 900,
+      flexShrink: 0,
     },
     input: {
       width: "100%",
-      background: "#1b2337",
-      color: "#fff",
-      border: "1px solid rgba(255,255,255,0.08)",
+      background: "#f8fafc",
+      color: "#111827",
+      border: "1px solid #e5e7eb",
       borderRadius: 16,
       padding: isMobile ? "13px 14px" : "14px 16px",
       outline: "none",
@@ -238,11 +393,7 @@ export default function App() {
       boxSizing: "border-box",
       opacity: 1,
     },
-    disabledInput: {
-      opacity: 0.45,
-      cursor: "not-allowed",
-      background: "#111827",
-    },
+    disabledInput: { opacity: 0.5, cursor: "not-allowed", background: "#f3f4f6", color: "#6b7280" },
     lockPanel: {
       display: "grid",
       gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
@@ -250,99 +401,102 @@ export default function App() {
       marginTop: 12,
     },
     primaryButton: {
-      background: isDiscountUnlocked ? "rgba(34,197,94,0.18)" : "rgba(249,115,22,0.18)",
-      color: isDiscountUnlocked ? "#86efac" : "#fdba74",
-      border: isDiscountUnlocked ? "1px solid rgba(34,197,94,0.35)" : "1px solid rgba(249,115,22,0.35)",
+      background: isDiscountUnlocked ? "#16a34a" : "#f97316",
+      color: "#ffffff",
+      border: "none",
       borderRadius: 14,
-      padding: "11px 14px",
+      padding: "12px 16px",
       cursor: "pointer",
-      fontWeight: 800,
+      fontWeight: 900,
       whiteSpace: "nowrap",
+      boxShadow: isDiscountUnlocked ? "0 12px 28px rgba(22,163,74,0.22)" : "0 12px 28px rgba(249,115,22,0.24)",
     },
     resetButton: {
       marginTop: 10,
       width: "100%",
-      background: "rgba(239,68,68,0.16)",
-      color: "#fca5a5",
-      border: "1px solid rgba(239,68,68,0.28)",
+      background: "#fff1f2",
+      color: "#e11d48",
+      border: "1px solid #ffe4e6",
       borderRadius: 14,
-      padding: "10px 12px",
+      padding: "11px 12px",
       cursor: isDiscountUnlocked ? "pointer" : "not-allowed",
-      fontWeight: 700,
-      opacity: isDiscountUnlocked ? 1 : 0.45,
+      fontWeight: 800,
+      opacity: isDiscountUnlocked ? 1 : 0.48,
     },
     lockStatus: {
       display: "inline-flex",
       alignItems: "center",
       gap: 8,
-      padding: "7px 10px",
+      padding: "7px 11px",
       borderRadius: 999,
-      background: isDiscountUnlocked ? "rgba(34,197,94,0.16)" : "rgba(239,68,68,0.14)",
-      color: isDiscountUnlocked ? "#86efac" : "#fca5a5",
+      background: isDiscountUnlocked ? "#dcfce7" : "#fff1f2",
+      color: isDiscountUnlocked ? "#15803d" : "#e11d48",
       fontSize: 13,
-      fontWeight: 700,
+      fontWeight: 900,
       marginBottom: 12,
+      border: isDiscountUnlocked ? "1px solid #bbf7d0" : "1px solid #ffe4e6",
     },
     tableWrap: {
       display: isMobile ? "none" : "block",
-      background: "rgba(20, 27, 45, 0.92)",
-      border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: 24,
+      background: "#ffffff",
+      border: "1px solid #eef0f4",
+      borderRadius: 26,
       overflowX: "auto",
-      boxShadow: "0 18px 40px rgba(0,0,0,0.22)",
+      boxShadow: "0 24px 60px rgba(15, 23, 42, 0.08)",
     },
-    table: { width: "100%", minWidth: 900, borderCollapse: "collapse" },
+    table: { width: "100%", minWidth: 920, borderCollapse: "collapse" },
     th: {
       textAlign: "left",
       padding: 18,
-      color: "#9ca3af",
-      fontSize: 14,
-      borderBottom: "1px solid rgba(255,255,255,0.08)",
+      color: "#6b7280",
+      fontSize: 13,
+      borderBottom: "1px solid #eef0f4",
+      background: "#f9fafb",
+      fontWeight: 900,
+      textTransform: "uppercase",
+      letterSpacing: "0.04em",
     },
-    td: {
-      padding: 18,
-      borderBottom: "1px solid rgba(255,255,255,0.06)",
-      color: "#e5e7eb",
-    },
+    td: { padding: 18, borderBottom: "1px solid #f1f5f9", color: "#374151" },
     badge: {
       display: "inline-block",
-      padding: "6px 12px",
+      padding: "7px 12px",
       borderRadius: 999,
-      background: "rgba(99,102,241,0.18)",
-      color: "#a5b4fc",
+      background: "#fff1e7",
+      color: "#ea580c",
       fontSize: 13,
+      fontWeight: 800,
+      border: "1px solid rgba(249,115,22,0.12)",
     },
-    price: { color: "#4ade80", fontWeight: 800, fontSize: 17 },
+    price: { color: "#ea580c", fontWeight: 900, fontSize: 17 },
     miniInput: {
       width: 90,
-      background: "#1b2337",
-      color: "#fff",
-      border: "1px solid rgba(255,255,255,0.1)",
+      background: "#f8fafc",
+      color: "#111827",
+      border: "1px solid #e5e7eb",
       borderRadius: 12,
-      padding: "9px 10px",
+      padding: "10px 10px",
       outline: "none",
       fontSize: 15,
       boxSizing: "border-box",
+      fontWeight: 800,
     },
-    mobileList: {
-      display: isMobile ? "grid" : "none",
-      gap: 12,
-    },
+    mobileList: { display: isMobile ? "grid" : "none", gap: 12 },
     productCard: {
-      background: "rgba(20, 27, 45, 0.94)",
-      border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: 20,
-      padding: 15,
-      boxShadow: "0 14px 30px rgba(0,0,0,0.18)",
+      background: "#ffffff",
+      border: "1px solid #eef0f4",
+      borderRadius: 22,
+      padding: 16,
+      boxShadow: "0 16px 40px rgba(15, 23, 42, 0.07)",
     },
-    productName: { fontSize: 17, fontWeight: 800, lineHeight: 1.35, marginBottom: 10 },
+    productName: { fontSize: 17, fontWeight: 900, lineHeight: 1.35, marginBottom: 10, color: "#111827" },
     mobileRow: {
       display: "flex",
       justifyContent: "space-between",
+      alignItems: "center",
       gap: 12,
-      padding: "8px 0",
-      borderBottom: "1px solid rgba(255,255,255,0.06)",
-      color: "#d1d5db",
+      padding: "9px 0",
+      borderBottom: "1px solid #f1f5f9",
+      color: "#4b5563",
       fontSize: 14,
     },
     featureGrid: {
@@ -351,44 +505,51 @@ export default function App() {
       gap: isMobile ? 12 : 16,
       marginTop: isMobile ? 16 : 24,
     },
-    featureTitle: { fontSize: isMobile ? 17 : 20, fontWeight: 800, marginBottom: 10 },
-    featureText: { color: "#9ca3af", lineHeight: 1.7, fontSize: isMobile ? 13 : 14 },
-    footer: { textAlign: "center", color: "#6b7280", marginTop: 30, paddingBottom: 20, fontSize: 13 },
+    featureTitle: { fontSize: isMobile ? 17 : 20, fontWeight: 900, marginBottom: 10, color: "#111827" },
+    featureText: { color: "#6b7280", lineHeight: 1.7, fontSize: isMobile ? 13 : 14 },
+    footer: { textAlign: "center", color: "#9ca3af", marginTop: 30, paddingBottom: 20, fontSize: 13 },
   };
 
   return (
     <div style={s.page}>
       <div style={s.container}>
-        <div style={s.header}>
-          <div style={s.brand}>
-            <img src="/logo.png" alt="SEADENT Logo" style={s.logoImage} />
-            <div>
-              <h1 style={s.title}>SEADENT Quote Center</h1>
-              <div style={s.subtitle}>Internal Pricing & Quotation Dashboard</div>
+        <div style={s.hero}>
+          <div style={s.header}>
+            <div style={s.brand}>
+              <img src="/logo.png" alt="SEADENT Logo" style={s.logoImage} />
+              <div>
+                <div style={s.eyebrow}>● SEADENT PRICING SYSTEM</div>
+                <h1 style={s.title}>SEADENT Quote Center</h1>
+                <div style={s.subtitle}>Internal Pricing & Quotation Dashboard</div>
+              </div>
             </div>
-          </div>
 
-          <div style={s.statGrid}>
-            <div style={s.card}>
-              <div style={s.label}>Products</div>
-              <div style={s.statNumber}>{products.length}</div>
-            </div>
-            <div style={s.card}>
-              <div style={s.label}>Quote Total</div>
-              <div style={s.total}>{formatPrice(totalValue)}</div>
+            <div style={s.statGrid}>
+              <div style={s.statCard}>
+                <div style={s.label}>Products</div>
+                <div style={s.statNumber}>{products.length}</div>
+              </div>
+              <div style={s.statCard}>
+                <div style={s.label}>Quote Total</div>
+                <div style={s.total}>{formatPrice(totalValue)}</div>
+              </div>
             </div>
           </div>
+          <div style={s.syncStatus}>{syncStatus}</div>
         </div>
 
         <div style={s.toolbar}>
           <div style={s.card}>
-            <input
-              style={s.input}
-              type="text"
-              placeholder="Search product..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+            <div style={s.searchBox}>
+              <div style={s.searchIcon}>⌕</div>
+              <input
+                style={s.input}
+                type="text"
+                placeholder="Tìm nhanh sản phẩm..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
           </div>
 
           <div style={s.card}>
@@ -442,7 +603,7 @@ export default function App() {
             <tbody>
               {filteredProducts.map((item) => {
                 const discount = getDiscount(item.id);
-                const finalPrice = item.price - (item.price * discount) / 100;
+                const finalPrice = calculateFinalPrice(item.price, discount);
                 return (
                   <tr key={item.id}>
                     <td style={{ ...s.td, fontWeight: 700 }}>{item.name}</td>
@@ -469,12 +630,11 @@ export default function App() {
         <div style={s.mobileList}>
           {filteredProducts.map((item) => {
             const discount = getDiscount(item.id);
-            const finalPrice = item.price - (item.price * discount) / 100;
+            const finalPrice = calculateFinalPrice(item.price, discount);
             return (
               <div style={s.productCard} key={item.id}>
                 <div style={s.productName}>{item.name}</div>
                 <div style={{ marginBottom: 8 }}><span style={s.badge}>{item.category}</span></div>
-
                 <div style={s.mobileRow}><span>Stock</span><strong>{item.stock}</strong></div>
                 <div style={s.mobileRow}><span>List Price</span><strong>{formatPrice(item.price)}</strong></div>
                 <div style={s.mobileRow}>
@@ -491,7 +651,7 @@ export default function App() {
                 </div>
                 <div style={{ ...s.mobileRow, borderBottom: "none" }}>
                   <span>Final Price</span>
-                  <strong style={{ color: "#4ade80", fontSize: 16 }}>{formatPrice(finalPrice)}</strong>
+                  <strong style={{ color: "#ea580c", fontSize: 16 }}>{formatPrice(finalPrice)}</strong>
                 </div>
               </div>
             );
