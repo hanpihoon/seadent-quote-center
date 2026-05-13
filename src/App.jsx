@@ -84,6 +84,8 @@ export default function App() {
   const [collapsedCategories, setCollapsedCategories] = React.useState({});
   const [cart, setCart] = React.useState({});
   const [customerName, setCustomerName] = React.useState("");
+  const [customerPhone, setCustomerPhone] = React.useState("");
+  const [customerAddress, setCustomerAddress] = React.useState("");
   const [customerNote, setCustomerNote] = React.useState("");
 
   const [isDiscountUnlocked, setIsDiscountUnlocked] = React.useState(() => {
@@ -400,8 +402,19 @@ export default function App() {
         <body>
           <div class="header">
             <div>
-              <div class="brand">SEADENT Quote Center</div>
-              <div class="subtitle">Professional Dental Equipment Quotation</div>
+              <div style="display:flex; gap:16px; align-items:flex-start;">
+                <img src="/logo.png" style="width:82px; object-fit:contain;" />
+                <div>
+                  <div class="brand">CÔNG TY CỔ PHẦN SEADENT</div>
+                  <div class="subtitle">
+                    VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>
+                    VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>
+                    Hotline: 0901371516<br/>
+                    Email: info@seadent.com.vn<br/>
+                    Website: seadent.com.vn
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="meta">
               <div><strong>Ngày:</strong> ${new Date().toLocaleDateString("vi-VN")}</div>
@@ -410,8 +423,12 @@ export default function App() {
           </div>
 
           <div class="customer">
-            <div><strong>Khách hàng:</strong> ${customerName || "................................"}</div>
-            <div><strong>Ghi chú:</strong> ${customerNote || "Không có"}</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div><strong>Tên khách hàng:</strong> ${customerName || "................................"}</div>
+              <div><strong>Số điện thoại:</strong> ${customerPhone || "................................"}</div>
+              <div><strong>Địa chỉ:</strong> ${customerAddress || "................................"}</div>
+              <div><strong>Ghi chú:</strong> ${customerNote || "Không có"}</div>
+            </div>
           </div>
 
           <table>
@@ -778,6 +795,8 @@ export default function App() {
 
           <div style={s.formGrid}>
             <input style={s.input} placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+            <input style={s.input} placeholder="Số điện thoại khách hàng" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
+            <input style={s.input} placeholder="Địa chỉ khách hàng" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
             <input style={s.input} placeholder="Ghi chú báo giá" value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} />
           </div>
 
