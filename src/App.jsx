@@ -20,8 +20,7 @@ function safeLocalStorageGet(key, fallback = null) {
   if (!isBrowser()) return fallback;
   try {
     return window.localStorage.getItem(key) ?? fallback;
-  } catch (error) {
-    console.warn("LocalStorage read error:", error);
+  } catch {
     return fallback;
   }
 }
@@ -30,8 +29,8 @@ function safeLocalStorageSet(key, value) {
   if (!isBrowser()) return;
   try {
     window.localStorage.setItem(key, value);
-  } catch (error) {
-    console.warn("LocalStorage write error:", error);
+  } catch {
+    // Ignore localStorage errors
   }
 }
 
@@ -82,13 +81,14 @@ export default function App() {
   const [globalDiscount, setGlobalDiscount] = React.useState(10);
   const [discounts, setDiscounts] = React.useState({});
   const [products, setProducts] = React.useState(DEMO_PRODUCTS);
-  const [isGroupedByCategory, setIsGroupedByCategory] = React.useState(() => {
-    return safeLocalStorageGet("seadent_group_by_category", "true") === "true";
-  });
   const [collapsedCategories, setCollapsedCategories] = React.useState({});
 
   const [isDiscountUnlocked, setIsDiscountUnlocked] = React.useState(() => {
     return safeLocalStorageGet("seadent_discount_unlocked", "false") === "true";
+  });
+
+  const [isGroupedByCategory, setIsGroupedByCategory] = React.useState(() => {
+    return safeLocalStorageGet("seadent_group_by_category", "true") === "true";
   });
 
   React.useEffect(() => {
@@ -122,6 +122,7 @@ export default function App() {
         DEMO_PRODUCTS.forEach((product) => {
           demoDiscounts[product.id] = product.discount;
         });
+        setProducts(DEMO_PRODUCTS);
         setDiscounts(demoDiscounts);
         setSyncStatus("Đang dùng dữ liệu demo. Hãy thay GOOGLE_SHEET_ID để đồng bộ Google Sheet.");
         return;
@@ -146,17 +147,16 @@ export default function App() {
           throw new Error("No products found in Google Sheet");
         }
 
-        setProducts(formatted);
-
         const sheetDiscounts = {};
         formatted.forEach((product) => {
           sheetDiscounts[product.id] = product.discount;
         });
 
+        setProducts(formatted);
         setDiscounts(sheetDiscounts);
         setSyncStatus("Đã đồng bộ dữ liệu từ Google Sheet");
-      } catch (err) {
-        console.error("Google Sheet Error:", err);
+      } catch (error) {
+        console.error("Google Sheet Error:", error);
 
         const demoDiscounts = {};
         DEMO_PRODUCTS.forEach((product) => {
@@ -174,10 +174,9 @@ export default function App() {
 
   const isMobile = screenWidth <= 760;
   const isTablet = screenWidth <= 1024;
+  const isScriptConfigured = GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "GOOGLE_APPS_SCRIPT_WEB_APP_URL";
 
   const getDiscount = (id) => discounts[String(id)] ?? 0;
-
-  const isScriptConfigured = GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "GOOGLE_APPS_SCRIPT_WEB_APP_URL";
 
   const syncDiscountToSheet = async (payload) => {
     if (!isScriptConfigured) {
@@ -205,8 +204,7 @@ export default function App() {
 
     const productId = String(id);
     const newDiscount = toNumber(value);
-    const newDiscounts = { ...discounts, [productId]: newDiscount };
-    setDiscounts(newDiscounts);
+    setDiscounts({ ...discounts, [productId]: newDiscount });
 
     await syncDiscountToSheet({
       action: "updateDiscount",
@@ -254,8 +252,6 @@ export default function App() {
       if (isBrowser()) alert("Vui lòng mở khóa trước khi reset chiết khấu");
       return;
     }
-
-    setGlobalDiscount(0);
     handleGlobalDiscountChange(0);
   };
 
@@ -294,6 +290,12 @@ export default function App() {
     return acc + calculateFinalPrice(item.price, getDiscount(item.id));
   }, 0);
 
+  const scrollToProducts = () => {
+    if (!isBrowser()) return;
+    const element = document.getElementById("products-section");
+    if (element) element.scrollIntoView({ behavior: "smooth" });
+  };
+
   const s = {
     page: {
       minHeight: "100vh",
@@ -304,6 +306,170 @@ export default function App() {
       boxSizing: "border-box",
     },
     container: { maxWidth: 1280, margin: "0 auto" },
+    landingHero: {
+      display: "grid",
+      gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr" : "1.05fr 0.95fr",
+      gap: isMobile ? 18 : 28,
+      alignItems: "center",
+      background: "radial-gradient(circle at top right, rgba(249,115,22,0.20), transparent 34%), linear-gradient(135deg, #ffffff 0%, #fff7ed 52%, #f8fafc 100%)",
+      border: "1px solid rgba(249,115,22,0.16)",
+      borderRadius: isMobile ? 26 : 36,
+      padding: isMobile ? 18 : 34,
+      marginBottom: isMobile ? 14 : 24,
+      boxShadow: "0 26px 80px rgba(15, 23, 42, 0.10)",
+      overflow: "hidden",
+      position: "relative",
+    },
+    landingBadge: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 8,
+      background: "#fff1e7",
+      color: "#ea580c",
+      border: "1px solid rgba(249,115,22,0.18)",
+      padding: "8px 12px",
+      borderRadius: 999,
+      fontSize: isMobile ? 11 : 13,
+      fontWeight: 900,
+      marginBottom: 14,
+    },
+    landingTitle: {
+      fontSize: isMobile ? 32 : isTablet ? 46 : 58,
+      lineHeight: 1.02,
+      letterSpacing: "-0.055em",
+      fontWeight: 950,
+      color: "#111827",
+      margin: 0,
+      maxWidth: 720,
+    },
+    landingHighlight: { color: "#f97316" },
+    landingText: {
+      color: "#6b7280",
+      fontSize: isMobile ? 15 : 18,
+      lineHeight: 1.65,
+      marginTop: 16,
+      maxWidth: 650,
+    },
+    landingActions: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 12,
+      marginTop: 22,
+    },
+    landingPrimary: {
+      background: "#f97316",
+      color: "#ffffff",
+      border: "none",
+      borderRadius: 999,
+      padding: isMobile ? "12px 16px" : "14px 20px",
+      fontWeight: 900,
+      cursor: "pointer",
+      boxShadow: "0 14px 32px rgba(249,115,22,0.28)",
+    },
+    landingSecondary: {
+      background: "#ffffff",
+      color: "#374151",
+      border: "1px solid #e5e7eb",
+      borderRadius: 999,
+      padding: isMobile ? "12px 16px" : "14px 20px",
+      fontWeight: 900,
+      cursor: "pointer",
+    },
+    landingVisual: {
+      minHeight: isMobile ? 250 : 360,
+      position: "relative",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    visualBlob: {
+      position: "absolute",
+      width: isMobile ? 250 : 390,
+      height: isMobile ? 250 : 390,
+      borderRadius: "42% 58% 50% 50% / 45% 42% 58% 55%",
+      background: "linear-gradient(135deg, #fb923c 0%, #f97316 45%, #fdba74 100%)",
+      opacity: 0.18,
+    },
+    visualPanel: {
+      position: "relative",
+      width: "100%",
+      maxWidth: 450,
+      background: "rgba(255,255,255,0.92)",
+      border: "1px solid rgba(255,255,255,0.85)",
+      borderRadius: isMobile ? 24 : 34,
+      padding: isMobile ? 16 : 22,
+      boxShadow: "0 30px 70px rgba(15,23,42,0.18)",
+      transform: isMobile ? "none" : "rotate(-2deg)",
+      backdropFilter: "blur(14px)",
+    },
+    visualTopBar: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 18,
+    },
+    visualDots: { display: "flex", gap: 6 },
+    visualDot: { width: 10, height: 10, borderRadius: 999, background: "#fed7aa" },
+    visualMiniLogo: {
+      width: 42,
+      height: 42,
+      borderRadius: 14,
+      objectFit: "contain",
+      background: "#fff7ed",
+      padding: 6,
+      boxSizing: "border-box",
+      border: "1px solid #fed7aa",
+    },
+    visualMetricGrid: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 12,
+      marginBottom: 14,
+    },
+    visualMetric: {
+      background: "#f8fafc",
+      border: "1px solid #eef0f4",
+      borderRadius: 18,
+      padding: 14,
+    },
+    visualMetricLabel: {
+      color: "#9ca3af",
+      fontSize: 12,
+      fontWeight: 800,
+      marginBottom: 8,
+    },
+    visualMetricValue: {
+      color: "#111827",
+      fontSize: isMobile ? 19 : 24,
+      fontWeight: 950,
+    },
+    visualList: { display: "grid", gap: 10 },
+    visualRow: {
+      display: "grid",
+      gridTemplateColumns: "1fr auto",
+      gap: 12,
+      alignItems: "center",
+      background: "#ffffff",
+      border: "1px solid #eef0f4",
+      borderRadius: 16,
+      padding: "12px 14px",
+    },
+    visualProduct: { color: "#374151", fontWeight: 900, fontSize: 13 },
+    visualPrice: { color: "#ea580c", fontWeight: 950, fontSize: 13 },
+    visualFloatingCard: {
+      position: isMobile ? "relative" : "absolute",
+      right: isMobile ? "auto" : -6,
+      bottom: isMobile ? "auto" : 24,
+      marginTop: isMobile ? 12 : 0,
+      background: "#111827",
+      color: "#ffffff",
+      borderRadius: 22,
+      padding: "14px 16px",
+      boxShadow: "0 18px 40px rgba(17,24,39,0.24)",
+      maxWidth: isMobile ? "100%" : 210,
+    },
+    floatingLabel: { color: "#fdba74", fontSize: 12, fontWeight: 900, marginBottom: 6 },
+    floatingValue: { fontSize: 20, fontWeight: 950 },
     hero: {
       background: "linear-gradient(135deg, #ffffff 0%, #fff7ed 100%)",
       border: "1px solid rgba(255, 122, 24, 0.16)",
@@ -389,12 +555,7 @@ export default function App() {
     label: { color: "#6b7280", fontSize: isMobile ? 12 : 14, marginBottom: 8, fontWeight: 700 },
     statNumber: { fontSize: isMobile ? 24 : 32, fontWeight: 900, color: "#111827" },
     total: { fontSize: isMobile ? 16 : 23, fontWeight: 900, color: "#ea580c" },
-    syncStatus: {
-      marginTop: 14,
-      color: "#6b7280",
-      fontSize: isMobile ? 12 : 13,
-      lineHeight: 1.5,
-    },
+    syncStatus: { marginTop: 14, color: "#6b7280", fontSize: isMobile ? 12 : 13, lineHeight: 1.5 },
     toolbar: {
       display: "grid",
       gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr" : "1fr 360px",
@@ -414,13 +575,7 @@ export default function App() {
       fontWeight: 900,
       flexShrink: 0,
     },
-    groupToolbar: {
-      display: "flex",
-      flexWrap: "wrap",
-      gap: 10,
-      marginTop: 14,
-      alignItems: "center",
-    },
+    groupToolbar: { display: "flex", flexWrap: "wrap", gap: 10, marginTop: 14, alignItems: "center" },
     groupButton: {
       background: isGroupedByCategory ? "#f97316" : "#ffffff",
       color: isGroupedByCategory ? "#ffffff" : "#374151",
@@ -451,13 +606,7 @@ export default function App() {
       borderBottom: "1px solid #eef0f4",
       cursor: "pointer",
     },
-    categoryTitle: {
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      fontWeight: 900,
-      color: "#111827",
-    },
+    categoryTitle: { display: "flex", alignItems: "center", gap: 10, fontWeight: 900, color: "#111827" },
     categoryCount: {
       background: "#ffedd5",
       color: "#ea580c",
@@ -466,11 +615,7 @@ export default function App() {
       fontSize: 12,
       fontWeight: 900,
     },
-    categoryArrow: {
-      color: "#ea580c",
-      fontWeight: 900,
-      fontSize: 18,
-    },
+    categoryArrow: { color: "#ea580c", fontWeight: 900, fontSize: 18 },
     input: {
       width: "100%",
       background: "#f8fafc",
@@ -614,9 +759,122 @@ export default function App() {
     footer: { textAlign: "center", color: "#9ca3af", marginTop: 30, paddingBottom: 20, fontSize: 13 },
   };
 
+  const renderProductRow = (item) => {
+    const discount = getDiscount(item.id);
+    const finalPrice = calculateFinalPrice(item.price, discount);
+
+    return (
+      <tr key={item.id}>
+        <td style={{ ...s.td, fontWeight: 700 }}>{item.name}</td>
+        <td style={s.td}><span style={s.badge}>{item.category}</span></td>
+        <td style={s.td}>{item.stock}</td>
+        <td style={s.td}>{formatPrice(item.price)}</td>
+        <td style={s.td}>
+          <input
+            style={{ ...s.miniInput, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
+            type="number"
+            value={discount}
+            disabled={!isDiscountUnlocked}
+            onChange={(e) => updateDiscount(item.id, e.target.value)}
+          /> <span>%</span>
+        </td>
+        <td style={{ ...s.td, ...s.price }}>{formatPrice(finalPrice)}</td>
+      </tr>
+    );
+  };
+
+  const renderMobileProductCard = (item) => {
+    const discount = getDiscount(item.id);
+    const finalPrice = calculateFinalPrice(item.price, discount);
+
+    return (
+      <div style={s.productCard} key={item.id}>
+        <div style={s.productName}>{item.name}</div>
+        <div style={{ marginBottom: 8 }}><span style={s.badge}>{item.category}</span></div>
+        <div style={s.mobileRow}><span>Stock</span><strong>{item.stock}</strong></div>
+        <div style={s.mobileRow}><span>List Price</span><strong>{formatPrice(item.price)}</strong></div>
+        <div style={s.mobileRow}>
+          <span>Discount</span>
+          <span>
+            <input
+              style={{ ...s.miniInput, width: 76, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
+              type="number"
+              value={discount}
+              disabled={!isDiscountUnlocked}
+              onChange={(e) => updateDiscount(item.id, e.target.value)}
+            /> %
+          </span>
+        </div>
+        <div style={{ ...s.mobileRow, borderBottom: "none" }}>
+          <span>Final Price</span>
+          <strong style={{ color: "#ea580c", fontSize: 16 }}>{formatPrice(finalPrice)}</strong>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div style={s.page}>
       <div style={s.container}>
+        <section style={s.landingHero}>
+          <div>
+            <div style={s.landingBadge}>✨ SEADENT DIGITAL QUOTATION</div>
+            <h1 style={s.landingTitle}>
+              Báo giá nhanh, <span style={s.landingHighlight}>chính xác</span> và chuyên nghiệp hơn.
+            </h1>
+            <div style={s.landingText}>
+              Quản lý danh sách sản phẩm, tra cứu giá, chỉnh chiết khấu và đồng bộ dữ liệu Google Sheet trong một giao diện hiện đại cho đội ngũ SEADENT.
+            </div>
+            <div style={s.landingActions}>
+              <button style={s.landingPrimary} onClick={scrollToProducts}>Bắt đầu báo giá</button>
+              <button style={s.landingSecondary} onClick={() => setSearch("")}>Xem toàn bộ sản phẩm</button>
+            </div>
+          </div>
+
+          <div style={s.landingVisual}>
+            <div style={s.visualBlob}></div>
+            <div style={s.visualPanel}>
+              <div style={s.visualTopBar}>
+                <div style={s.visualDots}>
+                  <span style={s.visualDot}></span>
+                  <span style={{ ...s.visualDot, background: "#fdba74" }}></span>
+                  <span style={{ ...s.visualDot, background: "#fb923c" }}></span>
+                </div>
+                <img src="/logo.png" alt="SEADENT" style={s.visualMiniLogo} />
+              </div>
+
+              <div style={s.visualMetricGrid}>
+                <div style={s.visualMetric}>
+                  <div style={s.visualMetricLabel}>PRODUCTS</div>
+                  <div style={s.visualMetricValue}>{products.length}</div>
+                </div>
+                <div style={s.visualMetric}>
+                  <div style={s.visualMetricLabel}>QUOTE TOTAL</div>
+                  <div style={{ ...s.visualMetricValue, color: "#ea580c" }}>{formatPrice(totalValue)}</div>
+                </div>
+              </div>
+
+              <div style={s.visualList}>
+                {filteredProducts.slice(0, 3).map((item) => {
+                  const discount = getDiscount(item.id);
+                  const finalPrice = calculateFinalPrice(item.price, discount);
+                  return (
+                    <div style={s.visualRow} key={`visual-${item.id}`}>
+                      <div style={s.visualProduct}>{item.name}</div>
+                      <div style={s.visualPrice}>{formatPrice(finalPrice)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={s.visualFloatingCard}>
+              <div style={s.floatingLabel}>SYNC STATUS</div>
+              <div style={s.floatingValue}>Google Sheet Ready</div>
+            </div>
+          </div>
+        </section>
+
         <div style={s.hero}>
           <div style={s.header}>
             <div style={s.brand}>
@@ -642,7 +900,7 @@ export default function App() {
           <div style={s.syncStatus}>{syncStatus}</div>
         </div>
 
-        <div style={s.toolbar}>
+        <div id="products-section" style={s.toolbar}>
           <div style={s.card}>
             <div style={s.searchBox}>
               <div style={s.searchIcon}>⌕</div>
@@ -656,10 +914,7 @@ export default function App() {
             </div>
 
             <div style={s.groupToolbar}>
-              <button
-                style={s.groupButton}
-                onClick={() => setIsGroupedByCategory(!isGroupedByCategory)}
-              >
+              <button style={s.groupButton} onClick={() => setIsGroupedByCategory(!isGroupedByCategory)}>
                 {isGroupedByCategory ? "✓ Group by Category" : "Group by Category"}
               </button>
 
@@ -702,9 +957,7 @@ export default function App() {
               </button>
             </div>
 
-            <button onClick={resetSavedDiscounts} style={s.resetButton}>
-              Reset Discount
-            </button>
+            <button onClick={resetSavedDiscounts} style={s.resetButton}>Reset Discount</button>
           </div>
         </div>
 
@@ -736,54 +989,11 @@ export default function App() {
                         </div>
                       </td>
                     </tr>
-
-                    {!collapsedCategories[category] && groupedProducts[category].map((item) => {
-                      const discount = getDiscount(item.id);
-                      const finalPrice = calculateFinalPrice(item.price, discount);
-                      return (
-                        <tr key={item.id}>
-                          <td style={{ ...s.td, fontWeight: 700 }}>{item.name}</td>
-                          <td style={s.td}><span style={s.badge}>{item.category}</span></td>
-                          <td style={s.td}>{item.stock}</td>
-                          <td style={s.td}>{formatPrice(item.price)}</td>
-                          <td style={s.td}>
-                            <input
-                              style={{ ...s.miniInput, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
-                              type="number"
-                              value={discount}
-                              disabled={!isDiscountUnlocked}
-                              onChange={(e) => updateDiscount(item.id, e.target.value)}
-                            /> <span>%</span>
-                          </td>
-                          <td style={{ ...s.td, ...s.price }}>{formatPrice(finalPrice)}</td>
-                        </tr>
-                      );
-                    })}
+                    {!collapsedCategories[category] && groupedProducts[category].map(renderProductRow)}
                   </React.Fragment>
                 ))
               ) : (
-                filteredProducts.map((item) => {
-                  const discount = getDiscount(item.id);
-                  const finalPrice = calculateFinalPrice(item.price, discount);
-                  return (
-                    <tr key={item.id}>
-                      <td style={{ ...s.td, fontWeight: 700 }}>{item.name}</td>
-                      <td style={s.td}><span style={s.badge}>{item.category}</span></td>
-                      <td style={s.td}>{item.stock}</td>
-                      <td style={s.td}>{formatPrice(item.price)}</td>
-                      <td style={s.td}>
-                        <input
-                          style={{ ...s.miniInput, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
-                          type="number"
-                          value={discount}
-                          disabled={!isDiscountUnlocked}
-                          onChange={(e) => updateDiscount(item.id, e.target.value)}
-                        /> <span>%</span>
-                      </td>
-                      <td style={{ ...s.td, ...s.price }}>{formatPrice(finalPrice)}</td>
-                    </tr>
-                  );
-                })
+                filteredProducts.map(renderProductRow)
               )}
             </tbody>
           </table>
@@ -797,73 +1007,27 @@ export default function App() {
                   <span>{collapsedCategories[category] ? "▸" : "▾"} {category}</span>
                   <span style={s.categoryCount}>{groupedProducts[category].length}</span>
                 </div>
-
-                {!collapsedCategories[category] && groupedProducts[category].map((item) => {
-                  const discount = getDiscount(item.id);
-                  const finalPrice = calculateFinalPrice(item.price, discount);
-                  return (
-                    <div style={s.productCard} key={item.id}>
-                      <div style={s.productName}>{item.name}</div>
-                      <div style={{ marginBottom: 8 }}><span style={s.badge}>{item.category}</span></div>
-                      <div style={s.mobileRow}><span>Stock</span><strong>{item.stock}</strong></div>
-                      <div style={s.mobileRow}><span>List Price</span><strong>{formatPrice(item.price)}</strong></div>
-                      <div style={s.mobileRow}>
-                        <span>Discount</span>
-                        <span>
-                          <input
-                            style={{ ...s.miniInput, width: 76, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
-                            type="number"
-                            value={discount}
-                            disabled={!isDiscountUnlocked}
-                            onChange={(e) => updateDiscount(item.id, e.target.value)}
-                          /> %
-                        </span>
-                      </div>
-                      <div style={{ ...s.mobileRow, borderBottom: "none" }}>
-                        <span>Final Price</span>
-                        <strong style={{ color: "#ea580c", fontSize: 16 }}>{formatPrice(finalPrice)}</strong>
-                      </div>
-                    </div>
-                  );
-                })}
+                {!collapsedCategories[category] && groupedProducts[category].map(renderMobileProductCard)}
               </React.Fragment>
             ))
           ) : (
-            filteredProducts.map((item) => {
-              const discount = getDiscount(item.id);
-              const finalPrice = calculateFinalPrice(item.price, discount);
-              return (
-                <div style={s.productCard} key={item.id}>
-                  <div style={s.productName}>{item.name}</div>
-                  <div style={{ marginBottom: 8 }}><span style={s.badge}>{item.category}</span></div>
-                  <div style={s.mobileRow}><span>Stock</span><strong>{item.stock}</strong></div>
-                  <div style={s.mobileRow}><span>List Price</span><strong>{formatPrice(item.price)}</strong></div>
-                  <div style={s.mobileRow}>
-                    <span>Discount</span>
-                    <span>
-                      <input
-                        style={{ ...s.miniInput, width: 76, ...(!isDiscountUnlocked ? s.disabledInput : {}) }}
-                        type="number"
-                        value={discount}
-                        disabled={!isDiscountUnlocked}
-                        onChange={(e) => updateDiscount(item.id, e.target.value)}
-                      /> %
-                    </span>
-                  </div>
-                  <div style={{ ...s.mobileRow, borderBottom: "none" }}>
-                    <span>Final Price</span>
-                    <strong style={{ color: "#ea580c", fontSize: 16 }}>{formatPrice(finalPrice)}</strong>
-                  </div>
-                </div>
-              );
-            })
+            filteredProducts.map(renderMobileProductCard)
           )}
         </div>
 
         <div style={s.featureGrid}>
-          <div style={s.card}><div style={s.featureTitle}>PDF Export</div><div style={s.featureText}>Generate professional quotation PDF with customer information, company logo and signature.</div></div>
-          <div style={s.card}><div style={s.featureTitle}>Google Sheets Sync</div><div style={s.featureText}>Auto update product pricing directly from Google Sheets.</div></div>
-          <div style={s.card}><div style={s.featureTitle}>Admin Dashboard</div><div style={s.featureText}>Manage products, pricing, quotation history and customers.</div></div>
+          <div style={s.card}>
+            <div style={s.featureTitle}>PDF Export</div>
+            <div style={s.featureText}>Generate professional quotation PDF with customer information, company logo and signature.</div>
+          </div>
+          <div style={s.card}>
+            <div style={s.featureTitle}>Google Sheets Sync</div>
+            <div style={s.featureText}>Auto update product pricing directly from Google Sheets.</div>
+          </div>
+          <div style={s.card}>
+            <div style={s.featureTitle}>Admin Dashboard</div>
+            <div style={s.featureText}>Manage products, pricing, quotation history and customers.</div>
+          </div>
         </div>
 
         <div style={s.footer}>SEADENT Quote Center © 2026</div>
