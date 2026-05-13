@@ -82,6 +82,9 @@ export default function App() {
   const [discounts, setDiscounts] = React.useState({});
   const [products, setProducts] = React.useState(DEMO_PRODUCTS);
   const [collapsedCategories, setCollapsedCategories] = React.useState({});
+  const [cart, setCart] = React.useState({});
+  const [customerName, setCustomerName] = React.useState("");
+  const [customerNote, setCustomerNote] = React.useState("");
 
   const [isDiscountUnlocked, setIsDiscountUnlocked] = React.useState(() => {
     return safeLocalStorageGet("seadent_discount_unlocked", "false") === "true";
@@ -131,21 +134,13 @@ export default function App() {
       try {
         const response = await fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}`);
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const data = await response.json();
-
-        if (!Array.isArray(data)) {
-          throw new Error("Google Sheet response is not an array");
-        }
+        if (!Array.isArray(data)) throw new Error("Google Sheet response is not an array");
 
         const formatted = data.map(normalizeProduct).filter((item) => item.name);
-
-        if (formatted.length === 0) {
-          throw new Error("No products found in Google Sheet");
-        }
+        if (formatted.length === 0) throw new Error("No products found in Google Sheet");
 
         const sheetDiscounts = {};
         formatted.forEach((product) => {
@@ -206,11 +201,19 @@ export default function App() {
     const newDiscount = toNumber(value);
     setDiscounts({ ...discounts, [productId]: newDiscount });
 
-    await syncDiscountToSheet({
-      action: "updateDiscount",
-      id: productId,
-      discount: newDiscount,
+    setCart((currentCart) => {
+      const currentItem = currentCart[productId];
+      if (!currentItem) return currentCart;
+      const nextCart = { ...currentCart };
+      nextCart[productId] = {
+        ...currentItem,
+        discount: newDiscount,
+        finalPrice: calculateFinalPrice(currentItem.price, newDiscount),
+      };
+      return nextCart;
     });
+
+    await syncDiscountToSheet({ action: "updateDiscount", id: productId, discount: newDiscount });
   };
 
   const handleGlobalDiscountChange = async (value) => {
@@ -225,10 +228,19 @@ export default function App() {
     });
     setDiscounts(newDiscounts);
 
-    await syncDiscountToSheet({
-      action: "updateAllDiscounts",
-      discount: newGlobalDiscount,
+    setCart((currentCart) => {
+      const nextCart = {};
+      Object.values(currentCart).forEach((item) => {
+        nextCart[item.id] = {
+          ...item,
+          discount: newGlobalDiscount,
+          finalPrice: calculateFinalPrice(item.price, newGlobalDiscount),
+        };
+      });
+      return nextCart;
     });
+
+    await syncDiscountToSheet({ action: "updateAllDiscounts", discount: newGlobalDiscount });
   };
 
   const unlockDiscount = () => {
@@ -270,10 +282,7 @@ export default function App() {
   const categoryNames = Object.keys(groupedProducts).sort((a, b) => a.localeCompare(b));
 
   const toggleCategory = (category) => {
-    setCollapsedCategories({
-      ...collapsedCategories,
-      [category]: !collapsedCategories[category],
-    });
+    setCollapsedCategories({ ...collapsedCategories, [category]: !collapsedCategories[category] });
   };
 
   const expandAllCategories = () => setCollapsedCategories({});
@@ -290,10 +299,155 @@ export default function App() {
     return acc + calculateFinalPrice(item.price, getDiscount(item.id));
   }, 0);
 
-  const scrollToProducts = () => {
+  const cartItems = Object.values(cart);
+  const cartQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotal = cartItems.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0);
+
+  const addToCart = (product) => {
+    const productId = String(product.id);
+    const discount = getDiscount(productId);
+    const finalPrice = calculateFinalPrice(product.price, discount);
+
+    setCart((currentCart) => {
+      const existing = currentCart[productId];
+      const nextQuantity = existing ? existing.quantity + 1 : 1;
+      return {
+        ...currentCart,
+        [productId]: {
+          id: productId,
+          name: product.name,
+          category: product.category,
+          price: product.price,
+          discount,
+          finalPrice,
+          quantity: nextQuantity,
+        },
+      };
+    });
+  };
+
+  const updateCartQuantity = (id, quantity) => {
+    const productId = String(id);
+    const nextQuantity = Math.max(1, toNumber(quantity, 1));
+
+    setCart((currentCart) => {
+      if (!currentCart[productId]) return currentCart;
+      return {
+        ...currentCart,
+        [productId]: {
+          ...currentCart[productId],
+          quantity: nextQuantity,
+        },
+      };
+    });
+  };
+
+  const removeFromCart = (id) => {
+    const productId = String(id);
+    setCart((currentCart) => {
+      const nextCart = { ...currentCart };
+      delete nextCart[productId];
+      return nextCart;
+    });
+  };
+
+  const clearCart = () => setCart({});
+
+  const exportQuotePdf = () => {
     if (!isBrowser()) return;
-    const element = document.getElementById("products-section");
-    if (element) element.scrollIntoView({ behavior: "smooth" });
+    if (cartItems.length === 0) {
+      alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi xuất PDF");
+      return;
+    }
+
+    const rows = cartItems.map((item, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${item.name}</td>
+        <td>${item.category}</td>
+        <td>${formatPrice(item.price)}</td>
+        <td>${item.discount}%</td>
+        <td>${formatPrice(item.finalPrice)}</td>
+        <td>${item.quantity}</td>
+        <td>${formatPrice(item.finalPrice * item.quantity)}</td>
+      </tr>
+    `).join("");
+
+    const quoteWindow = window.open("", "_blank");
+    if (!quoteWindow) return;
+
+    quoteWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <title>SEADENT Quotation</title>
+          <style>
+            body { font-family: Arial, sans-serif; color: #111827; padding: 32px; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #f97316; padding-bottom: 18px; margin-bottom: 24px; }
+            .brand { font-size: 28px; font-weight: 900; color: #f97316; }
+            .subtitle { color: #6b7280; margin-top: 6px; }
+            .meta { text-align: right; color: #374151; line-height: 1.6; }
+            .customer { background: #fff7ed; border: 1px solid #fed7aa; padding: 16px; border-radius: 12px; margin-bottom: 22px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+            th { background: #f97316; color: white; padding: 10px; text-align: left; font-size: 12px; }
+            td { border-bottom: 1px solid #e5e7eb; padding: 10px; font-size: 12px; }
+            .total { margin-top: 24px; text-align: right; font-size: 24px; font-weight: 900; color: #f97316; }
+            .note { margin-top: 20px; color: #6b7280; font-size: 13px; line-height: 1.6; }
+            .signature { display: flex; justify-content: space-between; margin-top: 60px; color: #374151; }
+            @media print { button { display: none; } body { padding: 20px; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="brand">SEADENT Quote Center</div>
+              <div class="subtitle">Professional Dental Equipment Quotation</div>
+            </div>
+            <div class="meta">
+              <div><strong>Ngày:</strong> ${new Date().toLocaleDateString("vi-VN")}</div>
+              <div><strong>Mã báo giá:</strong> SQC-${Date.now()}</div>
+            </div>
+          </div>
+
+          <div class="customer">
+            <div><strong>Khách hàng:</strong> ${customerName || "................................"}</div>
+            <div><strong>Ghi chú:</strong> ${customerNote || "Không có"}</div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Sản phẩm</th>
+                <th>Danh mục</th>
+                <th>Giá niêm yết</th>
+                <th>CK</th>
+                <th>Đơn giá sau CK</th>
+                <th>SL</th>
+                <th>Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+
+          <div class="total">Tổng cộng: ${formatPrice(cartTotal)}</div>
+
+          <div class="note">
+            Báo giá được tạo từ SEADENT Quote Center. Giá trị báo giá có thể thay đổi theo điều kiện thương mại thực tế.
+          </div>
+
+          <div class="signature">
+            <div><strong>Khách hàng</strong><br/><br/><br/>........................</div>
+            <div><strong>SEADENT</strong><br/><br/><br/>........................</div>
+          </div>
+
+          <script>
+            window.onload = function() { window.print(); };
+          </script>
+        </body>
+      </html>
+    `);
+    quoteWindow.document.close();
   };
 
   const s = {
@@ -306,170 +460,6 @@ export default function App() {
       boxSizing: "border-box",
     },
     container: { maxWidth: 1280, margin: "0 auto" },
-    landingHero: {
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr" : "1.05fr 0.95fr",
-      gap: isMobile ? 18 : 28,
-      alignItems: "center",
-      background: "radial-gradient(circle at top right, rgba(249,115,22,0.20), transparent 34%), linear-gradient(135deg, #ffffff 0%, #fff7ed 52%, #f8fafc 100%)",
-      border: "1px solid rgba(249,115,22,0.16)",
-      borderRadius: isMobile ? 26 : 36,
-      padding: isMobile ? 18 : 34,
-      marginBottom: isMobile ? 14 : 24,
-      boxShadow: "0 26px 80px rgba(15, 23, 42, 0.10)",
-      overflow: "hidden",
-      position: "relative",
-    },
-    landingBadge: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 8,
-      background: "#fff1e7",
-      color: "#ea580c",
-      border: "1px solid rgba(249,115,22,0.18)",
-      padding: "8px 12px",
-      borderRadius: 999,
-      fontSize: isMobile ? 11 : 13,
-      fontWeight: 900,
-      marginBottom: 14,
-    },
-    landingTitle: {
-      fontSize: isMobile ? 32 : isTablet ? 46 : 58,
-      lineHeight: 1.02,
-      letterSpacing: "-0.055em",
-      fontWeight: 950,
-      color: "#111827",
-      margin: 0,
-      maxWidth: 720,
-    },
-    landingHighlight: { color: "#f97316" },
-    landingText: {
-      color: "#6b7280",
-      fontSize: isMobile ? 15 : 18,
-      lineHeight: 1.65,
-      marginTop: 16,
-      maxWidth: 650,
-    },
-    landingActions: {
-      display: "flex",
-      flexWrap: "wrap",
-      gap: 12,
-      marginTop: 22,
-    },
-    landingPrimary: {
-      background: "#f97316",
-      color: "#ffffff",
-      border: "none",
-      borderRadius: 999,
-      padding: isMobile ? "12px 16px" : "14px 20px",
-      fontWeight: 900,
-      cursor: "pointer",
-      boxShadow: "0 14px 32px rgba(249,115,22,0.28)",
-    },
-    landingSecondary: {
-      background: "#ffffff",
-      color: "#374151",
-      border: "1px solid #e5e7eb",
-      borderRadius: 999,
-      padding: isMobile ? "12px 16px" : "14px 20px",
-      fontWeight: 900,
-      cursor: "pointer",
-    },
-    landingVisual: {
-      minHeight: isMobile ? 250 : 360,
-      position: "relative",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    visualBlob: {
-      position: "absolute",
-      width: isMobile ? 250 : 390,
-      height: isMobile ? 250 : 390,
-      borderRadius: "42% 58% 50% 50% / 45% 42% 58% 55%",
-      background: "linear-gradient(135deg, #fb923c 0%, #f97316 45%, #fdba74 100%)",
-      opacity: 0.18,
-    },
-    visualPanel: {
-      position: "relative",
-      width: "100%",
-      maxWidth: 450,
-      background: "rgba(255,255,255,0.92)",
-      border: "1px solid rgba(255,255,255,0.85)",
-      borderRadius: isMobile ? 24 : 34,
-      padding: isMobile ? 16 : 22,
-      boxShadow: "0 30px 70px rgba(15,23,42,0.18)",
-      transform: isMobile ? "none" : "rotate(-2deg)",
-      backdropFilter: "blur(14px)",
-    },
-    visualTopBar: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 18,
-    },
-    visualDots: { display: "flex", gap: 6 },
-    visualDot: { width: 10, height: 10, borderRadius: 999, background: "#fed7aa" },
-    visualMiniLogo: {
-      width: 42,
-      height: 42,
-      borderRadius: 14,
-      objectFit: "contain",
-      background: "#fff7ed",
-      padding: 6,
-      boxSizing: "border-box",
-      border: "1px solid #fed7aa",
-    },
-    visualMetricGrid: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 12,
-      marginBottom: 14,
-    },
-    visualMetric: {
-      background: "#f8fafc",
-      border: "1px solid #eef0f4",
-      borderRadius: 18,
-      padding: 14,
-    },
-    visualMetricLabel: {
-      color: "#9ca3af",
-      fontSize: 12,
-      fontWeight: 800,
-      marginBottom: 8,
-    },
-    visualMetricValue: {
-      color: "#111827",
-      fontSize: isMobile ? 19 : 24,
-      fontWeight: 950,
-    },
-    visualList: { display: "grid", gap: 10 },
-    visualRow: {
-      display: "grid",
-      gridTemplateColumns: "1fr auto",
-      gap: 12,
-      alignItems: "center",
-      background: "#ffffff",
-      border: "1px solid #eef0f4",
-      borderRadius: 16,
-      padding: "12px 14px",
-    },
-    visualProduct: { color: "#374151", fontWeight: 900, fontSize: 13 },
-    visualPrice: { color: "#ea580c", fontWeight: 950, fontSize: 13 },
-    visualFloatingCard: {
-      position: isMobile ? "relative" : "absolute",
-      right: isMobile ? "auto" : -6,
-      bottom: isMobile ? "auto" : 24,
-      marginTop: isMobile ? 12 : 0,
-      background: "#111827",
-      color: "#ffffff",
-      borderRadius: 22,
-      padding: "14px 16px",
-      boxShadow: "0 18px 40px rgba(17,24,39,0.24)",
-      maxWidth: isMobile ? "100%" : 210,
-    },
-    floatingLabel: { color: "#fdba74", fontSize: 12, fontWeight: 900, marginBottom: 6 },
-    floatingValue: { fontSize: 20, fontWeight: 950 },
     hero: {
       background: "linear-gradient(135deg, #ffffff 0%, #fff7ed 100%)",
       border: "1px solid rgba(255, 122, 24, 0.16)",
@@ -485,12 +475,7 @@ export default function App() {
       alignItems: isMobile ? "flex-start" : "center",
       flexWrap: "wrap",
     },
-    brand: {
-      display: "flex",
-      alignItems: "center",
-      gap: isMobile ? 12 : 18,
-      width: isMobile ? "100%" : "auto",
-    },
+    brand: { display: "flex", alignItems: "center", gap: isMobile ? 12 : 18, width: isMobile ? "100%" : "auto" },
     logoImage: {
       width: isMobile ? 54 : 74,
       height: isMobile ? 54 : 74,
@@ -516,244 +501,60 @@ export default function App() {
       fontWeight: 800,
       marginBottom: 8,
     },
-    title: {
-      fontSize: isMobile ? 26 : isTablet ? 36 : 46,
-      fontWeight: 900,
-      margin: 0,
-      lineHeight: 1.05,
-      color: "#111827",
-      letterSpacing: "-0.04em",
-    },
-    subtitle: {
-      color: "#6b7280",
-      marginTop: 8,
-      fontSize: isMobile ? 13 : 16,
-      lineHeight: 1.5,
-    },
-    statGrid: {
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(2, minmax(178px, 1fr))",
-      gap: isMobile ? 10 : 14,
-      width: isMobile ? "100%" : "auto",
-    },
-    statCard: {
-      background: "rgba(255,255,255,0.9)",
-      border: "1px solid #eef0f4",
-      borderRadius: isMobile ? 18 : 24,
-      padding: isMobile ? 14 : 20,
-      boxShadow: "0 16px 40px rgba(15, 23, 42, 0.06)",
-      boxSizing: "border-box",
-    },
-    card: {
-      background: "rgba(255,255,255,0.95)",
-      border: "1px solid #eef0f4",
-      borderRadius: isMobile ? 18 : 24,
-      padding: isMobile ? 14 : 22,
-      boxShadow: "0 16px 40px rgba(15, 23, 42, 0.06)",
-      boxSizing: "border-box",
-    },
+    title: { fontSize: isMobile ? 26 : isTablet ? 36 : 46, fontWeight: 900, margin: 0, lineHeight: 1.05, color: "#111827", letterSpacing: "-0.04em" },
+    subtitle: { color: "#6b7280", marginTop: 8, fontSize: isMobile ? 13 : 16, lineHeight: 1.5 },
+    statGrid: { display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3, minmax(150px, 1fr))", gap: isMobile ? 10 : 14, width: isMobile ? "100%" : "auto" },
+    statCard: { background: "rgba(255,255,255,0.9)", border: "1px solid #eef0f4", borderRadius: isMobile ? 18 : 24, padding: isMobile ? 14 : 20, boxShadow: "0 16px 40px rgba(15, 23, 42, 0.06)", boxSizing: "border-box" },
+    card: { background: "rgba(255,255,255,0.95)", border: "1px solid #eef0f4", borderRadius: isMobile ? 18 : 24, padding: isMobile ? 14 : 22, boxShadow: "0 16px 40px rgba(15, 23, 42, 0.06)", boxSizing: "border-box" },
     label: { color: "#6b7280", fontSize: isMobile ? 12 : 14, marginBottom: 8, fontWeight: 700 },
     statNumber: { fontSize: isMobile ? 24 : 32, fontWeight: 900, color: "#111827" },
     total: { fontSize: isMobile ? 16 : 23, fontWeight: 900, color: "#ea580c" },
     syncStatus: { marginTop: 14, color: "#6b7280", fontSize: isMobile ? 12 : 13, lineHeight: 1.5 },
-    toolbar: {
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr" : "1fr 360px",
-      gap: isMobile ? 12 : 16,
-      marginBottom: isMobile ? 14 : 22,
-    },
+    toolbar: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr" : "1fr 360px", gap: isMobile ? 12 : 16, marginBottom: isMobile ? 14 : 22 },
     searchBox: { display: "flex", alignItems: "center", gap: 12 },
-    searchIcon: {
-      width: 44,
-      height: 44,
-      borderRadius: 16,
-      background: "#fff1e7",
-      color: "#ea580c",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontWeight: 900,
-      flexShrink: 0,
-    },
+    searchIcon: { width: 44, height: 44, borderRadius: 16, background: "#fff1e7", color: "#ea580c", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, flexShrink: 0 },
     groupToolbar: { display: "flex", flexWrap: "wrap", gap: 10, marginTop: 14, alignItems: "center" },
-    groupButton: {
-      background: isGroupedByCategory ? "#f97316" : "#ffffff",
-      color: isGroupedByCategory ? "#ffffff" : "#374151",
-      border: isGroupedByCategory ? "1px solid #f97316" : "1px solid #e5e7eb",
-      borderRadius: 999,
-      padding: "10px 14px",
-      cursor: "pointer",
-      fontWeight: 900,
-      boxShadow: isGroupedByCategory ? "0 10px 24px rgba(249,115,22,0.22)" : "none",
-    },
-    smallButton: {
-      background: "#ffffff",
-      color: "#6b7280",
-      border: "1px solid #e5e7eb",
-      borderRadius: 999,
-      padding: "10px 13px",
-      cursor: "pointer",
-      fontWeight: 800,
-    },
-    categoryHeader: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      gap: 12,
-      padding: isMobile ? "13px 14px" : "15px 18px",
-      background: "linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)",
-      borderTop: "1px solid #eef0f4",
-      borderBottom: "1px solid #eef0f4",
-      cursor: "pointer",
-    },
+    groupButton: { background: isGroupedByCategory ? "#f97316" : "#ffffff", color: isGroupedByCategory ? "#ffffff" : "#374151", border: isGroupedByCategory ? "1px solid #f97316" : "1px solid #e5e7eb", borderRadius: 999, padding: "10px 14px", cursor: "pointer", fontWeight: 900, boxShadow: isGroupedByCategory ? "0 10px 24px rgba(249,115,22,0.22)" : "none" },
+    smallButton: { background: "#ffffff", color: "#6b7280", border: "1px solid #e5e7eb", borderRadius: 999, padding: "10px 13px", cursor: "pointer", fontWeight: 800 },
+    categoryHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: isMobile ? "13px 14px" : "15px 18px", background: "linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)", borderTop: "1px solid #eef0f4", borderBottom: "1px solid #eef0f4", cursor: "pointer" },
     categoryTitle: { display: "flex", alignItems: "center", gap: 10, fontWeight: 900, color: "#111827" },
-    categoryCount: {
-      background: "#ffedd5",
-      color: "#ea580c",
-      borderRadius: 999,
-      padding: "5px 10px",
-      fontSize: 12,
-      fontWeight: 900,
-    },
+    categoryCount: { background: "#ffedd5", color: "#ea580c", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 900 },
     categoryArrow: { color: "#ea580c", fontWeight: 900, fontSize: 18 },
-    input: {
-      width: "100%",
-      background: "#f8fafc",
-      color: "#111827",
-      border: "1px solid #e5e7eb",
-      borderRadius: 16,
-      padding: isMobile ? "13px 14px" : "14px 16px",
-      outline: "none",
-      fontSize: isMobile ? 15 : 16,
-      boxSizing: "border-box",
-      opacity: 1,
-    },
+    input: { width: "100%", background: "#f8fafc", color: "#111827", border: "1px solid #e5e7eb", borderRadius: 16, padding: isMobile ? "13px 14px" : "14px 16px", outline: "none", fontSize: isMobile ? 15 : 16, boxSizing: "border-box", opacity: 1 },
     disabledInput: { opacity: 0.5, cursor: "not-allowed", background: "#f3f4f6", color: "#6b7280" },
-    lockPanel: {
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
-      gap: 10,
-      marginTop: 12,
-    },
-    primaryButton: {
-      background: isDiscountUnlocked ? "#16a34a" : "#f97316",
-      color: "#ffffff",
-      border: "none",
-      borderRadius: 14,
-      padding: "12px 16px",
-      cursor: "pointer",
-      fontWeight: 900,
-      whiteSpace: "nowrap",
-      boxShadow: isDiscountUnlocked ? "0 12px 28px rgba(22,163,74,0.22)" : "0 12px 28px rgba(249,115,22,0.24)",
-    },
-    resetButton: {
-      marginTop: 10,
-      width: "100%",
-      background: "#fff1f2",
-      color: "#e11d48",
-      border: "1px solid #ffe4e6",
-      borderRadius: 14,
-      padding: "11px 12px",
-      cursor: isDiscountUnlocked ? "pointer" : "not-allowed",
-      fontWeight: 800,
-      opacity: isDiscountUnlocked ? 1 : 0.48,
-    },
-    lockStatus: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 8,
-      padding: "7px 11px",
-      borderRadius: 999,
-      background: isDiscountUnlocked ? "#dcfce7" : "#fff1f2",
-      color: isDiscountUnlocked ? "#15803d" : "#e11d48",
-      fontSize: 13,
-      fontWeight: 900,
-      marginBottom: 12,
-      border: isDiscountUnlocked ? "1px solid #bbf7d0" : "1px solid #ffe4e6",
-    },
-    tableWrap: {
-      display: isMobile ? "none" : "block",
-      background: "#ffffff",
-      border: "1px solid #eef0f4",
-      borderRadius: 26,
-      overflowX: "auto",
-      boxShadow: "0 24px 60px rgba(15, 23, 42, 0.08)",
-    },
-    table: { width: "100%", minWidth: 920, borderCollapse: "collapse" },
-    th: {
-      textAlign: "left",
-      padding: 18,
-      color: "#6b7280",
-      fontSize: 13,
-      borderBottom: "1px solid #eef0f4",
-      background: "#f9fafb",
-      fontWeight: 900,
-      textTransform: "uppercase",
-      letterSpacing: "0.04em",
-    },
+    lockPanel: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr auto", gap: 10, marginTop: 12 },
+    primaryButton: { background: isDiscountUnlocked ? "#16a34a" : "#f97316", color: "#ffffff", border: "none", borderRadius: 14, padding: "12px 16px", cursor: "pointer", fontWeight: 900, whiteSpace: "nowrap", boxShadow: isDiscountUnlocked ? "0 12px 28px rgba(22,163,74,0.22)" : "0 12px 28px rgba(249,115,22,0.24)" },
+    resetButton: { marginTop: 10, width: "100%", background: "#fff1f2", color: "#e11d48", border: "1px solid #ffe4e6", borderRadius: 14, padding: "11px 12px", cursor: isDiscountUnlocked ? "pointer" : "not-allowed", fontWeight: 800, opacity: isDiscountUnlocked ? 1 : 0.48 },
+    lockStatus: { display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 11px", borderRadius: 999, background: isDiscountUnlocked ? "#dcfce7" : "#fff1f2", color: isDiscountUnlocked ? "#15803d" : "#e11d48", fontSize: 13, fontWeight: 900, marginBottom: 12, border: isDiscountUnlocked ? "1px solid #bbf7d0" : "1px solid #ffe4e6" },
+    tableWrap: { display: isMobile ? "none" : "block", background: "#ffffff", border: "1px solid #eef0f4", borderRadius: 26, overflowX: "auto", boxShadow: "0 24px 60px rgba(15, 23, 42, 0.08)" },
+    table: { width: "100%", minWidth: 1080, borderCollapse: "collapse" },
+    th: { textAlign: "left", padding: 18, color: "#6b7280", fontSize: 13, borderBottom: "1px solid #eef0f4", background: "#f9fafb", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.04em" },
     td: { padding: 18, borderBottom: "1px solid #f1f5f9", color: "#374151" },
-    badge: {
-      display: "inline-block",
-      padding: "7px 12px",
-      borderRadius: 999,
-      background: "#fff1e7",
-      color: "#ea580c",
-      fontSize: 13,
-      fontWeight: 800,
-      border: "1px solid rgba(249,115,22,0.12)",
-    },
+    badge: { display: "inline-block", padding: "7px 12px", borderRadius: 999, background: "#fff1e7", color: "#ea580c", fontSize: 13, fontWeight: 800, border: "1px solid rgba(249,115,22,0.12)" },
     price: { color: "#ea580c", fontWeight: 900, fontSize: 17 },
-    miniInput: {
-      width: 90,
-      background: "#f8fafc",
-      color: "#111827",
-      border: "1px solid #e5e7eb",
-      borderRadius: 12,
-      padding: "10px 10px",
-      outline: "none",
-      fontSize: 15,
-      boxSizing: "border-box",
-      fontWeight: 800,
-    },
+    miniInput: { width: 90, background: "#f8fafc", color: "#111827", border: "1px solid #e5e7eb", borderRadius: 12, padding: "10px 10px", outline: "none", fontSize: 15, boxSizing: "border-box", fontWeight: 800 },
+    addButton: { background: "#f97316", color: "#ffffff", border: "none", borderRadius: 999, padding: "10px 13px", cursor: "pointer", fontWeight: 900, whiteSpace: "nowrap", boxShadow: "0 10px 24px rgba(249,115,22,0.2)" },
     mobileList: { display: isMobile ? "grid" : "none", gap: 12 },
-    mobileCategoryHeader: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      gap: 10,
-      background: "linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)",
-      border: "1px solid #fed7aa",
-      borderRadius: 18,
-      padding: "13px 14px",
-      color: "#111827",
-      fontWeight: 900,
-      boxShadow: "0 10px 26px rgba(249,115,22,0.1)",
-      cursor: "pointer",
-    },
-    productCard: {
-      background: "#ffffff",
-      border: "1px solid #eef0f4",
-      borderRadius: 22,
-      padding: 16,
-      boxShadow: "0 16px 40px rgba(15, 23, 42, 0.07)",
-    },
+    mobileCategoryHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, background: "linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)", border: "1px solid #fed7aa", borderRadius: 18, padding: "13px 14px", color: "#111827", fontWeight: 900, boxShadow: "0 10px 26px rgba(249,115,22,0.1)", cursor: "pointer" },
+    productCard: { background: "#ffffff", border: "1px solid #eef0f4", borderRadius: 22, padding: 16, boxShadow: "0 16px 40px rgba(15, 23, 42, 0.07)" },
     productName: { fontSize: 17, fontWeight: 900, lineHeight: 1.35, marginBottom: 10, color: "#111827" },
-    mobileRow: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      gap: 12,
-      padding: "9px 0",
-      borderBottom: "1px solid #f1f5f9",
-      color: "#4b5563",
-      fontSize: 14,
-    },
-    featureGrid: {
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr 1fr" : "repeat(3, 1fr)",
-      gap: isMobile ? 12 : 16,
-      marginTop: isMobile ? 16 : 24,
-    },
+    mobileRow: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid #f1f5f9", color: "#4b5563", fontSize: 14 },
+    cartPanel: { marginTop: isMobile ? 16 : 24, background: "#ffffff", border: "1px solid #eef0f4", borderRadius: isMobile ? 22 : 28, padding: isMobile ? 16 : 22, boxShadow: "0 24px 60px rgba(15,23,42,0.08)" },
+    cartHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 },
+    cartTitle: { fontSize: isMobile ? 22 : 28, fontWeight: 950, color: "#111827", margin: 0 },
+    cartActions: { display: "flex", gap: 10, flexWrap: "wrap" },
+    clearButton: { background: "#fff1f2", color: "#e11d48", border: "1px solid #ffe4e6", borderRadius: 999, padding: "10px 14px", cursor: "pointer", fontWeight: 900 },
+    pdfButton: { background: "#111827", color: "#ffffff", border: "none", borderRadius: 999, padding: "10px 14px", cursor: "pointer", fontWeight: 900 },
+    emptyCart: { background: "#f8fafc", border: "1px dashed #cbd5e1", borderRadius: 18, padding: 18, textAlign: "center", color: "#64748b", fontWeight: 800 },
+    cartTableWrap: { overflowX: "auto", border: "1px solid #eef0f4", borderRadius: 18 },
+    cartTable: { width: "100%", minWidth: 820, borderCollapse: "collapse" },
+    qtyInput: { width: 78, background: "#f8fafc", color: "#111827", border: "1px solid #e5e7eb", borderRadius: 12, padding: "9px 10px", outline: "none", fontWeight: 900 },
+    removeButton: { background: "#ffffff", color: "#e11d48", border: "1px solid #ffe4e6", borderRadius: 999, padding: "8px 12px", cursor: "pointer", fontWeight: 900 },
+    cartSummary: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr auto", gap: 12, alignItems: "center", marginTop: 16, background: "linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)", border: "1px solid #fed7aa", borderRadius: 20, padding: isMobile ? 14 : 18 },
+    cartSummaryText: { color: "#6b7280", fontWeight: 800, lineHeight: 1.5 },
+    cartSummaryTotal: { color: "#ea580c", fontSize: isMobile ? 24 : 30, fontWeight: 950, textAlign: isMobile ? "left" : "right" },
+    formGrid: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12, marginBottom: 14 },
+    featureGrid: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr 1fr" : "repeat(3, 1fr)", gap: isMobile ? 12 : 16, marginTop: isMobile ? 16 : 24 },
     featureTitle: { fontSize: isMobile ? 17 : 20, fontWeight: 900, marginBottom: 10, color: "#111827" },
     featureText: { color: "#6b7280", lineHeight: 1.7, fontSize: isMobile ? 13 : 14 },
     footer: { textAlign: "center", color: "#9ca3af", marginTop: 30, paddingBottom: 20, fontSize: 13 },
@@ -779,6 +580,7 @@ export default function App() {
           /> <span>%</span>
         </td>
         <td style={{ ...s.td, ...s.price }}>{formatPrice(finalPrice)}</td>
+        <td style={s.td}><button style={s.addButton} onClick={() => addToCart(item)}>+ Giỏ hàng</button></td>
       </tr>
     );
   };
@@ -805,10 +607,11 @@ export default function App() {
             /> %
           </span>
         </div>
-        <div style={{ ...s.mobileRow, borderBottom: "none" }}>
+        <div style={s.mobileRow}>
           <span>Final Price</span>
           <strong style={{ color: "#ea580c", fontSize: 16 }}>{formatPrice(finalPrice)}</strong>
         </div>
+        <button style={{ ...s.addButton, width: "100%", marginTop: 12 }} onClick={() => addToCart(item)}>+ Thêm vào giỏ hàng</button>
       </div>
     );
   };
@@ -816,65 +619,6 @@ export default function App() {
   return (
     <div style={s.page}>
       <div style={s.container}>
-        <section style={s.landingHero}>
-          <div>
-            <div style={s.landingBadge}>✨ SEADENT DIGITAL QUOTATION</div>
-            <h1 style={s.landingTitle}>
-              Báo giá nhanh, <span style={s.landingHighlight}>chính xác</span> và chuyên nghiệp hơn.
-            </h1>
-            <div style={s.landingText}>
-              Quản lý danh sách sản phẩm, tra cứu giá, chỉnh chiết khấu và đồng bộ dữ liệu Google Sheet trong một giao diện hiện đại cho đội ngũ SEADENT.
-            </div>
-            <div style={s.landingActions}>
-              <button style={s.landingPrimary} onClick={scrollToProducts}>Bắt đầu báo giá</button>
-              <button style={s.landingSecondary} onClick={() => setSearch("")}>Xem toàn bộ sản phẩm</button>
-            </div>
-          </div>
-
-          <div style={s.landingVisual}>
-            <div style={s.visualBlob}></div>
-            <div style={s.visualPanel}>
-              <div style={s.visualTopBar}>
-                <div style={s.visualDots}>
-                  <span style={s.visualDot}></span>
-                  <span style={{ ...s.visualDot, background: "#fdba74" }}></span>
-                  <span style={{ ...s.visualDot, background: "#fb923c" }}></span>
-                </div>
-                <img src="/logo.png" alt="SEADENT" style={s.visualMiniLogo} />
-              </div>
-
-              <div style={s.visualMetricGrid}>
-                <div style={s.visualMetric}>
-                  <div style={s.visualMetricLabel}>PRODUCTS</div>
-                  <div style={s.visualMetricValue}>{products.length}</div>
-                </div>
-                <div style={s.visualMetric}>
-                  <div style={s.visualMetricLabel}>QUOTE TOTAL</div>
-                  <div style={{ ...s.visualMetricValue, color: "#ea580c" }}>{formatPrice(totalValue)}</div>
-                </div>
-              </div>
-
-              <div style={s.visualList}>
-                {filteredProducts.slice(0, 3).map((item) => {
-                  const discount = getDiscount(item.id);
-                  const finalPrice = calculateFinalPrice(item.price, discount);
-                  return (
-                    <div style={s.visualRow} key={`visual-${item.id}`}>
-                      <div style={s.visualProduct}>{item.name}</div>
-                      <div style={s.visualPrice}>{formatPrice(finalPrice)}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div style={s.visualFloatingCard}>
-              <div style={s.floatingLabel}>SYNC STATUS</div>
-              <div style={s.floatingValue}>Google Sheet Ready</div>
-            </div>
-          </div>
-        </section>
-
         <div style={s.hero}>
           <div style={s.header}>
             <div style={s.brand}>
@@ -894,6 +638,10 @@ export default function App() {
               <div style={s.statCard}>
                 <div style={s.label}>Quote Total</div>
                 <div style={s.total}>{formatPrice(totalValue)}</div>
+              </div>
+              <div style={s.statCard}>
+                <div style={s.label}>Cart Total</div>
+                <div style={s.total}>{formatPrice(cartTotal)}</div>
               </div>
             </div>
           </div>
@@ -971,6 +719,7 @@ export default function App() {
                 <th style={s.th}>List Price</th>
                 <th style={s.th}>Discount</th>
                 <th style={s.th}>Final Price</th>
+                <th style={s.th}>Cart</th>
               </tr>
             </thead>
             <tbody>
@@ -978,7 +727,7 @@ export default function App() {
                 categoryNames.map((category) => (
                   <React.Fragment key={category}>
                     <tr>
-                      <td colSpan="6" style={{ padding: 0 }}>
+                      <td colSpan="7" style={{ padding: 0 }}>
                         <div style={s.categoryHeader} onClick={() => toggleCategory(category)}>
                           <div style={s.categoryTitle}>
                             <span>{collapsedCategories[category] ? "▸" : "▾"}</span>
@@ -1012,6 +761,68 @@ export default function App() {
             ))
           ) : (
             filteredProducts.map(renderMobileProductCard)
+          )}
+        </div>
+
+        <div style={s.cartPanel}>
+          <div style={s.cartHeader}>
+            <div>
+              <h2 style={s.cartTitle}>Giỏ hàng báo giá</h2>
+              <div style={s.syncStatus}>{cartQuantity} sản phẩm đã chọn</div>
+            </div>
+            <div style={s.cartActions}>
+              <button style={s.pdfButton} onClick={exportQuotePdf}>Xuất PDF báo giá</button>
+              <button style={s.clearButton} onClick={clearCart}>Xóa giỏ hàng</button>
+            </div>
+          </div>
+
+          <div style={s.formGrid}>
+            <input style={s.input} placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+            <input style={s.input} placeholder="Ghi chú báo giá" value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} />
+          </div>
+
+          {cartItems.length === 0 ? (
+            <div style={s.emptyCart}>Chưa có sản phẩm trong giỏ hàng. Bấm “+ Giỏ hàng” để thêm sản phẩm vào báo giá.</div>
+          ) : (
+            <>
+              <div style={s.cartTableWrap}>
+                <table style={s.cartTable}>
+                  <thead>
+                    <tr>
+                      <th style={s.th}>Sản phẩm</th>
+                      <th style={s.th}>Đơn giá sau CK</th>
+                      <th style={s.th}>Số lượng</th>
+                      <th style={s.th}>Thành tiền</th>
+                      <th style={s.th}>Xóa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cartItems.map((item) => (
+                      <tr key={`cart-${item.id}`}>
+                        <td style={{ ...s.td, fontWeight: 800 }}>{item.name}</td>
+                        <td style={s.td}>{formatPrice(item.finalPrice)}</td>
+                        <td style={s.td}>
+                          <input
+                            style={s.qtyInput}
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => updateCartQuantity(item.id, e.target.value)}
+                          />
+                        </td>
+                        <td style={{ ...s.td, ...s.price }}>{formatPrice(item.finalPrice * item.quantity)}</td>
+                        <td style={s.td}><button style={s.removeButton} onClick={() => removeFromCart(item.id)}>Xóa</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={s.cartSummary}>
+                <div style={s.cartSummaryText}>Tổng cộng {cartQuantity} sản phẩm trong báo giá</div>
+                <div style={s.cartSummaryTotal}>{formatPrice(cartTotal)}</div>
+              </div>
+            </>
           )}
         </div>
 
