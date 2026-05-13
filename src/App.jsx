@@ -57,17 +57,14 @@ export default function App() {
       flexWrap: "wrap",
     },
     brand: { display: "flex", alignItems: "center", gap: 18 },
-    logoBox: {
-      width: 68,
-      height: 68,
+    logoImage: {
+      width: 72,
+      height: 72,
       borderRadius: 20,
-      background: "rgba(255, 103, 31, 0.18)",
-      color: "#ff6b22",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: 34,
-      fontWeight: 800,
+      objectFit: "contain",
+      background: "#ffffff",
+      padding: 8,
+      boxSizing: "border-box",
     },
     title: { fontSize: 42, fontWeight: 800, margin: 0 },
     subtitle: { color: "#9ca3af", marginTop: 8, fontSize: 16 },
@@ -134,7 +131,7 @@ export default function App() {
       <div style={s.container}>
         <div style={s.header}>
           <div style={s.brand}>
-            <div style={s.logoBox}>S</div>
+            <img src="/logo.png" alt="SEADENT Logo" style={s.logoImage} />
             <div>
               <h1 style={s.title}>SEADENT Quote Center</h1>
               <div style={s.subtitle}>Internal Pricing & Quotation Dashboard</div>
