@@ -1,5 +1,9 @@
 import React from "react";
 
+const GOOGLE_SHEET_ID = "1HAFKnOoIs9VmdlmVuonjNSxpvKfzHlrCJ4l1zQq3HUs";
+const GOOGLE_SHEET_TAB = "products";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhp4Rv3FCzVYziwUx-og_5O47HUaazt79G_0DJsu1Oz1v2fiip1yHYxwg81spFAKRKLg/exec";
+
 export default function App() {
   const [search, setSearch] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -8,15 +12,9 @@ export default function App() {
   });
   const [screenWidth, setScreenWidth] = React.useState(window.innerWidth);
 
-  const [globalDiscount, setGlobalDiscount] = React.useState(() => {
-    const saved = localStorage.getItem("seadent_global_discount");
-    return saved ? Number(saved) : 10;
-  });
+  const [globalDiscount, setGlobalDiscount] = React.useState(10);
 
-  const [discounts, setDiscounts] = React.useState(() => {
-    const saved = localStorage.getItem("seadent_product_discounts");
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [discounts, setDiscounts] = React.useState({});
 
   const [products, setProducts] = React.useState([]);
 
@@ -30,7 +28,7 @@ export default function App() {
   const isTablet = screenWidth <= 1024;
 
   React.useEffect(() => {
-    fetch("https://opensheet.elk.sh/1HAFKnOoIs9VmdlmVuonjNSxpvKfzHlrCJ4l1zQq3HUs/products")
+    fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}`)
       .then((res) => res.json())
       .then((data) => {
         const formatted = data.map((item, index) => ({
@@ -39,22 +37,23 @@ export default function App() {
           category: item.category,
           price: Number(item.price),
           stock: Number(item.stock),
+          discount: Number(item.discount || 0),
         }));
 
         setProducts(formatted);
+
+        const sheetDiscounts = {};
+        formatted.forEach((product) => {
+          sheetDiscounts[product.id] = Number(product.discount || 0);
+        });
+        setDiscounts(sheetDiscounts);
       })
       .catch((err) => {
         console.error("Google Sheet Error:", err);
       });
   }, []);
 
-  React.useEffect(() => {
-    localStorage.setItem("seadent_global_discount", String(globalDiscount));
-  }, [globalDiscount]);
-
-  React.useEffect(() => {
-    localStorage.setItem("seadent_product_discounts", JSON.stringify(discounts));
-  }, [discounts]);
+  
 
   React.useEffect(() => {
     localStorage.setItem("seadent_discount_unlocked", String(isDiscountUnlocked));
@@ -62,16 +61,65 @@ export default function App() {
 
   const formatPrice = (value) => new Intl.NumberFormat("vi-VN").format(value || 0) + " đ";
 
-  const getDiscount = (id) => discounts[id] ?? globalDiscount;
+  const getDiscount = (id) => discounts[id] ?? 0;
 
-  const updateDiscount = (id, value) => {
+  const updateDiscount = async (id, value) => {
     if (!isDiscountUnlocked) return;
-    setDiscounts({ ...discounts, [id]: Number(value) });
+
+    const newDiscount = Number(value);
+    const newDiscounts = { ...discounts, [id]: newDiscount };
+    setDiscounts(newDiscounts);
+
+    const product = products.find((item) => item.id === id);
+    if (!product) return;
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "updateDiscount",
+          id: String(product.id),
+          discount: newDiscount,
+        }),
+      });
+    } catch (error) {
+      console.error("Update discount error:", error);
+      alert("Không thể đồng bộ chiết khấu lên Google Sheet");
+    }
   };
 
-  const handleGlobalDiscountChange = (value) => {
+  const handleGlobalDiscountChange = async (value) => {
     if (!isDiscountUnlocked) return;
-    setGlobalDiscount(Number(value));
+
+    const newGlobalDiscount = Number(value);
+    setGlobalDiscount(newGlobalDiscount);
+
+    const newDiscounts = {};
+    products.forEach((product) => {
+      newDiscounts[product.id] = newGlobalDiscount;
+    });
+    setDiscounts(newDiscounts);
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "updateAllDiscounts",
+          discount: newGlobalDiscount,
+        }),
+      });
+    } catch (error) {
+      console.error("Update all discounts error:", error);
+      alert("Không thể đồng bộ chiết khấu chung lên Google Sheet");
+    }
   };
 
   const unlockDiscount = () => {
@@ -88,16 +136,16 @@ export default function App() {
     setPassword("");
   };
 
+  
+
   const resetSavedDiscounts = () => {
     if (!isDiscountUnlocked) {
       alert("Vui lòng mở khóa trước khi reset chiết khấu");
       return;
     }
 
-    localStorage.removeItem("seadent_global_discount");
-    localStorage.removeItem("seadent_product_discounts");
-    setGlobalDiscount(10);
-    setDiscounts({});
+    setGlobalDiscount(0);
+    handleGlobalDiscountChange(0);
   };
 
   const filteredProducts = products.filter((item) =>
