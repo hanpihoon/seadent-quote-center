@@ -3,7 +3,6 @@ import React from "react";
 const GOOGLE_SHEET_ID = "1HAFKnOoIs9VmdlmVuonjNSxpvKfzHlrCJ4l1zQq3HUs";
 const GOOGLE_SHEET_TAB = "products";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhp4Rv3FCzVYziwUx-og_5O47HUaazt79G_0DJsu1Oz1v2fiip1yHYxwg81spFAKRKLg/exec";
-";
 const DISCOUNT_PASSWORD = "seadent";
 
 const DEMO_PRODUCTS = [
