@@ -66,10 +66,28 @@ export default function App() {
 
   React.useEffect(() => {
     if (!isBrowser()) return undefined;
-    const onResize = () => setWidth(window.innerWidth || 1280);
+
+    let viewport = document.querySelector('meta[name="viewport"]');
+    if (!viewport) {
+      viewport = document.createElement("meta");
+      viewport.setAttribute("name", "viewport");
+      document.head.appendChild(viewport);
+    }
+    viewport.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover");
+
+    const onResize = () => {
+      const safeWidth = Math.min(window.innerWidth || 1280, document.documentElement.clientWidth || 1280);
+      setWidth(safeWidth);
+    };
+
     onResize();
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -99,7 +117,7 @@ export default function App() {
     loadProducts();
   }, []);
 
-  const isPhone = width <= 760;
+  const isPhone = width <= 900 || (isBrowser() && /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent));
   const getDiscount = (id) => discounts[String(id)] ?? 0;
 
   const filtered = products.filter((p) => `${p.name} ${p.category}`.toLowerCase().includes(search.toLowerCase()));
@@ -239,8 +257,8 @@ export default function App() {
   };
 
   const s = {
-    page: { minHeight: "100vh", background: "linear-gradient(135deg,#fff 0%,#f6f7fb 50%,#fff3ea 100%)", color: "#111827", fontFamily: "Arial, Helvetica, sans-serif", padding: isPhone ? 10 : 28, boxSizing: "border-box" },
-    container: { maxWidth: 1280, margin: "0 auto" },
+    page: { minHeight: "100vh", width: "100%", maxWidth: "100vw", overflowX: "hidden", background: "linear-gradient(135deg,#fff 0%,#f6f7fb 50%,#fff3ea 100%)", color: "#111827", fontFamily: "Arial, Helvetica, sans-serif", padding: isPhone ? 10 : 28, boxSizing: "border-box" },
+    container: { maxWidth: isPhone ? "100%" : 1280, margin: "0 auto", overflowX: "hidden" },
     card: { background: "#fff", border: "1px solid #eef0f4", borderRadius: isPhone ? 18 : 22, padding: isPhone ? 14 : 22, boxShadow: "0 18px 45px rgba(15,23,42,.07)" },
     hero: { display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", gap: isPhone ? 16 : 24, alignItems: isPhone ? "stretch" : "center", marginBottom: isPhone ? 14 : 22, background: "linear-gradient(135deg,#fff,#fff7ed)", border: "1px solid #fed7aa", borderRadius: isPhone ? 22 : 28, padding: isPhone ? 16 : 26, boxShadow: "0 24px 65px rgba(15,23,42,.08)" },
     brand: { display: "flex", gap: isPhone ? 12 : 16, alignItems: "center" },
@@ -248,16 +266,16 @@ export default function App() {
     title: { fontSize: isPhone ? 25 : 42, margin: 0, letterSpacing: "-.04em", lineHeight: 1.08 },
     muted: { color: "#6b7280", fontSize: isPhone ? 12 : 14 },
     badge: { display: "inline-block", background: "#fff1e7", color: "#ea580c", padding: "6px 10px", borderRadius: 999, fontWeight: 800, fontSize: 12, marginBottom: 8 },
-    statGrid: { display: "grid", gridTemplateColumns: isPhone ? "repeat(3,1fr)" : "repeat(3,150px)", gap: isPhone ? 8 : 12, width: isPhone ? "100%" : "auto" },
+    statGrid: { display: "grid", gridTemplateColumns: isPhone ? "1fr" : "repeat(3,150px)", gap: isPhone ? 8 : 12, width: isPhone ? "100%" : "auto" },
     stat: { background: "rgba(255,255,255,.9)", border: "1px solid #eef0f4", borderRadius: isPhone ? 14 : 18, padding: isPhone ? 10 : 16, minWidth: 0 },
     statValue: { color: "#ea580c", fontSize: isPhone ? 13 : 22, fontWeight: 900, wordBreak: "break-word" },
-    grid: { display: "grid", gridTemplateColumns: isPhone ? "1fr" : "1fr 360px", gap: isPhone ? 12 : 16, marginBottom: isPhone ? 12 : 18 },
+    grid: { display: "grid", gridTemplateColumns: isPhone ? "minmax(0,1fr)" : "1fr 360px", gap: isPhone ? 12 : 16, marginBottom: isPhone ? 12 : 18, width: "100%" },
     input: { width: "100%", background: "#f8fafc", color: "#111827", border: "1px solid #e5e7eb", borderRadius: 14, padding: isPhone ? "12px" : "12px 14px", outline: "none", boxSizing: "border-box", fontSize: 16 },
     button: { background: "#f97316", color: "#fff", border: "none", borderRadius: 999, padding: isPhone ? "11px 12px" : "10px 14px", cursor: "pointer", fontWeight: 900, fontSize: isPhone ? 13 : 14 },
     secondary: { background: "#fff", color: "#374151", border: "1px solid #e5e7eb", borderRadius: 999, padding: isPhone ? "11px 12px" : "10px 13px", cursor: "pointer", fontWeight: 800, fontSize: isPhone ? 13 : 14 },
     dark: { background: "#111827", color: "#fff", border: "none", borderRadius: 999, padding: isPhone ? "11px 12px" : "10px 14px", cursor: "pointer", fontWeight: 900, fontSize: isPhone ? 13 : 14 },
     danger: { background: "#fff1f2", color: "#e11d48", border: "1px solid #ffe4e6", borderRadius: 999, padding: isPhone ? "11px 12px" : "10px 14px", cursor: "pointer", fontWeight: 900, fontSize: isPhone ? 13 : 14 },
-    toolbar: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 },
+    toolbar: { display: "flex", flexDirection: isPhone ? "column" : "row", gap: 10, flexWrap: "wrap", marginTop: 14 },
     tableWrap: { background: "#fff", border: "1px solid #eef0f4", borderRadius: 22, overflowX: "auto", boxShadow: "0 18px 45px rgba(15,23,42,.07)" },
     table: { width: "100%", borderCollapse: "collapse" },
     th: { textAlign: "left", padding: 14, background: "#f9fafb", color: "#6b7280", fontSize: 12, textTransform: "uppercase", whiteSpace: "nowrap" },
@@ -268,9 +286,9 @@ export default function App() {
     price: { color: "#ea580c", fontWeight: 900 },
     mobileList: { display: "grid", gap: 12, marginTop: 12 },
     mobileCategory: { background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 16, padding: "12px 14px", fontWeight: 900, color: "#111827", display: "flex", justifyContent: "space-between", alignItems: "center" },
-    productCard: { background: "#fff", border: "1px solid #eef0f4", borderRadius: 18, padding: 14, boxShadow: "0 14px 32px rgba(15,23,42,.07)" },
+    productCard: { background: "#fff", border: "1px solid #eef0f4", borderRadius: 18, padding: 14, boxShadow: "0 14px 32px rgba(15,23,42,.07)", width: "100%", boxSizing: "border-box" },
     productName: { fontSize: 16, fontWeight: 900, color: "#111827", lineHeight: 1.35, marginBottom: 8 },
-    mobileLine: { display: "flex", justifyContent: "space-between", gap: 12, padding: "8px 0", borderBottom: "1px solid #f1f5f9", color: "#4b5563", fontSize: 13 },
+    mobileLine: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: "1px solid #f1f5f9", color: "#4b5563", fontSize: 13 },
     mobileValue: { fontWeight: 900, color: "#111827", textAlign: "right" },
     cart: { marginTop: isPhone ? 14 : 22, marginBottom: isPhone ? 116 : 0, scrollMarginTop: 12 },
     cartHeader: { display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", alignItems: isPhone ? "stretch" : "center", gap: 12, marginBottom: 14 },
@@ -351,8 +369,8 @@ export default function App() {
           <div style={s.card}>
             <input style={s.input} placeholder="Tìm nhanh sản phẩm..." value={search} onChange={(e) => setSearch(e.target.value)} />
             <div style={s.toolbar}>
-              <button style={isGrouped ? s.button : s.secondary} onClick={() => setIsGrouped(!isGrouped)}>{isGrouped ? "✓ Group by Category" : "Group by Category"}</button>
-              {isGrouped && <><button style={s.secondary} onClick={() => setCollapsed({})}>Expand all</button><button style={s.secondary} onClick={() => setCollapsed(Object.fromEntries(categories.map((c) => [c, true])))}>Collapse all</button></>}
+              <button style={{ ...(isGrouped ? s.button : s.secondary), width: isPhone ? "100%" : "auto" }} onClick={() => setIsGrouped(!isGrouped)}>{isGrouped ? "✓ Group by Category" : "Group by Category"}</button>
+              {isGrouped && <><button style={{ ...s.secondary, width: isPhone ? "100%" : "auto" }} onClick={() => setCollapsed({})}>Expand all</button><button style={{ ...s.secondary, width: isPhone ? "100%" : "auto" }} onClick={() => setCollapsed(Object.fromEntries(categories.map((c) => [c, true])))}>Collapse all</button></>}
             </div>
             <div style={{ ...s.muted, marginTop: 12 }}>{syncStatus}</div>
           </div>
