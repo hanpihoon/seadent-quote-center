@@ -1,194 +1,382 @@
 import React from "react";
 
+const GOOGLE_SHEET_ID = "1HAFKnOoIs9VmdlmVuonjNSxpvKfzHlrCJ4l1zQq3HUs";
+const GOOGLE_SHEET_TAB = "products";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhp4Rv3FCzVYziwUx-og_5O47HUaazt79G_0DJsu1Oz1v2fiip1yHYxwg81spFAKRKLg/exec";
+const DISCOUNT_PASSWORD = "seadent";
+
+const DEMO_PRODUCTS = [
+  { id: "1", name: "Planmeca Compact i5", category: "Dental Unit", price: 450000000, stock: 3, discount: 10 },
+  { id: "2", name: "Belmont Clesta eIII", category: "Dental Unit", price: 390000000, stock: 2, discount: 12 },
+  { id: "3", name: "Durr VS 1200", category: "Suction", price: 89000000, stock: 8, discount: 8 },
+  { id: "4", name: "Melag Vacuklav", category: "Sterilization", price: 125000000, stock: 4, discount: 15 },
+];
+
+const money = (value) => `${new Intl.NumberFormat("vi-VN").format(Number(value) || 0)} đ`;
+const num = (value, fallback = 0) => (Number.isFinite(Number(value)) ? Number(value) : fallback);
+const finalPrice = (price, discount) => num(price) - (num(price) * num(discount)) / 100;
+const isBrowser = () => typeof window !== "undefined";
+
+const getLocal = (key, fallback) => {
+  if (!isBrowser()) return fallback;
+  try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
+};
+
+const setLocal = (key, value) => {
+  if (!isBrowser()) return;
+  try { localStorage.setItem(key, value); } catch {}
+};
+
+const normalizeProduct = (item, index) => ({
+  id: String(item.id || item.name || index + 1),
+  name: String(item.name || "Unnamed product"),
+  category: String(item.category || "Uncategorized"),
+  price: num(item.price),
+  stock: num(item.stock),
+  discount: num(item.discount),
+});
+
 export default function App() {
-  const [search, setSearch] = React.useState("");
-  const [globalDiscount, setGlobalDiscount] = React.useState(10);
+  const [products, setProducts] = React.useState(DEMO_PRODUCTS);
   const [discounts, setDiscounts] = React.useState({});
+  const [cart, setCart] = React.useState({});
+  const [search, setSearch] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [syncStatus, setSyncStatus] = React.useState("Đang tải dữ liệu...");
+  const [globalDiscount, setGlobalDiscount] = React.useState(10);
+  const [collapsedCategories, setCollapsedCategories] = React.useState({});
+  const [customerName, setCustomerName] = React.useState("");
+  const [customerPhone, setCustomerPhone] = React.useState("");
+  const [customerAddress, setCustomerAddress] = React.useState("");
+  const [customerNote, setCustomerNote] = React.useState("");
+  const [isUnlocked, setIsUnlocked] = React.useState(() => getLocal("seadent_discount_unlocked", "false") === "true");
+  const [isGrouped, setIsGrouped] = React.useState(() => getLocal("seadent_group_by_category", "true") === "true");
+  const [width, setWidth] = React.useState(() => (isBrowser() ? window.innerWidth : 1280));
 
-  const products = [
-    { id: 1, name: "Planmeca Compact i5", category: "Dental Unit", price: 450000000, stock: 3 },
-    { id: 2, name: "Belmont Clesta eIII", category: "Dental Unit", price: 390000000, stock: 2 },
-    { id: 3, name: "Durr VS 1200", category: "Suction", price: 89000000, stock: 8 },
-    { id: 4, name: "Melag Vacuklav", category: "Sterilization", price: 125000000, stock: 4 },
-  ];
+  React.useEffect(() => {
+    setLocal("seadent_discount_unlocked", String(isUnlocked));
+  }, [isUnlocked]);
 
-  const formatPrice = (value) => new Intl.NumberFormat("vi-VN").format(value) + " đ";
-  const getDiscount = (id) => discounts[id] ?? globalDiscount;
-  const updateDiscount = (id, value) => setDiscounts({ ...discounts, [id]: Number(value) });
+  React.useEffect(() => {
+    setLocal("seadent_group_by_category", String(isGrouped));
+  }, [isGrouped]);
 
-  const filteredProducts = products.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase())
+  React.useEffect(() => {
+    if (!isBrowser()) return undefined;
+    const onResize = () => setWidth(window.innerWidth || 1280);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  React.useEffect(() => {
+    async function loadProducts() {
+      if (GOOGLE_SHEET_ID === "GOOGLE_SHEET_ID") {
+        const demoDiscounts = Object.fromEntries(DEMO_PRODUCTS.map((p) => [p.id, p.discount]));
+        setDiscounts(demoDiscounts);
+        setSyncStatus("Đang dùng dữ liệu demo. Hãy thay GOOGLE_SHEET_ID để đồng bộ Google Sheet.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const formatted = data.map(normalizeProduct).filter((p) => p.name);
+        const sheetDiscounts = Object.fromEntries(formatted.map((p) => [p.id, p.discount]));
+        setProducts(formatted);
+        setDiscounts(sheetDiscounts);
+        setSyncStatus("Đã đồng bộ dữ liệu từ Google Sheet");
+      } catch (error) {
+        console.error("Google Sheet Error:", error);
+        const demoDiscounts = Object.fromEntries(DEMO_PRODUCTS.map((p) => [p.id, p.discount]));
+        setProducts(DEMO_PRODUCTS);
+        setDiscounts(demoDiscounts);
+        setSyncStatus("Không tải được Google Sheet. Đang dùng dữ liệu demo để web không bị lỗi.");
+      }
+    }
+    loadProducts();
+  }, []);
+
+  const getDiscount = (id) => discounts[String(id)] ?? 0;
+
+  const syncDiscount = async (payload) => {
+    if (GOOGLE_SCRIPT_URL === "GOOGLE_APPS_SCRIPT_WEB_APP_URL") {
+      setSyncStatus("Chưa cấu hình GOOGLE_SCRIPT_URL. Thay đổi chỉ hiển thị trên web hiện tại.");
+      return;
+    }
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      setSyncStatus("Đã gửi cập nhật chiết khấu lên Google Sheet");
+    } catch (error) {
+      console.error(error);
+      setSyncStatus("Không thể đồng bộ chiết khấu lên Google Sheet");
+    }
+  };
+
+  const updateDiscount = async (id, value) => {
+    if (!isUnlocked) return;
+    const productId = String(id);
+    const discount = num(value);
+    setDiscounts((prev) => ({ ...prev, [productId]: discount }));
+    setCart((prev) => {
+      if (!prev[productId]) return prev;
+      return { ...prev, [productId]: { ...prev[productId], discount, finalPrice: finalPrice(prev[productId].price, discount) } };
+    });
+    await syncDiscount({ action: "updateDiscount", id: productId, discount });
+  };
+
+  const applyGlobalDiscount = async (value) => {
+    if (!isUnlocked) return;
+    const discount = num(value);
+    setGlobalDiscount(discount);
+    setDiscounts(Object.fromEntries(products.map((p) => [p.id, discount])));
+    setCart((prev) => Object.fromEntries(Object.values(prev).map((item) => [item.id, { ...item, discount, finalPrice: finalPrice(item.price, discount) }])));
+    await syncDiscount({ action: "updateAllDiscounts", discount });
+  };
+
+  const unlockDiscount = () => {
+    if (password !== DISCOUNT_PASSWORD) return alert("Sai mật khẩu mở khóa chiết khấu");
+    setIsUnlocked(true);
+    setPassword("");
+    setSyncStatus("Đã mở khóa chỉnh sửa chiết khấu");
+  };
+
+  const filteredProducts = products.filter((p) =>
+    `${p.name} ${p.category}`.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalValue = filteredProducts.reduce((acc, item) => {
-    const discount = getDiscount(item.id);
-    return acc + (item.price - (item.price * discount) / 100);
-  }, 0);
+  const groupedProducts = filteredProducts.reduce((groups, product) => {
+    const category = product.category || "Uncategorized";
+    groups[category] = groups[category] || [];
+    groups[category].push(product);
+    return groups;
+  }, {});
 
-  const s = {
-    page: {
-      minHeight: "100vh",
-      background: "#0b0f19",
-      color: "#ffffff",
-      fontFamily: "Arial, Helvetica, sans-serif",
-      padding: 28,
-    },
-    container: { maxWidth: 1200, margin: "0 auto" },
-    header: {
-      display: "flex",
-      justifyContent: "space-between",
-      gap: 24,
-      alignItems: "center",
-      marginBottom: 28,
-      flexWrap: "wrap",
-    },
-    brand: { display: "flex", alignItems: "center", gap: 18 },
-    logoBox: {
-      width: 68,
-      height: 68,
-      borderRadius: 20,
-      background: "rgba(255, 103, 31, 0.18)",
-      color: "#ff6b22",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: 34,
-      fontWeight: 800,
-    },
-    title: { fontSize: 42, fontWeight: 800, margin: 0 },
-    subtitle: { color: "#9ca3af", marginTop: 8, fontSize: 16 },
-    statGrid: { display: "grid", gridTemplateColumns: "repeat(2, minmax(170px, 1fr))", gap: 16 },
-    card: {
-      background: "#141b2d",
-      border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: 24,
-      padding: 22,
-      boxShadow: "0 18px 40px rgba(0,0,0,0.22)",
-    },
-    label: { color: "#9ca3af", fontSize: 14, marginBottom: 8 },
-    statNumber: { fontSize: 30, fontWeight: 800 },
-    total: { fontSize: 22, fontWeight: 800, color: "#4ade80" },
-    toolbar: { display: "grid", gridTemplateColumns: "1fr 260px", gap: 16, marginBottom: 24 },
-    input: {
-      width: "100%",
-      background: "#1b2337",
-      color: "#fff",
-      border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: 16,
-      padding: "14px 16px",
-      outline: "none",
-      fontSize: 16,
-      boxSizing: "border-box",
-    },
-    tableWrap: {
-      background: "#141b2d",
-      border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: 24,
-      overflowX: "auto",
-      boxShadow: "0 18px 40px rgba(0,0,0,0.22)",
-    },
-    table: { width: "100%", minWidth: 900, borderCollapse: "collapse" },
-    th: { textAlign: "left", padding: 18, color: "#9ca3af", fontSize: 14, borderBottom: "1px solid rgba(255,255,255,0.08)" },
-    td: { padding: 18, borderBottom: "1px solid rgba(255,255,255,0.06)", color: "#e5e7eb" },
-    badge: {
-      display: "inline-block",
-      padding: "6px 12px",
-      borderRadius: 999,
-      background: "rgba(99,102,241,0.18)",
-      color: "#a5b4fc",
-      fontSize: 13,
-    },
-    price: { color: "#4ade80", fontWeight: 800, fontSize: 17 },
-    miniInput: {
-      width: 90,
-      background: "#1b2337",
-      color: "#fff",
-      border: "1px solid rgba(255,255,255,0.1)",
-      borderRadius: 12,
-      padding: "9px 10px",
-      outline: "none",
-      fontSize: 15,
-    },
-    featureGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 24 },
-    featureTitle: { fontSize: 20, fontWeight: 800, marginBottom: 10 },
-    featureText: { color: "#9ca3af", lineHeight: 1.7, fontSize: 14 },
-    footer: { textAlign: "center", color: "#6b7280", marginTop: 36, paddingBottom: 20 },
+  const categories = Object.keys(groupedProducts).sort((a, b) => a.localeCompare(b));
+  const isPhone = width <= 760;
+  const quoteTotal = filteredProducts.reduce((sum, p) => sum + finalPrice(p.price, getDiscount(p.id)), 0);
+  const cartItems = Object.values(cart);
+  const cartQty = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotalBeforeDiscount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const cartTotal = cartItems.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0);
+  const cartDiscountTotal = cartTotalBeforeDiscount - cartTotal;
+
+  const addToCart = (product) => {
+    const id = String(product.id);
+    const discount = getDiscount(id);
+    setCart((prev) => ({
+      ...prev,
+      [id]: {
+        id,
+        name: product.name,
+        category: product.category,
+        price: product.price,
+        discount,
+        finalPrice: finalPrice(product.price, discount),
+        quantity: (prev[id]?.quantity || 0) + 1,
+      },
+    }));
+  };
+
+  const updateQty = (id, quantity) => {
+    const safeQty = Math.max(1, num(quantity, 1));
+    setCart((prev) => ({ ...prev, [id]: { ...prev[id], quantity: safeQty } }));
+  };
+
+  const removeFromCart = (id) => {
+    setCart((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const exportQuotePdf = () => {
+    if (!isBrowser()) return;
+    if (!cartItems.length) return alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi xuất PDF");
+
+    const rows = cartItems.map((item, index) => `
+      <tr>
+        <td>${index + 1}</td><td>${item.name}</td><td>${item.category}</td>
+        <td>${money(item.price)}</td><td>${item.discount}%</td><td>${money(item.finalPrice)}</td>
+        <td>${item.quantity}</td><td>${money(item.finalPrice * item.quantity)}</td>
+      </tr>`).join("");
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(`
+      <!doctype html><html><head><title>SEADENT Quotation</title>
+      <style>
+        body{font-family:Arial,sans-serif;color:#111827;padding:28px} .header{display:flex;justify-content:space-between;border-bottom:3px solid #f97316;padding-bottom:16px;margin-bottom:20px}
+        .brand{font-size:24px;font-weight:900;color:#f97316}.sub{color:#6b7280;line-height:1.5}.meta{text-align:right;line-height:1.6} h2{text-align:center;margin:24px 0}
+        .customer{background:#fff7ed;border:1px solid #fed7aa;padding:14px;border-radius:12px;margin-bottom:18px;line-height:1.8}
+        table{width:100%;border-collapse:collapse} th{background:#f97316;color:white;padding:9px;font-size:12px;text-align:left} td{border-bottom:1px solid #e5e7eb;padding:9px;font-size:12px}
+        .summary{width:520px;margin-left:auto;margin-top:22px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden}.sumrow{display:grid;grid-template-columns:220px 1fr;gap:18px;align-items:center;padding:10px 14px;border-bottom:1px solid #e5e7eb;font-size:13px}.sumrow:last-child{border-bottom:none}.sumlabel{color:#374151;font-weight:800;white-space:nowrap}.sumvalue{font-weight:900;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.sumfinal{background:#fff7ed;color:#f97316;font-size:17px}.sumfinal .sumvalue{font-size:20px}.total{text-align:right;margin-top:22px;font-size:24px;font-weight:900;color:#f97316}.signature{display:flex;justify-content:space-between;margin-top:55px;text-align:center}
+        @media print{body{padding:18px}}
+      </style></head><body>
+      <div class="header"><div style="display:flex;gap:14px"><img src="/logo.png" style="width:82px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0901371516 · Email: info@seadent.com.vn · Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
+      <h2>BẢNG BÁO GIÁ</h2>
+      <div class="customer"><b>Tên khách hàng:</b> ${customerName || "........................"}<br/><b>Số điện thoại:</b> ${customerPhone || "........................"}<br/><b>Địa chỉ:</b> ${customerAddress || "........................"}<br/><b>Ghi chú:</b> ${customerNote || "Không có"}</div>
+      <table><thead><tr><th>#</th><th>Sản phẩm</th><th>Danh mục</th><th>Giá niêm yết</th><th>CK</th><th>Đơn giá sau CK</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="summary">
+        <div class="sumrow"><div class="sumlabel">Tổng tiền trước chiết khấu</div><div class="sumvalue">${money(cartTotalBeforeDiscount)}</div></div>
+        <div class="sumrow"><div class="sumlabel">Tổng tiền chiết khấu</div><div class="sumvalue">${money(cartDiscountTotal)}</div></div>
+        <div class="sumrow sumfinal"><div class="sumlabel">Tổng cộng sau chiết khấu</div><div class="sumvalue">${money(cartTotal)}</div></div>
+      </div>
+      <div style="margin-top:18px;padding:14px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;color:#7c2d12;line-height:1.8;font-size:13px">
+      <div><b>• Giá trên đã bao gồm thuế GTGT</b></div>
+      <div><b>• Chất lượng hàng hoá mới 100%</b></div>
+      </div>
+      <div style="margin-top:16px;color:#6b7280">Báo giá được tạo từ SEADENT Quote Center.</div>
+      <div class="signature"><div><b>Khách hàng</b><br/><br/><br/>........................</div><div><b>Nhân viên phụ trách</b><br/><br/><br/>........................</div><div><b>Giám đốc kinh doanh</b><br/><br/><br/>........................</div></div>
+      <script>window.onload=function(){window.print()}</script></body></html>`);
+    win.document.close();
+  };
+
+  const styles = {
+    page: { minHeight: "100vh", background: "linear-gradient(135deg,#fff 0%,#f6f7fb 50%,#fff3ea 100%)", color: "#111827", fontFamily: "Arial, Helvetica, sans-serif", padding: isPhone ? 10 : 28, boxSizing: "border-box" },
+    container: { maxWidth: 1280, margin: "0 auto" },
+    card: { background: "#fff", border: "1px solid #eef0f4", borderRadius: isPhone ? 18 : 22, padding: isPhone ? 14 : 22, boxShadow: "0 18px 45px rgba(15,23,42,.07)" },
+    hero: { display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", gap: isPhone ? 16 : 24, alignItems: isPhone ? "stretch" : "center", marginBottom: isPhone ? 14 : 22, background: "linear-gradient(135deg,#fff,#fff7ed)", border: "1px solid #fed7aa", borderRadius: isPhone ? 22 : 28, padding: isPhone ? 16 : 26, boxShadow: "0 24px 65px rgba(15,23,42,.08)" },
+    brand: { display: "flex", gap: isPhone ? 12 : 16, alignItems: "center" },
+    logo: { width: isPhone ? 54 : 72, height: isPhone ? 54 : 72, objectFit: "contain", background: "#fff", borderRadius: isPhone ? 16 : 20, padding: 8, border: "1px solid #fed7aa" },
+    title: { fontSize: isPhone ? 26 : 42, margin: 0, letterSpacing: "-.04em", lineHeight: 1.08 },
+    muted: { color: "#6b7280", fontSize: isPhone ? 12 : 14 },
+    badge: { display: "inline-block", background: "#fff1e7", color: "#ea580c", padding: "6px 10px", borderRadius: 999, fontWeight: 800, fontSize: 12, marginBottom: 8 },
+    statGrid: { display: "grid", gridTemplateColumns: isPhone ? "repeat(3,1fr)" : "repeat(3,150px)", gap: isPhone ? 8 : 12, width: isPhone ? "100%" : "auto" },
+    stat: { background: "rgba(255,255,255,.9)", border: "1px solid #eef0f4", borderRadius: isPhone ? 14 : 18, padding: isPhone ? 10 : 16, minWidth: 0 },
+    statValue: { color: "#ea580c", fontSize: isPhone ? 14 : 22, fontWeight: 900, wordBreak: "break-word" },
+    grid: { display: "grid", gridTemplateColumns: isPhone ? "1fr" : "1fr 360px", gap: isPhone ? 12 : 16, marginBottom: isPhone ? 12 : 18 },
+    input: { width: "100%", background: "#f8fafc", color: "#111827", border: "1px solid #e5e7eb", borderRadius: 14, padding: isPhone ? "12px 12px" : "12px 14px", outline: "none", boxSizing: "border-box", fontSize: 16 },
+    button: { background: "#f97316", color: "#fff", border: "none", borderRadius: 999, padding: isPhone ? "10px 12px" : "10px 14px", cursor: "pointer", fontWeight: 900, fontSize: isPhone ? 13 : 14 },
+    secondaryBtn: { background: "#fff", color: "#374151", border: "1px solid #e5e7eb", borderRadius: 999, padding: isPhone ? "10px 12px" : "10px 13px", cursor: "pointer", fontWeight: 800, fontSize: isPhone ? 13 : 14 },
+    darkBtn: { background: "#111827", color: "#fff", border: "none", borderRadius: 999, padding: isPhone ? "10px 12px" : "10px 14px", cursor: "pointer", fontWeight: 900, fontSize: isPhone ? 13 : 14 },
+    dangerBtn: { background: "#fff1f2", color: "#e11d48", border: "1px solid #ffe4e6", borderRadius: 999, padding: isPhone ? "10px 12px" : "10px 14px", cursor: "pointer", fontWeight: 900, fontSize: isPhone ? 13 : 14 },
+    toolbar: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 },
+    tableWrap: { background: "#fff", border: "1px solid #eef0f4", borderRadius: isPhone ? 18 : 22, overflowX: "auto", WebkitOverflowScrolling: "touch", boxShadow: "0 18px 45px rgba(15,23,42,.07)" },
+    table: { width: "100%", minWidth: isPhone ? 920 : "auto", borderCollapse: "collapse" },
+    th: { textAlign: "left", padding: isPhone ? 10 : 14, background: "#f9fafb", color: "#6b7280", fontSize: isPhone ? 11 : 12, textTransform: "uppercase", whiteSpace: "nowrap" },
+    td: { padding: isPhone ? 10 : 14, borderTop: "1px solid #f1f5f9", color: "#374151", fontSize: isPhone ? 12 : 14 },
+    category: { display: "flex", justifyContent: "space-between", padding: isPhone ? "12px 14px" : "14px 18px", background: "#fff7ed", cursor: "pointer", fontWeight: 900, color: "#111827", fontSize: isPhone ? 13 : 14 },
+    tag: { background: "#fff1e7", color: "#ea580c", borderRadius: 999, padding: isPhone ? "5px 8px" : "6px 10px", fontWeight: 800, fontSize: isPhone ? 11 : 12, whiteSpace: "nowrap" },
+    miniInput: { width: 82, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, padding: 8, fontWeight: 800 },
+    price: { color: "#ea580c", fontWeight: 900 },
+    cart: { marginTop: 22 },
+    cartHeader: { display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", alignItems: isPhone ? "stretch" : "center", gap: 12, marginBottom: 14 },
+    formGrid: { display: "grid", gridTemplateColumns: isPhone ? "1fr" : "repeat(4,1fr)", gap: 12, marginBottom: 14 },
+    summary: { display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", alignItems: isPhone ? "stretch" : "center", gap: isPhone ? 10 : 0, marginTop: 16, background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 18, padding: isPhone ? 14 : 16 },
+    footer: { textAlign: "center", color: "#9ca3af", marginTop: 28, fontSize: 13, paddingBottom: isPhone ? 18 : 0 },
+  };
+
+  const ProductRow = ({ product }) => {
+    const discount = getDiscount(product.id);
+    const price = finalPrice(product.price, discount);
+    return (
+      <tr>
+        <td style={{ ...styles.td, fontWeight: 800 }}>{product.name}</td>
+        <td style={styles.td}><span style={styles.tag}>{product.category}</span></td>
+        <td style={styles.td}>{product.stock}</td>
+        <td style={styles.td}>{money(product.price)}</td>
+        <td style={styles.td}><input style={{ ...styles.miniInput, opacity: isUnlocked ? 1 : .45 }} disabled={!isUnlocked} type="number" value={discount} onChange={(e) => updateDiscount(product.id, e.target.value)} /> %</td>
+        <td style={{ ...styles.td, ...styles.price }}>{money(price)}</td>
+        <td style={styles.td}><button style={styles.button} onClick={() => addToCart(product)}>+ Giỏ hàng</button></td>
+      </tr>
+    );
   };
 
   return (
-    <div style={s.page}>
-      <div style={s.container}>
-        <div style={s.header}>
-          <div style={s.brand}>
-            <div style={s.logoBox}>S</div>
+    <div style={styles.page}>
+      <div style={styles.container}>
+        <section style={styles.hero}>
+          <div style={styles.brand}>
+            <img src="/logo.png" alt="SEADENT" style={styles.logo} />
             <div>
-              <h1 style={s.title}>SEADENT Quote Center</h1>
-              <div style={s.subtitle}>Internal Pricing & Quotation Dashboard</div>
+              <div style={styles.badge}>● SEADENT PRICING SYSTEM</div>
+              <h1 style={styles.title}>SEADENT Quote Center</h1>
+              <div style={styles.muted}>Internal Pricing & Quotation Dashboard</div>
             </div>
           </div>
+          <div style={styles.statGrid}>
+            <div style={styles.stat}><div style={styles.muted}>Products</div><div style={styles.statValue}>{products.length}</div></div>
+            <div style={styles.stat}><div style={styles.muted}>Quote Total</div><div style={styles.statValue}>{money(quoteTotal)}</div></div>
+            <div style={styles.stat}><div style={styles.muted}>Cart Total</div><div style={styles.statValue}>{money(cartTotal)}</div></div>
+          </div>
+        </section>
 
-          <div style={s.statGrid}>
-            <div style={s.card}>
-              <div style={s.label}>Products</div>
-              <div style={s.statNumber}>{products.length}</div>
+        <div style={styles.grid}>
+          <div style={styles.card}>
+            <input style={styles.input} placeholder="Tìm nhanh sản phẩm..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <div style={styles.toolbar}>
+              <button style={isGrouped ? styles.button : styles.secondaryBtn} onClick={() => setIsGrouped(!isGrouped)}>{isGrouped ? "✓ Group by Category" : "Group by Category"}</button>
+              {isGrouped && <><button style={styles.secondaryBtn} onClick={() => setCollapsedCategories({})}>Expand all</button><button style={styles.secondaryBtn} onClick={() => setCollapsedCategories(Object.fromEntries(categories.map((c) => [c, true])))}>Collapse all</button></>}
             </div>
-            <div style={s.card}>
-              <div style={s.label}>Quote Total</div>
-              <div style={s.total}>{formatPrice(totalValue)}</div>
+            <div style={{ ...styles.muted, marginTop: 12 }}>{syncStatus}</div>
+          </div>
+
+          <div style={styles.card}>
+            <div style={styles.badge}>{isUnlocked ? "🔓 Discount Unlocked" : "🔒 Discount Locked"}</div>
+            <input style={{ ...styles.input, opacity: isUnlocked ? 1 : .45 }} type="number" value={globalDiscount} disabled={!isUnlocked} onChange={(e) => applyGlobalDiscount(e.target.value)} />
+            <div style={{ display: "grid", gridTemplateColumns: isPhone ? "1fr" : "1fr auto", gap: 10, marginTop: 12 }}>
+              <input style={styles.input} type="password" placeholder="Password" value={password} disabled={isUnlocked} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlockDiscount()} />
+              <button style={styles.button} onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>{isUnlocked ? "Lock" : "Unlock"}</button>
             </div>
+            <button style={{ ...styles.dangerBtn, width: "100%", marginTop: 10, opacity: isUnlocked ? 1 : .5 }} onClick={() => isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước")}>Reset Discount</button>
           </div>
         </div>
 
-        <div style={s.toolbar}>
-          <div style={s.card}>
-            <input style={s.input} type="text" placeholder="Search product..." value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-          <div style={s.card}>
-            <div style={s.label}>Default Discount</div>
-            <input style={s.input} type="number" value={globalDiscount} onChange={(e) => setGlobalDiscount(Number(e.target.value))} />
-          </div>
-        </div>
-
-        <div style={s.tableWrap}>
-          <table style={s.table}>
-            <thead>
-              <tr>
-                <th style={s.th}>Product</th>
-                <th style={s.th}>Category</th>
-                <th style={s.th}>Stock</th>
-                <th style={s.th}>List Price</th>
-                <th style={s.th}>Discount</th>
-                <th style={s.th}>Final Price</th>
-              </tr>
-            </thead>
+        <div style={styles.tableWrap}>
+          <table style={styles.table}>
+            <thead><tr><th style={styles.th}>Product</th><th style={styles.th}>Category</th><th style={styles.th}>Stock</th><th style={styles.th}>List Price</th><th style={styles.th}>Discount</th><th style={styles.th}>Final Price</th><th style={styles.th}>Cart</th></tr></thead>
             <tbody>
-              {filteredProducts.map((item) => {
-                const discount = getDiscount(item.id);
-                const finalPrice = item.price - (item.price * discount) / 100;
-                return (
-                  <tr key={item.id}>
-                    <td style={{ ...s.td, fontWeight: 700 }}>{item.name}</td>
-                    <td style={s.td}><span style={s.badge}>{item.category}</span></td>
-                    <td style={s.td}>{item.stock}</td>
-                    <td style={s.td}>{formatPrice(item.price)}</td>
-                    <td style={s.td}>
-                      <input style={s.miniInput} type="number" value={discount} onChange={(e) => updateDiscount(item.id, e.target.value)} /> <span>%</span>
-                    </td>
-                    <td style={{ ...s.td, ...s.price }}>{formatPrice(finalPrice)}</td>
-                  </tr>
-                );
-              })}
+              {isGrouped ? categories.map((category) => (
+                <React.Fragment key={category}>
+                  <tr><td colSpan="7" style={{ padding: 0 }}><div style={styles.category} onClick={() => setCollapsedCategories((p) => ({ ...p, [category]: !p[category] }))}><span>{collapsedCategories[category] ? "▸" : "▾"} {category} <span style={styles.tag}>{groupedProducts[category].length}</span></span><span>{collapsedCategories[category] ? "+" : "−"}</span></div></td></tr>
+                  {!collapsedCategories[category] && groupedProducts[category].map((product) => <ProductRow key={product.id} product={product} />)}
+                </React.Fragment>
+              )) : filteredProducts.map((product) => <ProductRow key={product.id} product={product} />)}
             </tbody>
           </table>
         </div>
 
-        <div style={s.featureGrid}>
-          <div style={s.card}><div style={s.featureTitle}>PDF Export</div><div style={s.featureText}>Generate professional quotation PDF with customer information, company logo and signature.</div></div>
-          <div style={s.card}><div style={s.featureTitle}>Google Sheets Sync</div><div style={s.featureText}>Auto update product pricing directly from Google Sheets.</div></div>
-          <div style={s.card}><div style={s.featureTitle}>Admin Dashboard</div><div style={s.featureText}>Manage products, pricing, quotation history and customers.</div></div>
-        </div>
+        <section style={{ ...styles.card, ...styles.cart }}>
+          <div style={styles.cartHeader}>
+            <div><h2 style={{ margin: 0 }}>Giỏ hàng báo giá</h2><div style={styles.muted}>{cartQty} sản phẩm đã chọn</div></div>
+            <div style={styles.toolbar}><button style={styles.darkBtn} onClick={exportQuotePdf}>Xuất PDF báo giá</button><button style={styles.dangerBtn} onClick={() => setCart({})}>Xóa giỏ hàng</button></div>
+          </div>
 
-        <div style={s.footer}>SEADENT Quote Center © 2026</div>
+          <div style={styles.formGrid}>
+            <input style={styles.input} placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+            <input style={styles.input} placeholder="Số điện thoại" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
+            <input style={styles.input} placeholder="Địa chỉ" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
+            <input style={styles.input} placeholder="Ghi chú" value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} />
+          </div>
+
+          {!cartItems.length ? <div style={{ ...styles.card, textAlign: "center", color: "#64748b" }}>Chưa có sản phẩm trong giỏ hàng.</div> : (
+            <>
+              <div style={styles.tableWrap}>
+                <table style={styles.table}>
+                  <thead><tr><th style={styles.th}>Sản phẩm</th><th style={styles.th}>Đơn giá sau CK</th><th style={styles.th}>Số lượng</th><th style={styles.th}>Thành tiền</th><th style={styles.th}>Xóa</th></tr></thead>
+                  <tbody>{cartItems.map((item) => <tr key={item.id}><td style={styles.td}>{item.name}</td><td style={styles.td}>{money(item.finalPrice)}</td><td style={styles.td}><input style={styles.miniInput} type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item.id, e.target.value)} /></td><td style={{ ...styles.td, ...styles.price }}>{money(item.finalPrice * item.quantity)}</td><td style={styles.td}><button style={styles.dangerBtn} onClick={() => removeFromCart(item.id)}>Xóa</button></td></tr>)}</tbody>
+                </table>
+              </div>
+              <div style={styles.summary}>
+                <div>
+                  <strong>Tổng cộng {cartQty} sản phẩm trong báo giá</strong>
+                  <div style={styles.muted}>Trước CK: {money(cartTotalBeforeDiscount)} · Tiền CK: {money(cartDiscountTotal)}</div>
+                </div>
+                <div style={{ ...styles.statValue, fontSize: 30 }}>{money(cartTotal)}</div>
+              </div>
+            </>
+          )}
+        </section>
+
+        <div style={styles.footer}>SEADENT Quote Center © 2026</div>
       </div>
     </div>
   );
