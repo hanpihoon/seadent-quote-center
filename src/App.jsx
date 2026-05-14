@@ -219,6 +219,10 @@ export default function App() {
         <div class="sumrow"><div class="sumlabel">Tổng tiền chiết khấu</div><div class="sumvalue">${money(cartDiscountTotal)}</div></div>
         <div class="sumrow sumfinal"><div class="sumlabel">Tổng cộng sau chiết khấu</div><div class="sumvalue">${money(cartTotal)}</div></div>
       </div>
+      <div style="margin-top:18px;padding:14px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;color:#7c2d12;line-height:1.8;font-size:13px">
+      <div><b>• Giá trên đã bao gồm thuế GTGT</b></div>
+      <div><b>• Chất lượng hàng hoá mới 100%</b></div>
+      </div>
       <div style="margin-top:16px;color:#6b7280">Báo giá được tạo từ SEADENT Quote Center.</div>
       <div class="signature"><div><b>Khách hàng</b><br/><br/><br/>........................</div><div><b>Nhân viên phụ trách</b><br/><br/><br/>........................</div><div><b>Giám đốc kinh doanh</b><br/><br/><br/>........................</div></div>
       <script>window.onload=function(){window.print()}</script></body></html>`);
