@@ -259,6 +259,12 @@ export default function App() {
     darkBtn: { background: "#111827", color: "#fff", border: "none", borderRadius: 999, padding: isPhone ? "10px 12px" : "10px 14px", cursor: "pointer", fontWeight: 900, fontSize: isPhone ? 13 : 14 },
     dangerBtn: { background: "#fff1f2", color: "#e11d48", border: "1px solid #ffe4e6", borderRadius: 999, padding: isPhone ? "10px 12px" : "10px 14px", cursor: "pointer", fontWeight: 900, fontSize: isPhone ? 13 : 14 },
     toolbar: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 },
+    mobileList: { display: "grid", gap: 12, marginTop: 12 },
+    mobileCategory: { background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 16, padding: "12px 14px", fontWeight: 900, color: "#111827", display: "flex", justifyContent: "space-between", alignItems: "center" },
+    productCard: { background: "#fff", border: "1px solid #eef0f4", borderRadius: 18, padding: 14, boxShadow: "0 14px 32px rgba(15,23,42,.07)" },
+    productName: { fontSize: 16, fontWeight: 900, color: "#111827", lineHeight: 1.35, marginBottom: 8 },
+    mobileLine: { display: "flex", justifyContent: "space-between", gap: 12, padding: "8px 0", borderBottom: "1px solid #f1f5f9", color: "#4b5563", fontSize: 13 },
+    mobileValue: { fontWeight: 900, color: "#111827", textAlign: "right" },
     tableWrap: { background: "#fff", border: "1px solid #eef0f4", borderRadius: isPhone ? 18 : 22, overflowX: "auto", WebkitOverflowScrolling: "touch", boxShadow: "0 18px 45px rgba(15,23,42,.07)" },
     table: { width: "100%", minWidth: isPhone ? 920 : "auto", borderCollapse: "collapse" },
     th: { textAlign: "left", padding: isPhone ? 10 : 14, background: "#f9fafb", color: "#6b7280", fontSize: isPhone ? 11 : 12, textTransform: "uppercase", whiteSpace: "nowrap" },
@@ -289,6 +295,38 @@ export default function App() {
       </tr>
     );
   };
+
+  const ProductCard = ({ product }) => {
+    const discount = getDiscount(product.id);
+    const price = finalPrice(product.price, discount);
+    return (
+      <div style={styles.productCard}>
+        <div style={styles.productName}>{product.name}</div>
+        <div style={{ marginBottom: 8 }}><span style={styles.tag}>{product.category}</span></div>
+        <div style={styles.mobileLine}><span>Stock</span><span style={styles.mobileValue}>{product.stock}</span></div>
+        <div style={styles.mobileLine}><span>List Price</span><span style={styles.mobileValue}>{money(product.price)}</span></div>
+        <div style={styles.mobileLine}>
+          <span>Discount</span>
+          <span style={styles.mobileValue}><input style={{ ...styles.miniInput, width: 72, opacity: isUnlocked ? 1 : .45 }} disabled={!isUnlocked} type="number" value={discount} onChange={(e) => updateDiscount(product.id, e.target.value)} /> %</span>
+        </div>
+        <div style={styles.mobileLine}><span>Final Price</span><span style={{ ...styles.mobileValue, color: "#ea580c" }}>{money(price)}</span></div>
+        <button style={{ ...styles.button, width: "100%", marginTop: 12 }} onClick={() => addToCart(product)}>+ Thêm vào giỏ hàng</button>
+      </div>
+    );
+  };
+
+  const CartCard = ({ item }) => (
+    <div style={styles.productCard}>
+      <div style={styles.productName}>{item.name}</div>
+      <div style={styles.mobileLine}><span>Đơn giá sau CK</span><span style={styles.mobileValue}>{money(item.finalPrice)}</span></div>
+      <div style={styles.mobileLine}>
+        <span>Số lượng</span>
+        <input style={{ ...styles.miniInput, width: 74 }} type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item.id, e.target.value)} />
+      </div>
+      <div style={styles.mobileLine}><span>Thành tiền</span><span style={{ ...styles.mobileValue, color: "#ea580c" }}>{money(item.finalPrice * item.quantity)}</span></div>
+      <button style={{ ...styles.dangerBtn, width: "100%", marginTop: 12 }} onClick={() => removeFromCart(item.id)}>Xóa</button>
+    </div>
+  );
 
   return (
     <div style={styles.page}>
@@ -330,19 +368,33 @@ export default function App() {
           </div>
         </div>
 
-        <div style={styles.tableWrap}>
-          <table style={styles.table}>
-            <thead><tr><th style={styles.th}>Product</th><th style={styles.th}>Category</th><th style={styles.th}>Stock</th><th style={styles.th}>List Price</th><th style={styles.th}>Discount</th><th style={styles.th}>Final Price</th><th style={styles.th}>Cart</th></tr></thead>
-            <tbody>
-              {isGrouped ? categories.map((category) => (
-                <React.Fragment key={category}>
-                  <tr><td colSpan="7" style={{ padding: 0 }}><div style={styles.category} onClick={() => setCollapsedCategories((p) => ({ ...p, [category]: !p[category] }))}><span>{collapsedCategories[category] ? "▸" : "▾"} {category} <span style={styles.tag}>{groupedProducts[category].length}</span></span><span>{collapsedCategories[category] ? "+" : "−"}</span></div></td></tr>
-                  {!collapsedCategories[category] && groupedProducts[category].map((product) => <ProductRow key={product.id} product={product} />)}
-                </React.Fragment>
-              )) : filteredProducts.map((product) => <ProductRow key={product.id} product={product} />)}
-            </tbody>
-          </table>
-        </div>
+        {isPhone ? (
+          <div style={styles.mobileList}>
+            {isGrouped ? categories.map((category) => (
+              <React.Fragment key={category}>
+                <div style={styles.mobileCategory} onClick={() => setCollapsedCategories((p) => ({ ...p, [category]: !p[category] }))}>
+                  <span>{collapsedCategories[category] ? "▸" : "▾"} {category}</span>
+                  <span style={styles.tag}>{groupedProducts[category].length}</span>
+                </div>
+                {!collapsedCategories[category] && groupedProducts[category].map((product) => <ProductCard key={product.id} product={product} />)}
+              </React.Fragment>
+            )) : filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
+          </div>
+        ) : (
+          <div style={styles.tableWrap}>
+            <table style={styles.table}>
+              <thead><tr><th style={styles.th}>Product</th><th style={styles.th}>Category</th><th style={styles.th}>Stock</th><th style={styles.th}>List Price</th><th style={styles.th}>Discount</th><th style={styles.th}>Final Price</th><th style={styles.th}>Cart</th></tr></thead>
+              <tbody>
+                {isGrouped ? categories.map((category) => (
+                  <React.Fragment key={category}>
+                    <tr><td colSpan="7" style={{ padding: 0 }}><div style={styles.category} onClick={() => setCollapsedCategories((p) => ({ ...p, [category]: !p[category] }))}><span>{collapsedCategories[category] ? "▸" : "▾"} {category} <span style={styles.tag}>{groupedProducts[category].length}</span></span><span>{collapsedCategories[category] ? "+" : "−"}</span></div></td></tr>
+                    {!collapsedCategories[category] && groupedProducts[category].map((product) => <ProductRow key={product.id} product={product} />)}
+                  </React.Fragment>
+                )) : filteredProducts.map((product) => <ProductRow key={product.id} product={product} />)}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <section style={{ ...styles.card, ...styles.cart }}>
           <div style={styles.cartHeader}>
@@ -359,12 +411,46 @@ export default function App() {
 
           {!cartItems.length ? <div style={{ ...styles.card, textAlign: "center", color: "#64748b" }}>Chưa có sản phẩm trong giỏ hàng.</div> : (
             <>
-              <div style={styles.tableWrap}>
-                <table style={styles.table}>
-                  <thead><tr><th style={styles.th}>Sản phẩm</th><th style={styles.th}>Đơn giá sau CK</th><th style={styles.th}>Số lượng</th><th style={styles.th}>Thành tiền</th><th style={styles.th}>Xóa</th></tr></thead>
-                  <tbody>{cartItems.map((item) => <tr key={item.id}><td style={styles.td}>{item.name}</td><td style={styles.td}>{money(item.finalPrice)}</td><td style={styles.td}><input style={styles.miniInput} type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item.id, e.target.value)} /></td><td style={{ ...styles.td, ...styles.price }}>{money(item.finalPrice * item.quantity)}</td><td style={styles.td}><button style={styles.dangerBtn} onClick={() => removeFromCart(item.id)}>Xóa</button></td></tr>)}</tbody>
-                </table>
-              </div>
+              {isPhone ? (
+                <div style={styles.mobileList}>
+                  {cartItems.map((item) => <CartCard key={item.id} item={item} />)}
+                </div>
+              ) : (
+                <div style={styles.tableWrap}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>Sản phẩm</th>
+                        <th style={styles.th}>Đơn giá sau CK</th>
+                        <th style={styles.th}>Số lượng</th>
+                        <th style={styles.th}>Thành tiền</th>
+                        <th style={styles.th}>Xóa</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cartItems.map((item) => (
+                        <tr key={item.id}>
+                          <td style={styles.td}>{item.name}</td>
+                          <td style={styles.td}>{money(item.finalPrice)}</td>
+                          <td style={styles.td}>
+                            <input
+                              style={styles.miniInput}
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => updateQty(item.id, e.target.value)}
+                            />
+                          </td>
+                          <td style={{ ...styles.td, ...styles.price }}>{money(item.finalPrice * item.quantity)}</td>
+                          <td style={styles.td}>
+                            <button style={styles.dangerBtn} onClick={() => removeFromCart(item.id)}>Xóa</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               <div style={styles.summary}>
                 <div>
                   <strong>Tổng cộng {cartQty} sản phẩm trong báo giá</strong>
