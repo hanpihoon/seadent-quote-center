@@ -31,7 +31,7 @@ const setLocal = (key, value) => {
   try {
     window.localStorage.setItem(key, value);
   } catch {
-    // Ignore localStorage errors
+    // ignore localStorage errors
   }
 };
 
@@ -59,10 +59,6 @@ export default function App() {
   const [customerNote, setCustomerNote] = React.useState("");
   const [isUnlocked, setIsUnlocked] = React.useState(() => getLocal("seadent_discount_unlocked", "false") === "true");
   const [isGrouped, setIsGrouped] = React.useState(() => getLocal("seadent_group_by_category", "true") === "true");
-  const [width, setWidth] = React.useState(() => (isBrowser() ? window.innerWidth : 1280));
-
-  React.useEffect(() => setLocal("seadent_discount_unlocked", String(isUnlocked)), [isUnlocked]);
-  React.useEffect(() => setLocal("seadent_group_by_category", String(isGrouped)), [isGrouped]);
 
   React.useEffect(() => {
     if (!isBrowser()) return undefined;
@@ -75,20 +71,15 @@ export default function App() {
     }
     viewport.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover");
 
-    const onResize = () => {
-      const safeWidth = Math.min(window.innerWidth || 1280, document.documentElement.clientWidth || 1280);
-      setWidth(safeWidth);
-    };
+    document.documentElement.style.overflowX = "hidden";
+    document.body.style.overflowX = "hidden";
+    document.body.style.margin = "0";
 
-    onResize();
-    window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onResize);
-
-    return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
-    };
+    return undefined;
   }, []);
+
+  React.useEffect(() => setLocal("seadent_discount_unlocked", String(isUnlocked)), [isUnlocked]);
+  React.useEffect(() => setLocal("seadent_group_by_category", String(isGrouped)), [isGrouped]);
 
   React.useEffect(() => {
     async function loadProducts() {
@@ -117,7 +108,6 @@ export default function App() {
     loadProducts();
   }, []);
 
-  const isPhone = width <= 900 || (isBrowser() && /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent));
   const getDiscount = (id) => discounts[String(id)] ?? 0;
 
   const filtered = products.filter((p) => `${p.name} ${p.category}`.toLowerCase().includes(search.toLowerCase()));
@@ -220,6 +210,11 @@ export default function App() {
     });
   };
 
+  const scrollToCart = () => {
+    if (!isBrowser()) return;
+    document.getElementById("quote-cart")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const exportQuotePdf = () => {
     if (!isBrowser()) return;
     if (!cartItems.length) {
@@ -256,226 +251,173 @@ export default function App() {
     win.document.close();
   };
 
-  const s = {
-    page: { minHeight: "100vh", width: "100%", maxWidth: "100vw", overflowX: "hidden", background: "linear-gradient(135deg,#fff 0%,#f6f7fb 50%,#fff3ea 100%)", color: "#111827", fontFamily: "Arial, Helvetica, sans-serif", padding: isPhone ? 10 : 28, boxSizing: "border-box" },
-    container: { maxWidth: isPhone ? "100%" : 1280, margin: "0 auto", overflowX: "hidden" },
-    card: { background: "#fff", border: "1px solid #eef0f4", borderRadius: isPhone ? 18 : 22, padding: isPhone ? 14 : 22, boxShadow: "0 18px 45px rgba(15,23,42,.07)" },
-    hero: { display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", gap: isPhone ? 16 : 24, alignItems: isPhone ? "stretch" : "center", marginBottom: isPhone ? 14 : 22, background: "linear-gradient(135deg,#fff,#fff7ed)", border: "1px solid #fed7aa", borderRadius: isPhone ? 22 : 28, padding: isPhone ? 16 : 26, boxShadow: "0 24px 65px rgba(15,23,42,.08)" },
-    brand: { display: "flex", gap: isPhone ? 12 : 16, alignItems: "center" },
-    logo: { width: isPhone ? 54 : 72, height: isPhone ? 54 : 72, objectFit: "contain", background: "#fff", borderRadius: isPhone ? 16 : 20, padding: 8, border: "1px solid #fed7aa" },
-    title: { fontSize: isPhone ? 25 : 42, margin: 0, letterSpacing: "-.04em", lineHeight: 1.08 },
-    muted: { color: "#6b7280", fontSize: isPhone ? 12 : 14 },
-    badge: { display: "inline-block", background: "#fff1e7", color: "#ea580c", padding: "6px 10px", borderRadius: 999, fontWeight: 800, fontSize: 12, marginBottom: 8 },
-    statGrid: { display: "grid", gridTemplateColumns: isPhone ? "1fr" : "repeat(3,150px)", gap: isPhone ? 8 : 12, width: isPhone ? "100%" : "auto" },
-    stat: { background: "rgba(255,255,255,.9)", border: "1px solid #eef0f4", borderRadius: isPhone ? 14 : 18, padding: isPhone ? 10 : 16, minWidth: 0 },
-    statValue: { color: "#ea580c", fontSize: isPhone ? 13 : 22, fontWeight: 900, wordBreak: "break-word" },
-    grid: { display: "grid", gridTemplateColumns: isPhone ? "minmax(0,1fr)" : "1fr 360px", gap: isPhone ? 12 : 16, marginBottom: isPhone ? 12 : 18, width: "100%" },
-    input: { width: "100%", background: "#f8fafc", color: "#111827", border: "1px solid #e5e7eb", borderRadius: 14, padding: isPhone ? "12px" : "12px 14px", outline: "none", boxSizing: "border-box", fontSize: 16 },
-    button: { background: "#f97316", color: "#fff", border: "none", borderRadius: 999, padding: isPhone ? "11px 12px" : "10px 14px", cursor: "pointer", fontWeight: 900, fontSize: isPhone ? 13 : 14 },
-    secondary: { background: "#fff", color: "#374151", border: "1px solid #e5e7eb", borderRadius: 999, padding: isPhone ? "11px 12px" : "10px 13px", cursor: "pointer", fontWeight: 800, fontSize: isPhone ? 13 : 14 },
-    dark: { background: "#111827", color: "#fff", border: "none", borderRadius: 999, padding: isPhone ? "11px 12px" : "10px 14px", cursor: "pointer", fontWeight: 900, fontSize: isPhone ? 13 : 14 },
-    danger: { background: "#fff1f2", color: "#e11d48", border: "1px solid #ffe4e6", borderRadius: 999, padding: isPhone ? "11px 12px" : "10px 14px", cursor: "pointer", fontWeight: 900, fontSize: isPhone ? 13 : 14 },
-    toolbar: { display: "flex", flexDirection: isPhone ? "column" : "row", gap: 10, flexWrap: "wrap", marginTop: 14 },
-    tableWrap: { background: "#fff", border: "1px solid #eef0f4", borderRadius: 22, overflowX: "auto", boxShadow: "0 18px 45px rgba(15,23,42,.07)" },
-    table: { width: "100%", borderCollapse: "collapse" },
-    th: { textAlign: "left", padding: 14, background: "#f9fafb", color: "#6b7280", fontSize: 12, textTransform: "uppercase", whiteSpace: "nowrap" },
-    td: { padding: 14, borderTop: "1px solid #f1f5f9", color: "#374151", fontSize: 14 },
-    category: { display: "flex", justifyContent: "space-between", padding: "14px 18px", background: "#fff7ed", cursor: "pointer", fontWeight: 900, color: "#111827" },
-    tag: { background: "#fff1e7", color: "#ea580c", borderRadius: 999, padding: "5px 9px", fontWeight: 800, fontSize: 12, whiteSpace: "nowrap" },
-    miniInput: { width: 82, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, padding: 8, fontWeight: 800, fontSize: 16 },
-    price: { color: "#ea580c", fontWeight: 900 },
-    mobileList: { display: "grid", gap: 12, marginTop: 12 },
-    mobileCategory: { background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 16, padding: "12px 14px", fontWeight: 900, color: "#111827", display: "flex", justifyContent: "space-between", alignItems: "center" },
-    productCard: { background: "#fff", border: "1px solid #eef0f4", borderRadius: 18, padding: 14, boxShadow: "0 14px 32px rgba(15,23,42,.07)", width: "100%", boxSizing: "border-box" },
-    productName: { fontSize: 16, fontWeight: 900, color: "#111827", lineHeight: 1.35, marginBottom: 8 },
-    mobileLine: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: "1px solid #f1f5f9", color: "#4b5563", fontSize: 13 },
-    mobileValue: { fontWeight: 900, color: "#111827", textAlign: "right" },
-    cart: { marginTop: isPhone ? 14 : 22, marginBottom: isPhone ? 116 : 0, scrollMarginTop: 12 },
-    cartHeader: { display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", alignItems: isPhone ? "stretch" : "center", gap: 12, marginBottom: 14 },
-    formGrid: { display: "grid", gridTemplateColumns: isPhone ? "1fr" : "repeat(4,1fr)", gap: 12, marginBottom: 14 },
-    summary: { display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", alignItems: isPhone ? "stretch" : "center", gap: isPhone ? 10 : 0, marginTop: 16, background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 18, padding: 16 },
-    sticky: { position: "fixed", left: 8, right: 8, bottom: 8, zIndex: 50, background: "#111827", color: "#fff", borderRadius: 18, padding: "10px", boxShadow: "0 18px 50px rgba(0,0,0,.24)", display: isPhone ? "grid" : "none", gridTemplateColumns: "1fr 1fr", gap: 8, alignItems: "center" },
-    stickyInfo: { gridColumn: "1 / -1", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, padding: "0 4px 2px" },
-    stickyBtn: { border: "none", borderRadius: 14, padding: "12px 10px", fontWeight: 900, fontSize: 14, cursor: "pointer" },
-    mobilePdfBtn: { width: "100%", background: "#111827", color: "#fff", border: "none", borderRadius: 16, padding: "14px 12px", fontWeight: 900, fontSize: 15, marginTop: 10, cursor: "pointer" },
-    footer: { textAlign: "center", color: "#9ca3af", marginTop: 28, fontSize: 13, paddingBottom: isPhone ? 18 : 0 },
-  };
-
-  const ProductRow = ({ product }) => {
-    const discount = getDiscount(product.id);
-    const price = calcFinal(product.price, discount);
-    return (
-      <tr>
-        <td style={{ ...s.td, fontWeight: 800 }}>{product.name}</td>
-        <td style={s.td}><span style={s.tag}>{product.category}</span></td>
-        <td style={s.td}>{product.stock}</td>
-        <td style={s.td}>{money(product.price)}</td>
-        <td style={s.td}><input style={{ ...s.miniInput, opacity: isUnlocked ? 1 : 0.45 }} disabled={!isUnlocked} type="number" value={discount} onChange={(e) => updateDiscount(product.id, e.target.value)} /> %</td>
-        <td style={{ ...s.td, ...s.price }}>{money(price)}</td>
-        <td style={s.td}><button style={s.button} onClick={() => addToCart(product)}>+ Giỏ hàng</button></td>
-      </tr>
-    );
+  const css = {
+    page: { minHeight: "100vh", width: "100%", maxWidth: "100vw", overflowX: "hidden", background: "#f8fafc", color: "#111827", fontFamily: "Arial, Helvetica, sans-serif", boxSizing: "border-box", padding: 12, paddingBottom: cartItems.length ? 104 : 20 },
+    shell: { width: "100%", maxWidth: 980, margin: "0 auto" },
+    hero: { background: "linear-gradient(135deg,#fff,#fff7ed)", border: "1px solid #fed7aa", borderRadius: 22, padding: 16, boxShadow: "0 16px 38px rgba(15,23,42,.08)", marginBottom: 12 },
+    brandRow: { display: "flex", alignItems: "center", gap: 12 },
+    logo: { width: 52, height: 52, objectFit: "contain", borderRadius: 16, background: "#fff", border: "1px solid #fed7aa", padding: 7, boxSizing: "border-box" },
+    badge: { display: "inline-block", background: "#fff1e7", color: "#ea580c", padding: "5px 9px", borderRadius: 999, fontWeight: 900, fontSize: 11, marginBottom: 6 },
+    title: { margin: 0, fontSize: 25, lineHeight: 1.05, letterSpacing: "-.04em" },
+    textMuted: { color: "#6b7280", fontSize: 12, lineHeight: 1.45 },
+    stats: { display: "grid", gridTemplateColumns: "1fr", gap: 8, marginTop: 14 },
+    stat: { background: "rgba(255,255,255,.92)", border: "1px solid #eef0f4", borderRadius: 16, padding: 12 },
+    statLabel: { color: "#6b7280", fontSize: 12, fontWeight: 800 },
+    statValue: { color: "#ea580c", fontWeight: 950, fontSize: 18, marginTop: 3, wordBreak: "break-word" },
+    panel: { background: "#fff", border: "1px solid #eef0f4", borderRadius: 20, padding: 14, boxShadow: "0 14px 32px rgba(15,23,42,.06)", marginBottom: 12 },
+    input: { width: "100%", height: 46, background: "#f8fafc", color: "#111827", border: "1px solid #e5e7eb", borderRadius: 14, padding: "0 13px", fontSize: 16, outline: "none", boxSizing: "border-box" },
+    btn: { width: "100%", minHeight: 46, border: "none", borderRadius: 15, padding: "11px 13px", fontSize: 14, fontWeight: 900, cursor: "pointer", background: "#f97316", color: "#fff" },
+    btnDark: { background: "#111827", color: "#fff" },
+    btnLight: { background: "#fff", color: "#374151", border: "1px solid #e5e7eb" },
+    btnDanger: { background: "#fff1f2", color: "#e11d48", border: "1px solid #ffe4e6" },
+    stack: { display: "grid", gridTemplateColumns: "1fr", gap: 10 },
+    toolbar: { display: "grid", gridTemplateColumns: "1fr", gap: 10, marginTop: 10 },
+    category: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 16, padding: "12px 14px", fontWeight: 950, color: "#111827" },
+    count: { background: "#fff1e7", color: "#ea580c", borderRadius: 999, padding: "5px 9px", fontSize: 12, fontWeight: 900 },
+    card: { background: "#fff", border: "1px solid #eef0f4", borderRadius: 18, padding: 14, boxShadow: "0 14px 32px rgba(15,23,42,.06)" },
+    productTitle: { fontSize: 16, fontWeight: 950, lineHeight: 1.35, marginBottom: 8 },
+    tag: { display: "inline-block", background: "#fff1e7", color: "#ea580c", borderRadius: 999, padding: "5px 9px", fontSize: 12, fontWeight: 900 },
+    line: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: "1px solid #f1f5f9", color: "#4b5563", fontSize: 13 },
+    value: { color: "#111827", fontWeight: 900, textAlign: "right" },
+    price: { color: "#ea580c", fontWeight: 950 },
+    miniInput: { width: 76, height: 38, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, padding: "0 8px", fontSize: 16, fontWeight: 900, boxSizing: "border-box" },
+    formGrid: { display: "grid", gridTemplateColumns: "1fr", gap: 10, marginBottom: 12 },
+    summary: { background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 16, padding: 14, display: "grid", gap: 6, marginTop: 12 },
+    sticky: { position: "fixed", left: 10, right: 10, bottom: 10, zIndex: 99, background: "#111827", color: "#fff", borderRadius: 20, padding: 10, boxShadow: "0 18px 50px rgba(0,0,0,.25)", display: cartItems.length ? "grid" : "none", gridTemplateColumns: "1fr 1fr", gap: 8 },
+    stickyTop: { gridColumn: "1 / -1", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, padding: "0 4px 2px" },
+    footer: { textAlign: "center", color: "#9ca3af", fontSize: 12, marginTop: 20 },
   };
 
   const ProductCard = ({ product }) => {
     const discount = getDiscount(product.id);
     const price = calcFinal(product.price, discount);
     return (
-      <div style={s.productCard}>
-        <div style={s.productName}>{product.name}</div>
-        <div style={{ marginBottom: 8 }}><span style={s.tag}>{product.category}</span></div>
-        <div style={s.mobileLine}><span>Giá niêm yết</span><span style={s.mobileValue}>{money(product.price)}</span></div>
-        <div style={s.mobileLine}><span>Tồn kho</span><span style={s.mobileValue}>{product.stock}</span></div>
-        <div style={s.mobileLine}>
+      <div style={css.card}>
+        <div style={css.productTitle}>{product.name}</div>
+        <div style={{ marginBottom: 8 }}><span style={css.tag}>{product.category}</span></div>
+        <div style={css.line}><span>Giá niêm yết</span><span style={css.value}>{money(product.price)}</span></div>
+        <div style={css.line}><span>Tồn kho</span><span style={css.value}>{product.stock}</span></div>
+        <div style={css.line}>
           <span>Chiết khấu</span>
-          <span style={s.mobileValue}><input style={{ ...s.miniInput, width: 74, opacity: isUnlocked ? 1 : 0.45 }} disabled={!isUnlocked} type="number" value={discount} onChange={(e) => updateDiscount(product.id, e.target.value)} /> %</span>
+          <span style={css.value}>
+            <input style={{ ...css.miniInput, opacity: isUnlocked ? 1 : 0.45 }} disabled={!isUnlocked} type="number" value={discount} onChange={(e) => updateDiscount(product.id, e.target.value)} /> %
+          </span>
         </div>
-        <div style={s.mobileLine}><span>Giá bán</span><span style={{ ...s.mobileValue, color: "#ea580c" }}>{money(price)}</span></div>
-        <button style={{ ...s.button, width: "100%", marginTop: 12 }} onClick={() => addToCart(product)}>+ Thêm vào giỏ hàng</button>
+        <div style={css.line}><span>Giá bán</span><span style={{ ...css.value, ...css.price }}>{money(price)}</span></div>
+        <button style={{ ...css.btn, marginTop: 12 }} onClick={() => addToCart(product)}>+ Thêm vào giỏ hàng</button>
       </div>
     );
   };
 
   const CartCard = ({ item }) => (
-    <div style={s.productCard}>
-      <div style={s.productName}>{item.name}</div>
-      <div style={s.mobileLine}><span>Đơn giá</span><span style={s.mobileValue}>{money(item.finalPrice)}</span></div>
-      <div style={s.mobileLine}><span>Số lượng</span><input style={{ ...s.miniInput, width: 74 }} type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item.id, e.target.value)} /></div>
-      <div style={s.mobileLine}><span>Thành tiền</span><span style={{ ...s.mobileValue, color: "#ea580c" }}>{money(item.finalPrice * item.quantity)}</span></div>
-      <button style={{ ...s.danger, width: "100%", marginTop: 12 }} onClick={() => removeFromCart(item.id)}>Xóa</button>
+    <div style={css.card}>
+      <div style={css.productTitle}>{item.name}</div>
+      <div style={css.line}><span>Đơn giá</span><span style={css.value}>{money(item.finalPrice)}</span></div>
+      <div style={css.line}><span>Số lượng</span><input style={css.miniInput} type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item.id, e.target.value)} /></div>
+      <div style={css.line}><span>Thành tiền</span><span style={{ ...css.value, ...css.price }}>{money(item.finalPrice * item.quantity)}</span></div>
+      <button style={{ ...css.btn, ...css.btnDanger, marginTop: 12 }} onClick={() => removeFromCart(item.id)}>Xóa sản phẩm</button>
     </div>
   );
 
   return (
-    <div style={s.page}>
-      <div style={s.container}>
-        <section style={s.hero}>
-          <div style={s.brand}>
-            <img src="/logo.png" alt="SEADENT" style={s.logo} />
+    <div style={css.page}>
+      <main style={css.shell}>
+        <section style={css.hero}>
+          <div style={css.brandRow}>
+            <img src="/logo.png" alt="SEADENT" style={css.logo} />
             <div>
-              <div style={s.badge}>● SEADENT PRICING SYSTEM</div>
-              <h1 style={s.title}>SEADENT Quote Center</h1>
-              <div style={s.muted}>Internal Pricing & Quotation Dashboard</div>
+              <div style={css.badge}>SEADENT PRICING</div>
+              <h1 style={css.title}>Quote Center</h1>
+              <div style={css.textMuted}>Báo giá nhanh trên mobile</div>
             </div>
           </div>
-          <div style={s.statGrid}>
-            <div style={s.stat}><div style={s.muted}>Products</div><div style={s.statValue}>{products.length}</div></div>
-            <div style={s.stat}><div style={s.muted}>Quote Total</div><div style={s.statValue}>{money(quoteTotal)}</div></div>
-            <div style={s.stat}><div style={s.muted}>Cart Total</div><div style={s.statValue}>{money(cartTotal)}</div></div>
+
+          <div style={css.stats}>
+            <div style={css.stat}><div style={css.statLabel}>Products</div><div style={css.statValue}>{products.length}</div></div>
+            <div style={css.stat}><div style={css.statLabel}>Quote Total</div><div style={css.statValue}>{money(quoteTotal)}</div></div>
+            <div style={css.stat}><div style={css.statLabel}>Cart Total</div><div style={css.statValue}>{money(cartTotal)}</div></div>
           </div>
         </section>
 
-        <div style={s.grid}>
-          <div style={s.card}>
-            <input style={s.input} placeholder="Tìm nhanh sản phẩm..." value={search} onChange={(e) => setSearch(e.target.value)} />
-            <div style={s.toolbar}>
-              <button style={{ ...(isGrouped ? s.button : s.secondary), width: isPhone ? "100%" : "auto" }} onClick={() => setIsGrouped(!isGrouped)}>{isGrouped ? "✓ Group by Category" : "Group by Category"}</button>
-              {isGrouped && <><button style={{ ...s.secondary, width: isPhone ? "100%" : "auto" }} onClick={() => setCollapsed({})}>Expand all</button><button style={{ ...s.secondary, width: isPhone ? "100%" : "auto" }} onClick={() => setCollapsed(Object.fromEntries(categories.map((c) => [c, true])))}>Collapse all</button></>}
-            </div>
-            <div style={{ ...s.muted, marginTop: 12 }}>{syncStatus}</div>
+        <section style={css.panel}>
+          <input style={css.input} placeholder="Tìm nhanh sản phẩm..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <div style={css.toolbar}>
+            <button style={{ ...css.btn, ...(isGrouped ? {} : css.btnLight) }} onClick={() => setIsGrouped(!isGrouped)}>{isGrouped ? "✓ Group by Category" : "Group by Category"}</button>
+            {isGrouped && (
+              <>
+                <button style={{ ...css.btn, ...css.btnLight }} onClick={() => setCollapsed({})}>Mở tất cả</button>
+                <button style={{ ...css.btn, ...css.btnLight }} onClick={() => setCollapsed(Object.fromEntries(categories.map((c) => [c, true])))}>Thu gọn tất cả</button>
+              </>
+            )}
+          </div>
+          <div style={{ ...css.textMuted, marginTop: 10 }}>{syncStatus}</div>
+        </section>
+
+        <section style={css.panel}>
+          <div style={css.badge}>{isUnlocked ? "🔓 Đã mở khóa chiết khấu" : "🔒 Đang khóa chiết khấu"}</div>
+          <div style={css.stack}>
+            <input style={{ ...css.input, opacity: isUnlocked ? 1 : 0.45 }} type="number" value={globalDiscount} disabled={!isUnlocked} onChange={(e) => applyGlobalDiscount(e.target.value)} />
+            <input style={css.input} type="password" placeholder="Password" value={password} disabled={isUnlocked} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlockDiscount()} />
+            <button style={css.btn} onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>{isUnlocked ? "Khóa lại" : "Mở khóa"}</button>
+            <button style={{ ...css.btn, ...css.btnDanger, opacity: isUnlocked ? 1 : 0.5 }} onClick={() => isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước")}>Reset Discount</button>
+          </div>
+        </section>
+
+        <section style={css.stack}>
+          {isGrouped ? categories.map((category) => (
+            <React.Fragment key={category}>
+              <div style={css.category} onClick={() => setCollapsed((prev) => ({ ...prev, [category]: !prev[category] }))}>
+                <span>{collapsed[category] ? "▸" : "▾"} {category}</span>
+                <span style={css.count}>{grouped[category].length}</span>
+              </div>
+              {!collapsed[category] && grouped[category].map((product) => <ProductCard key={product.id} product={product} />)}
+            </React.Fragment>
+          )) : filtered.map((product) => <ProductCard key={product.id} product={product} />)}
+        </section>
+
+        <section id="quote-cart" style={{ ...css.panel, marginTop: 14 }}>
+          <div style={{ marginBottom: 12 }}>
+            <h2 style={{ margin: 0, fontSize: 22 }}>Giỏ hàng báo giá</h2>
+            <div style={css.textMuted}>{cartQty} sản phẩm đã chọn</div>
           </div>
 
-          <div style={s.card}>
-            <div style={s.badge}>{isUnlocked ? "🔓 Discount Unlocked" : "🔒 Discount Locked"}</div>
-            <input style={{ ...s.input, opacity: isUnlocked ? 1 : 0.45 }} type="number" value={globalDiscount} disabled={!isUnlocked} onChange={(e) => applyGlobalDiscount(e.target.value)} />
-            <div style={{ display: "grid", gridTemplateColumns: isPhone ? "1fr" : "1fr auto", gap: 10, marginTop: 12 }}>
-              <input style={s.input} type="password" placeholder="Password" value={password} disabled={isUnlocked} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlockDiscount()} />
-              <button style={s.button} onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>{isUnlocked ? "Lock" : "Unlock"}</button>
-            </div>
-            <button style={{ ...s.danger, width: "100%", marginTop: 10, opacity: isUnlocked ? 1 : 0.5 }} onClick={() => isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước")}>Reset Discount</button>
-          </div>
-        </div>
-
-        {isPhone ? (
-          <div style={s.mobileList}>
-            {isGrouped ? categories.map((category) => (
-              <React.Fragment key={category}>
-                <div style={s.mobileCategory} onClick={() => setCollapsed((p) => ({ ...p, [category]: !p[category] }))}>
-                  <span>{collapsed[category] ? "▸" : "▾"} {category}</span>
-                  <span style={s.tag}>{grouped[category].length}</span>
-                </div>
-                {!collapsed[category] && grouped[category].map((product) => <ProductCard key={product.id} product={product} />)}
-              </React.Fragment>
-            )) : filtered.map((product) => <ProductCard key={product.id} product={product} />)}
-          </div>
-        ) : (
-          <div style={s.tableWrap}>
-            <table style={s.table}>
-              <thead><tr><th style={s.th}>Product</th><th style={s.th}>Category</th><th style={s.th}>Stock</th><th style={s.th}>List Price</th><th style={s.th}>Discount</th><th style={s.th}>Final Price</th><th style={s.th}>Cart</th></tr></thead>
-              <tbody>
-                {isGrouped ? categories.map((category) => (
-                  <React.Fragment key={category}>
-                    <tr><td colSpan="7" style={{ padding: 0 }}><div style={s.category} onClick={() => setCollapsed((p) => ({ ...p, [category]: !p[category] }))}><span>{collapsed[category] ? "▸" : "▾"} {category} <span style={s.tag}>{grouped[category].length}</span></span><span>{collapsed[category] ? "+" : "−"}</span></div></td></tr>
-                    {!collapsed[category] && grouped[category].map((product) => <ProductRow key={product.id} product={product} />)}
-                  </React.Fragment>
-                )) : filtered.map((product) => <ProductRow key={product.id} product={product} />)}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        <section id="quote-cart" style={{ ...s.card, ...s.cart }}>
-          <div style={{ display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
-            <div><h2 style={{ margin: 0 }}>Giỏ hàng báo giá</h2><div style={s.muted}>{cartQty} sản phẩm đã chọn</div></div>
-            <div style={s.toolbar}>
-              <button style={{ ...s.dark, width: isPhone ? "100%" : "auto", padding: isPhone ? "14px 16px" : s.dark.padding }} onClick={exportQuotePdf}>Xuất PDF báo giá</button>
-              <button style={{ ...s.danger, width: isPhone ? "100%" : "auto" }} onClick={() => setCart({})}>Xóa giỏ hàng</button>
-            </div>
+          <div style={css.stack}>
+            <button style={{ ...css.btn, ...css.btnDark }} onClick={exportQuotePdf}>Xuất PDF báo giá</button>
+            <button style={{ ...css.btn, ...css.btnDanger }} onClick={() => setCart({})}>Xóa giỏ hàng</button>
           </div>
 
-          {isPhone && cartItems.length > 0 && (
-            <button style={s.mobilePdfBtn} onClick={exportQuotePdf}>Xuất PDF báo giá</button>
-          )}
-
-          <div style={s.formGrid}>
-            <input style={s.input} placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
-            <input style={s.input} placeholder="Số điện thoại" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
-            <input style={s.input} placeholder="Địa chỉ" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
-            <input style={s.input} placeholder="Ghi chú" value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} />
+          <div style={{ ...css.formGrid, marginTop: 12 }}>
+            <input style={css.input} placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+            <input style={css.input} placeholder="Số điện thoại" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
+            <input style={css.input} placeholder="Địa chỉ" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
+            <input style={css.input} placeholder="Ghi chú" value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} />
           </div>
 
-          {!cartItems.length ? <div style={{ ...s.card, textAlign: "center", color: "#64748b" }}>Chưa có sản phẩm trong giỏ hàng.</div> : (
+          {!cartItems.length ? (
+            <div style={{ ...css.card, textAlign: "center", color: "#64748b" }}>Chưa có sản phẩm trong giỏ hàng.</div>
+          ) : (
             <>
-              {isPhone ? (
-                <div style={s.mobileList}>{cartItems.map((item) => <CartCard key={item.id} item={item} />)}</div>
-              ) : (
-                <div style={s.tableWrap}>
-                  <table style={s.table}>
-                    <thead><tr><th style={s.th}>Sản phẩm</th><th style={s.th}>Đơn giá sau CK</th><th style={s.th}>Số lượng</th><th style={s.th}>Thành tiền</th><th style={s.th}>Xóa</th></tr></thead>
-                    <tbody>{cartItems.map((item) => <tr key={item.id}><td style={s.td}>{item.name}</td><td style={s.td}>{money(item.finalPrice)}</td><td style={s.td}><input style={s.miniInput} type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item.id, e.target.value)} /></td><td style={{ ...s.td, ...s.price }}>{money(item.finalPrice * item.quantity)}</td><td style={s.td}><button style={s.danger} onClick={() => removeFromCart(item.id)}>Xóa</button></td></tr>)}</tbody>
-                  </table>
-                </div>
-              )}
-              <div style={s.summary}>
-                <div><strong>Tổng cộng {cartQty} sản phẩm</strong><div style={s.muted}>Trước CK: {money(cartBeforeDiscount)} · Tiền CK: {money(cartDiscount)}</div></div>
-                <div style={{ ...s.statValue, fontSize: isPhone ? 24 : 30 }}>{money(cartTotal)}</div>
+              <div style={css.stack}>{cartItems.map((item) => <CartCard key={item.id} item={item} />)}</div>
+              <div style={css.summary}>
+                <strong>Tổng cộng {cartQty} sản phẩm</strong>
+                <div style={css.textMuted}>Trước CK: {money(cartBeforeDiscount)}</div>
+                <div style={css.textMuted}>Tiền CK: {money(cartDiscount)}</div>
+                <div style={{ ...css.statValue, fontSize: 26 }}>{money(cartTotal)}</div>
               </div>
             </>
           )}
         </section>
 
-        {isPhone && cartItems.length > 0 && (
-          <div style={s.sticky}>
-            <div style={s.stickyInfo}>
-              <span>Tổng báo giá</span>
-              <strong>{money(cartTotal)}</strong>
-            </div>
-            <button
-              style={{ ...s.stickyBtn, background: "#ffffff", color: "#111827" }}
-              onClick={() => document.getElementById("quote-cart")?.scrollIntoView({ behavior: "smooth" })}
-            >
-              Xem giỏ
-            </button>
-            <button
-              style={{ ...s.stickyBtn, background: "#f97316", color: "#ffffff" }}
-              onClick={exportQuotePdf}
-            >
-              Xuất PDF
-            </button>
-          </div>
-        )}
+        <div style={css.footer}>SEADENT Quote Center © 2026</div>
+      </main>
 
-        <div style={s.footer}>SEADENT Quote Center © 2026</div>
+      <div style={css.sticky}>
+        <div style={css.stickyTop}>
+          <span>Tổng báo giá</span>
+          <strong>{money(cartTotal)}</strong>
+        </div>
+        <button style={{ ...css.btn, ...css.btnLight }} onClick={scrollToCart}>Xem giỏ</button>
+        <button style={css.btn} onClick={exportQuotePdf}>Xuất PDF</button>
       </div>
     </div>
   );
