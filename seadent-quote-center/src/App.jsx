@@ -272,11 +272,14 @@ export default function App() {
     productName: { fontSize: 16, fontWeight: 900, color: "#111827", lineHeight: 1.35, marginBottom: 8 },
     mobileLine: { display: "flex", justifyContent: "space-between", gap: 12, padding: "8px 0", borderBottom: "1px solid #f1f5f9", color: "#4b5563", fontSize: 13 },
     mobileValue: { fontWeight: 900, color: "#111827", textAlign: "right" },
-    cart: { marginTop: 22, marginBottom: isPhone ? 96 : 0 },
+    cart: { marginTop: isPhone ? 14 : 22, marginBottom: isPhone ? 116 : 0, scrollMarginTop: 12 },
     cartHeader: { display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", alignItems: isPhone ? "stretch" : "center", gap: 12, marginBottom: 14 },
     formGrid: { display: "grid", gridTemplateColumns: isPhone ? "1fr" : "repeat(4,1fr)", gap: 12, marginBottom: 14 },
     summary: { display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", alignItems: isPhone ? "stretch" : "center", gap: isPhone ? 10 : 0, marginTop: 16, background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 18, padding: 16 },
-    sticky: { position: "fixed", left: 10, right: 10, bottom: 10, zIndex: 50, background: "#111827", color: "#fff", borderRadius: 18, padding: "12px 14px", boxShadow: "0 18px 50px rgba(0,0,0,.24)", display: isPhone ? "flex" : "none", justifyContent: "space-between", alignItems: "center", gap: 10 },
+    sticky: { position: "fixed", left: 8, right: 8, bottom: 8, zIndex: 50, background: "#111827", color: "#fff", borderRadius: 18, padding: "10px", boxShadow: "0 18px 50px rgba(0,0,0,.24)", display: isPhone ? "grid" : "none", gridTemplateColumns: "1fr 1fr", gap: 8, alignItems: "center" },
+    stickyInfo: { gridColumn: "1 / -1", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, padding: "0 4px 2px" },
+    stickyBtn: { border: "none", borderRadius: 14, padding: "12px 10px", fontWeight: 900, fontSize: 14, cursor: "pointer" },
+    mobilePdfBtn: { width: "100%", background: "#111827", color: "#fff", border: "none", borderRadius: 16, padding: "14px 12px", fontWeight: 900, fontSize: 15, marginTop: 10, cursor: "pointer" },
     footer: { textAlign: "center", color: "#9ca3af", marginTop: 28, fontSize: 13, paddingBottom: isPhone ? 18 : 0 },
   };
 
@@ -393,11 +396,18 @@ export default function App() {
           </div>
         )}
 
-        <section style={{ ...s.card, ...s.cart }}>
+        <section id="quote-cart" style={{ ...s.card, ...s.cart }}>
           <div style={{ display: "flex", flexDirection: isPhone ? "column" : "row", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
             <div><h2 style={{ margin: 0 }}>Giỏ hàng báo giá</h2><div style={s.muted}>{cartQty} sản phẩm đã chọn</div></div>
-            <div style={s.toolbar}><button style={s.dark} onClick={exportQuotePdf}>Xuất PDF báo giá</button><button style={s.danger} onClick={() => setCart({})}>Xóa giỏ hàng</button></div>
+            <div style={s.toolbar}>
+              <button style={{ ...s.dark, width: isPhone ? "100%" : "auto", padding: isPhone ? "14px 16px" : s.dark.padding }} onClick={exportQuotePdf}>Xuất PDF báo giá</button>
+              <button style={{ ...s.danger, width: isPhone ? "100%" : "auto" }} onClick={() => setCart({})}>Xóa giỏ hàng</button>
+            </div>
           </div>
+
+          {isPhone && cartItems.length > 0 && (
+            <button style={s.mobilePdfBtn} onClick={exportQuotePdf}>Xuất PDF báo giá</button>
+          )}
 
           <div style={s.formGrid}>
             <input style={s.input} placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
@@ -428,8 +438,22 @@ export default function App() {
 
         {isPhone && cartItems.length > 0 && (
           <div style={s.sticky}>
-            <div><div style={{ fontSize: 12, opacity: 0.75 }}>Tổng báo giá</div><div style={{ fontWeight: 900 }}>{money(cartTotal)}</div></div>
-            <button style={{ ...s.button, padding: "10px 14px" }} onClick={exportQuotePdf}>PDF</button>
+            <div style={s.stickyInfo}>
+              <span>Tổng báo giá</span>
+              <strong>{money(cartTotal)}</strong>
+            </div>
+            <button
+              style={{ ...s.stickyBtn, background: "#ffffff", color: "#111827" }}
+              onClick={() => document.getElementById("quote-cart")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              Xem giỏ
+            </button>
+            <button
+              style={{ ...s.stickyBtn, background: "#f97316", color: "#ffffff" }}
+              onClick={exportQuotePdf}
+            >
+              Xuất PDF
+            </button>
           </div>
         )}
 
