@@ -73,7 +73,9 @@ const STYLES = `
   .sq-line { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #4b5563; font-size: 13px; }
   .sq-value { color: #111827; font-weight: 900; text-align: right; overflow-wrap: anywhere; }
   .sq-price { color: #ea580c; font-weight: 950; }
-  .sq-mini-input { width: 78px; height: 38px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0 8px; font-size: 16px; font-weight: 900; }
+  .sq-mini-input { width: 78px; height: 38px; background: #ffffff; color: #111827; border: 1px solid #d1d5db; border-radius: 10px; padding: 0 8px; font-size: 16px; font-weight: 900; text-align: center; outline: none; opacity: 1; -webkit-text-fill-color: #111827; caret-color: #111827; }
+  .sq-mini-input:disabled { background: #f3f4f6; color: #111827; -webkit-text-fill-color: #111827; opacity: .65; }
+  .sq-mini-input:focus { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,.15); }
   .sq-summary { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; padding: 14px; display: grid; gap: 6px; margin-top: 12px; }
 
   .sq-sticky { position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 99; background: #111827; color: #fff; border-radius: 20px; padding: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.25); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 640px; margin: 0 auto; }
