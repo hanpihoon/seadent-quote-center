@@ -314,8 +314,11 @@ export default function App() {
       <div class="customer"><b>Tên khách hàng:</b> ${customerName || "........................"}<br/><b>Số điện thoại:</b> ${customerPhone || "........................"}<br/><b>Địa chỉ:</b> ${customerAddress || "........................"}<br/><b>Ghi chú:</b> ${customerNote || "Không có"}</div>
       <table><thead><tr><th>#</th><th>Sản phẩm</th><th>Danh mục</th><th>Giá niêm yết</th><th>CK</th><th>Đơn giá sau CK</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="summary"><div class="sumrow"><div class="sumlabel">Tổng tiền trước chiết khấu</div><div class="sumvalue">${money(cartBeforeDiscount)}</div></div><div class="sumrow"><div class="sumlabel">Tổng tiền chiết khấu</div><div class="sumvalue">${money(cartDiscount)}</div></div><div class="sumrow sumfinal"><div class="sumlabel">Tổng cộng sau chiết khấu</div><div class="sumvalue">${money(cartTotal)}</div></div></div>
-      <div class="note"><b>• Giá trên đã bao gồm thuế GTGT</b><br/><b>• Chất lượng hàng hoá mới 100%</b></div>
-      <div style="margin-top:16px;color:#6b7280">Báo giá được tạo từ SEADENT Quote Center.</div>
+      <div class="note">
+        <b>• Giá trên đã bao gồm thuế GTGT</b><br/>
+        <b>• Chất lượng hàng hoá mới 100%</b><br/>
+        <b>• Báo giá được tạo từ SEADENT Quote Center</b>
+      </div>
       <div class="signature"><div><b>Khách hàng</b><br/><br/><br/>........................</div><div><b>Nhân viên phụ trách</b><br/><br/><br/>........................</div><div><b>Giám đốc kinh doanh</b><br/><br/><br/>........................</div></div>
       <script>window.onload=function(){window.print()}</script></body></html>`);
     win.document.close();
