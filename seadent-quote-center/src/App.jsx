@@ -199,23 +199,23 @@ export default function App() {
     const win = window.open("", "_blank");
     if (!win) return;
     win.document.write(`
-      <!doctype html><html><head><title>SEADENT Quotation</title>
+      <!doctype html><html><head><meta charset="UTF-8" /><title>SEADENT Quotation</title>
       <style>
-        body{font-family:Arial,sans-serif;color:#111827;padding:28px} .header{display:flex;justify-content:space-between;border-bottom:3px solid #f97316;padding-bottom:16px;margin-bottom:20px}
+        body{font-family:"Segoe UI",Tahoma,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;color:#111827;padding:28px} .header{display:flex;justify-content:space-between;border-bottom:3px solid #f97316;padding-bottom:16px;margin-bottom:20px}
         .brand{font-size:24px;font-weight:900;color:#f97316}.sub{color:#6b7280;line-height:1.5}.meta{text-align:right;line-height:1.6} h2{text-align:center;margin:24px 0}
         .customer{background:#fff7ed;border:1px solid #fed7aa;padding:14px;border-radius:12px;margin-bottom:18px;line-height:1.8}
-        table{width:100%;border-collapse:collapse} th{background:#f97316;color:white;padding:9px;font-size:12px;text-align:left} td{border-bottom:1px solid #e5e7eb;padding:9px;font-size:12px}
+        table{width:100%;border-collapse:collapse} th{background:#f97316;color:#ffffff;padding:9px;font-size:12px;text-align:left;font-weight:700} td{border-bottom:1px solid #e5e7eb;padding:9px;font-size:12px;font-weight:500}
         .total{text-align:right;margin-top:22px;font-size:24px;font-weight:900;color:#f97316}.signature{display:flex;justify-content:space-between;margin-top:55px;text-align:center}
         @media print{body{padding:18px}}
       </style></head><body>
-      <div class="header"><div style="display:flex;gap:14px"><img src="/logo.png" style="width:82px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0901371516 · Email: info@seadent.com.vn · Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
+      <div class="header"><div style="display:flex;gap:14px"><img src="/logo.png" style="width:82px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0901371516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
       <h2>BẢNG BÁO GIÁ</h2>
       <div class="customer"><b>Tên khách hàng:</b> ${customerName || "........................"}<br/><b>Số điện thoại:</b> ${customerPhone || "........................"}<br/><b>Địa chỉ:</b> ${customerAddress || "........................"}<br/><b>Ghi chú:</b> ${customerNote || "Không có"}</div>
       <table><thead><tr><th>#</th><th>Sản phẩm</th><th>Danh mục</th><th>Giá niêm yết</th><th>CK</th><th>Đơn giá sau CK</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="total">Tổng cộng: ${money(cartTotal)}</div>
-      <div style="margin-top:16px;color:#6b7280">Báo giá được tạo từ SEADENT Quote Center.</div>
+      <div style="margin-top:16px;color:#6b7280;font-family:'Segoe UI',Tahoma,sans-serif">Báo giá được tạo từ SEADENT Quote Center.</div>
       <div class="signature"><div><b>Khách hàng</b><br/><br/><br/>........................</div><div><b>Nhân viên phụ trách</b><br/><br/><br/>........................</div><div><b>Giám đốc kinh doanh</b><br/><br/><br/>........................</div></div>
-      <script>window.onload=function(){window.print()}</script></body></html>`);
+      <script>window.onload=function(){document.body.style.zoom='1';window.print()}</script></body></html>`);
     win.document.close();
   };
 
