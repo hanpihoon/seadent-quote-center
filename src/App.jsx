@@ -120,11 +120,26 @@ function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart 
   );
 }
 
-function CartCard({ item, updateQty, removeFromCart }) {
+function CartCard({ item, updateQty, updateCartDiscount, removeFromCart, isUnlocked }) {
   return (
     <div className="sq-card">
       <div className="sq-product-title">{item.name}</div>
       <div className="sq-line"><span>Đơn giá</span><span className="sq-value">{money(item.finalPrice)}</span></div>
+      <div className="sq-line">
+        <span>Chiết khấu</span>
+        <span className="sq-value">
+          <input
+            className="sq-mini-input"
+            type="number"
+            min="0"
+            max="100"
+            value={item.discount}
+            disabled={!isUnlocked}
+            style={{ opacity: isUnlocked ? 1 : 0.45 }}
+            onChange={(e) => updateCartDiscount(item.id, e.target.value)}
+          /> %
+        </span>
+      </div>
       <div className="sq-line"><span>Số lượng</span><input className="sq-mini-input" type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item.id, e.target.value)} /></div>
       <div className="sq-line"><span>Thành tiền</span><span className="sq-value sq-price">{money(item.finalPrice * item.quantity)}</span></div>
       <button className="sq-btn sq-btn-danger" style={{ marginTop: 12 }} onClick={() => removeFromCart(item.id)}>Xóa sản phẩm</button>
@@ -272,6 +287,25 @@ export default function App() {
     setCart((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], quantity: safeQty } } : prev));
   };
 
+  const updateCartDiscount = (id, value) => {
+    if (!isUnlocked) return;
+    const discount = Math.max(0, Math.min(100, num(value)));
+
+    setCart((prev) => {
+      const item = prev[id];
+      if (!item) return prev;
+
+      return {
+        ...prev,
+        [id]: {
+          ...item,
+          discount,
+          finalPrice: calcPrice(item.price, discount),
+        },
+      };
+    });
+  };
+
   const removeFromCart = (id) => {
     setCart((prev) => {
       const next = { ...prev };
@@ -402,7 +436,16 @@ export default function App() {
               <div className="sq-card" style={{ textAlign: "center", color: "#64748b" }}>Chưa có sản phẩm trong giỏ hàng.</div>
             ) : (
               <>
-                <div className="sq-card-grid">{cartItems.map((item) => <CartCard key={item.id} item={item} updateQty={updateQty} removeFromCart={removeFromCart} />)}</div>
+                <div className="sq-card-grid">{cartItems.map((item) => (
+                  <CartCard
+                    key={item.id}
+                    item={item}
+                    updateQty={updateQty}
+                    updateCartDiscount={updateCartDiscount}
+                    removeFromCart={removeFromCart}
+                    isUnlocked={isUnlocked}
+                  />
+                ))}</div>
                 <div className="sq-summary">
                   <strong>Tổng cộng {cartQty} sản phẩm</strong>
                   <div className="sq-muted">Trước CK: {money(cartBeforeDiscount)}</div>
