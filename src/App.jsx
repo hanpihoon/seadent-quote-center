@@ -14,17 +14,17 @@ const DEMO_PRODUCTS = [
 
 const money = (value) => `${new Intl.NumberFormat("vi-VN").format(Number(value) || 0)} đ`;
 const num = (value, fallback = 0) => (Number.isFinite(Number(value)) ? Number(value) : fallback);
-const finalPrice = (price, discount) => num(price) - (num(price) * num(discount)) / 100;
+const calcPrice = (price, discount) => num(price) - (num(price) * num(discount)) / 100;
 const isBrowser = () => typeof window !== "undefined";
 
 const getLocal = (key, fallback) => {
   if (!isBrowser()) return fallback;
-  try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
+  try { return window.localStorage.getItem(key) ?? fallback; } catch { return fallback; }
 };
 
 const setLocal = (key, value) => {
   if (!isBrowser()) return;
-  try { localStorage.setItem(key, value); } catch {}
+  try { window.localStorage.setItem(key, value); } catch {}
 };
 
 const normalizeProduct = (item, index) => ({
@@ -36,6 +36,100 @@ const normalizeProduct = (item, index) => ({
   discount: num(item.discount),
 });
 
+const STYLES = `
+  * { box-sizing: border-box; }
+  html, body, #root { width: 100%; max-width: 100%; margin: 0; overflow-x: hidden; }
+  body { background: #f8fafc; font-family: Arial, Helvetica, sans-serif; color: #111827; }
+  button, input { font-family: inherit; }
+
+  .sq-page { min-height: 100vh; width: 100%; max-width: 100vw; overflow-x: hidden; padding: 12px 12px 112px; background: #f8fafc; }
+  .sq-shell { width: 100%; max-width: 1180px; margin: 0 auto; }
+  .sq-hero { background: linear-gradient(135deg,#fff,#fff7ed); border: 1px solid #fed7aa; border-radius: 22px; padding: 16px; box-shadow: 0 16px 38px rgba(15,23,42,.08); margin-bottom: 12px; }
+  .sq-brand { display: flex; gap: 12px; align-items: center; min-width: 0; }
+  .sq-logo { width: 52px; height: 52px; object-fit: contain; border-radius: 16px; background: #fff; border: 1px solid #fed7aa; padding: 7px; flex: 0 0 auto; }
+  .sq-badge { display: inline-block; background: #fff1e7; color: #ea580c; padding: 5px 9px; border-radius: 999px; font-weight: 900; font-size: 11px; margin-bottom: 6px; }
+  .sq-title { margin: 0; font-size: 25px; line-height: 1.05; letter-spacing: -.04em; }
+  .sq-muted { color: #6b7280; font-size: 12px; line-height: 1.45; }
+  .sq-stats { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 14px; }
+  .sq-stat { background: rgba(255,255,255,.92); border: 1px solid #eef0f4; border-radius: 16px; padding: 12px; min-width: 0; }
+  .sq-stat-label { color: #6b7280; font-size: 12px; font-weight: 800; }
+  .sq-stat-value { color: #ea580c; font-weight: 950; font-size: 18px; margin-top: 3px; overflow-wrap: anywhere; }
+
+  .sq-panel { background: #fff; border: 1px solid #eef0f4; border-radius: 20px; padding: 14px; box-shadow: 0 14px 32px rgba(15,23,42,.06); margin-bottom: 12px; min-width: 0; }
+  .sq-input { width: 100%; height: 46px; background: #f8fafc; color: #111827; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0 13px; font-size: 16px; outline: none; }
+  .sq-btn { width: 100%; min-height: 46px; border: none; border-radius: 15px; padding: 11px 13px; font-size: 14px; font-weight: 900; cursor: pointer; background: #f97316; color: #fff; }
+  .sq-btn-dark { background: #111827; color: #fff; }
+  .sq-btn-light { background: #fff; color: #374151; border: 1px solid #e5e7eb; }
+  .sq-btn-danger { background: #fff1f2; color: #e11d48; border: 1px solid #ffe4e6; }
+  .sq-stack { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .sq-tools { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+
+  .sq-category { display: flex; justify-content: space-between; align-items: center; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; padding: 12px 14px; font-weight: 950; color: #111827; }
+  .sq-count { background: #fff1e7; color: #ea580c; border-radius: 999px; padding: 5px 9px; font-size: 12px; font-weight: 900; }
+  .sq-card-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .sq-card { background: #fff; border: 1px solid #eef0f4; border-radius: 18px; padding: 14px; box-shadow: 0 14px 32px rgba(15,23,42,.06); min-width: 0; }
+  .sq-product-title { font-size: 16px; font-weight: 950; line-height: 1.35; margin-bottom: 8px; overflow-wrap: anywhere; }
+  .sq-tag { display: inline-block; background: #fff1e7; color: #ea580c; border-radius: 999px; padding: 5px 9px; font-size: 12px; font-weight: 900; }
+  .sq-line { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #4b5563; font-size: 13px; }
+  .sq-value { color: #111827; font-weight: 900; text-align: right; overflow-wrap: anywhere; }
+  .sq-price { color: #ea580c; font-weight: 950; }
+  .sq-mini-input { width: 78px; height: 38px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0 8px; font-size: 16px; font-weight: 900; }
+  .sq-summary { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; padding: 14px; display: grid; gap: 6px; margin-top: 12px; }
+
+  .sq-sticky { position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 99; background: #111827; color: #fff; border-radius: 20px; padding: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.25); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 640px; margin: 0 auto; }
+  .sq-sticky-top { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 0 4px 2px; }
+  .sq-footer { text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px; }
+
+  @media (min-width: 768px) {
+    .sq-page { padding: 24px 24px 112px; }
+    .sq-hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 16px; align-items: center; }
+    .sq-title { font-size: 42px; }
+    .sq-logo { width: 72px; height: 72px; }
+    .sq-stats { grid-template-columns: repeat(3, minmax(0,1fr)); margin-top: 0; }
+    .sq-top-grid { display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 12px; }
+    .sq-tools { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .sq-card-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .sq-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+  }
+
+  @media (min-width: 1100px) {
+    .sq-card-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .sq-form-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  }
+`;
+
+function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart }) {
+  const price = calcPrice(product.price, discount);
+  return (
+    <div className="sq-card">
+      <div className="sq-product-title">{product.name}</div>
+      <div style={{ marginBottom: 8 }}><span className="sq-tag">{product.category}</span></div>
+      <div className="sq-line"><span>Giá niêm yết</span><span className="sq-value">{money(product.price)}</span></div>
+      <div className="sq-line"><span>Tồn kho</span><span className="sq-value">{product.stock}</span></div>
+      <div className="sq-line">
+        <span>Chiết khấu</span>
+        <span className="sq-value">
+          <input className="sq-mini-input" style={{ opacity: isUnlocked ? 1 : 0.45 }} disabled={!isUnlocked} type="number" value={discount} onChange={(e) => updateDiscount(product.id, e.target.value)} /> %
+        </span>
+      </div>
+      <div className="sq-line"><span>Giá bán</span><span className="sq-value sq-price">{money(price)}</span></div>
+      <button className="sq-btn" style={{ marginTop: 12 }} onClick={() => addToCart(product)}>+ Thêm vào giỏ hàng</button>
+    </div>
+  );
+}
+
+function CartCard({ item, updateQty, removeFromCart }) {
+  return (
+    <div className="sq-card">
+      <div className="sq-product-title">{item.name}</div>
+      <div className="sq-line"><span>Đơn giá</span><span className="sq-value">{money(item.finalPrice)}</span></div>
+      <div className="sq-line"><span>Số lượng</span><input className="sq-mini-input" type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item.id, e.target.value)} /></div>
+      <div className="sq-line"><span>Thành tiền</span><span className="sq-value sq-price">{money(item.finalPrice * item.quantity)}</span></div>
+      <button className="sq-btn sq-btn-danger" style={{ marginTop: 12 }} onClick={() => removeFromCart(item.id)}>Xóa sản phẩm</button>
+    </div>
+  );
+}
+
 export default function App() {
   const [products, setProducts] = React.useState(DEMO_PRODUCTS);
   const [discounts, setDiscounts] = React.useState({});
@@ -44,7 +138,7 @@ export default function App() {
   const [password, setPassword] = React.useState("");
   const [syncStatus, setSyncStatus] = React.useState("Đang tải dữ liệu...");
   const [globalDiscount, setGlobalDiscount] = React.useState(10);
-  const [collapsedCategories, setCollapsedCategories] = React.useState({});
+  const [collapsed, setCollapsed] = React.useState({});
   const [customerName, setCustomerName] = React.useState("");
   const [customerPhone, setCustomerPhone] = React.useState("");
   const [customerAddress, setCustomerAddress] = React.useState("");
@@ -53,36 +147,37 @@ export default function App() {
   const [isGrouped, setIsGrouped] = React.useState(() => getLocal("seadent_group_by_category", "true") === "true");
 
   React.useEffect(() => {
-    setLocal("seadent_discount_unlocked", String(isUnlocked));
-  }, [isUnlocked]);
+    if (!isBrowser()) return undefined;
+    let viewport = document.querySelector('meta[name="viewport"]');
+    if (!viewport) {
+      viewport = document.createElement("meta");
+      viewport.setAttribute("name", "viewport");
+      document.head.appendChild(viewport);
+    }
+    viewport.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover");
+    document.documentElement.style.overflowX = "hidden";
+    document.body.style.overflowX = "hidden";
+    document.body.style.margin = "0";
+    return undefined;
+  }, []);
 
-  React.useEffect(() => {
-    setLocal("seadent_group_by_category", String(isGrouped));
-  }, [isGrouped]);
+  React.useEffect(() => setLocal("seadent_discount_unlocked", String(isUnlocked)), [isUnlocked]);
+  React.useEffect(() => setLocal("seadent_group_by_category", String(isGrouped)), [isGrouped]);
 
   React.useEffect(() => {
     async function loadProducts() {
-      if (GOOGLE_SHEET_ID === "GOOGLE_SHEET_ID") {
-        const demoDiscounts = Object.fromEntries(DEMO_PRODUCTS.map((p) => [p.id, p.discount]));
-        setDiscounts(demoDiscounts);
-        setSyncStatus("Đang dùng dữ liệu demo. Hãy thay GOOGLE_SHEET_ID để đồng bộ Google Sheet.");
-        return;
-      }
-
       try {
         const res = await fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const formatted = data.map(normalizeProduct).filter((p) => p.name);
-        const sheetDiscounts = Object.fromEntries(formatted.map((p) => [p.id, p.discount]));
-        setProducts(formatted);
-        setDiscounts(sheetDiscounts);
+        setProducts(formatted.length ? formatted : DEMO_PRODUCTS);
+        setDiscounts(Object.fromEntries((formatted.length ? formatted : DEMO_PRODUCTS).map((p) => [p.id, p.discount])));
         setSyncStatus("Đã đồng bộ dữ liệu từ Google Sheet");
       } catch (error) {
         console.error("Google Sheet Error:", error);
-        const demoDiscounts = Object.fromEntries(DEMO_PRODUCTS.map((p) => [p.id, p.discount]));
         setProducts(DEMO_PRODUCTS);
-        setDiscounts(demoDiscounts);
+        setDiscounts(Object.fromEntries(DEMO_PRODUCTS.map((p) => [p.id, p.discount])));
         setSyncStatus("Không tải được Google Sheet. Đang dùng dữ liệu demo để web không bị lỗi.");
       }
     }
@@ -90,12 +185,23 @@ export default function App() {
   }, []);
 
   const getDiscount = (id) => discounts[String(id)] ?? 0;
+  const filtered = products.filter((p) => `${p.name} ${p.category}`.toLowerCase().includes(search.toLowerCase()));
+  const grouped = filtered.reduce((acc, product) => {
+    const category = product.category || "Uncategorized";
+    acc[category] = acc[category] || [];
+    acc[category].push(product);
+    return acc;
+  }, {});
+  const categories = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
+
+  const cartItems = Object.values(cart);
+  const cartQty = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartBeforeDiscount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const cartTotal = cartItems.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0);
+  const cartDiscount = cartBeforeDiscount - cartTotal;
+  const quoteTotal = filtered.reduce((sum, p) => sum + calcPrice(p.price, getDiscount(p.id)), 0);
 
   const syncDiscount = async (payload) => {
-    if (GOOGLE_SCRIPT_URL === "GOOGLE_APPS_SCRIPT_WEB_APP_URL") {
-      setSyncStatus("Chưa cấu hình GOOGLE_SCRIPT_URL. Thay đổi chỉ hiển thị trên web hiện tại.");
-      return;
-    }
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
@@ -116,8 +222,9 @@ export default function App() {
     const discount = num(value);
     setDiscounts((prev) => ({ ...prev, [productId]: discount }));
     setCart((prev) => {
-      if (!prev[productId]) return prev;
-      return { ...prev, [productId]: { ...prev[productId], discount, finalPrice: finalPrice(prev[productId].price, discount) } };
+      const item = prev[productId];
+      if (!item) return prev;
+      return { ...prev, [productId]: { ...item, discount, finalPrice: calcPrice(item.price, discount) } };
     });
     await syncDiscount({ action: "updateDiscount", id: productId, discount });
   };
@@ -127,35 +234,19 @@ export default function App() {
     const discount = num(value);
     setGlobalDiscount(discount);
     setDiscounts(Object.fromEntries(products.map((p) => [p.id, discount])));
-    setCart((prev) => Object.fromEntries(Object.values(prev).map((item) => [item.id, { ...item, discount, finalPrice: finalPrice(item.price, discount) }])));
+    setCart((prev) => Object.fromEntries(Object.values(prev).map((item) => [item.id, { ...item, discount, finalPrice: calcPrice(item.price, discount) }])));
     await syncDiscount({ action: "updateAllDiscounts", discount });
   };
 
   const unlockDiscount = () => {
-    if (password !== DISCOUNT_PASSWORD) return alert("Sai mật khẩu mở khóa chiết khấu");
+    if (password !== DISCOUNT_PASSWORD) {
+      alert("Sai mật khẩu mở khóa chiết khấu");
+      return;
+    }
     setIsUnlocked(true);
     setPassword("");
     setSyncStatus("Đã mở khóa chỉnh sửa chiết khấu");
   };
-
-  const filteredProducts = products.filter((p) =>
-    `${p.name} ${p.category}`.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const groupedProducts = filteredProducts.reduce((groups, product) => {
-    const category = product.category || "Uncategorized";
-    groups[category] = groups[category] || [];
-    groups[category].push(product);
-    return groups;
-  }, {});
-
-  const categories = Object.keys(groupedProducts).sort((a, b) => a.localeCompare(b));
-  const quoteTotal = filteredProducts.reduce((sum, p) => sum + finalPrice(p.price, getDiscount(p.id)), 0);
-  const cartItems = Object.values(cart);
-  const cartQty = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const cartTotalBeforeDiscount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const cartTotal = cartItems.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0);
-  const cartDiscountTotal = cartTotalBeforeDiscount - cartTotal;
 
   const addToCart = (product) => {
     const id = String(product.id);
@@ -168,7 +259,7 @@ export default function App() {
         category: product.category,
         price: product.price,
         discount,
-        finalPrice: finalPrice(product.price, discount),
+        finalPrice: calcPrice(product.price, discount),
         quantity: (prev[id]?.quantity || 0) + 1,
       },
     }));
@@ -176,7 +267,7 @@ export default function App() {
 
   const updateQty = (id, quantity) => {
     const safeQty = Math.max(1, num(quantity, 1));
-    setCart((prev) => ({ ...prev, [id]: { ...prev[id], quantity: safeQty } }));
+    setCart((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], quantity: safeQty } } : prev));
   };
 
   const removeFromCart = (id) => {
@@ -187,9 +278,17 @@ export default function App() {
     });
   };
 
+  const scrollToCart = () => {
+    if (!isBrowser()) return;
+    document.getElementById("quote-cart")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const exportQuotePdf = () => {
     if (!isBrowser()) return;
-    if (!cartItems.length) return alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi xuất PDF");
+    if (!cartItems.length) {
+      alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi xuất PDF");
+      return;
+    }
 
     const rows = cartItems.map((item, index) => `
       <tr>
@@ -201,173 +300,128 @@ export default function App() {
     const win = window.open("", "_blank");
     if (!win) return;
     win.document.write(`
-      <!doctype html><html><head><title>SEADENT Quotation</title>
+      <!doctype html><html><head><meta charset="UTF-8" /><title>SEADENT Quotation</title>
       <style>
-        body{font-family:Arial,sans-serif;color:#111827;padding:28px} .header{display:flex;justify-content:space-between;border-bottom:3px solid #f97316;padding-bottom:16px;margin-bottom:20px}
-        .brand{font-size:24px;font-weight:900;color:#f97316}.sub{color:#6b7280;line-height:1.5}.meta{text-align:right;line-height:1.6} h2{text-align:center;margin:24px 0}
-        .customer{background:#fff7ed;border:1px solid #fed7aa;padding:14px;border-radius:12px;margin-bottom:18px;line-height:1.8}
-        table{width:100%;border-collapse:collapse} th{background:#f97316;color:white;padding:9px;font-size:12px;text-align:left} td{border-bottom:1px solid #e5e7eb;padding:9px;font-size:12px}
-        .summary{width:520px;margin-left:auto;margin-top:22px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden}.sumrow{display:grid;grid-template-columns:220px 1fr;gap:18px;align-items:center;padding:10px 14px;border-bottom:1px solid #e5e7eb;font-size:13px}.sumrow:last-child{border-bottom:none}.sumlabel{color:#374151;font-weight:800;white-space:nowrap}.sumvalue{font-weight:900;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.sumfinal{background:#fff7ed;color:#f97316;font-size:17px}.sumfinal .sumvalue{font-size:20px}.total{text-align:right;margin-top:22px;font-size:24px;font-weight:900;color:#f97316}.signature{display:flex;justify-content:space-between;margin-top:55px;text-align:center}
-        @media print{body{padding:18px}}
+        body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;color:#111827;padding:28px;-webkit-font-smoothing:antialiased}.header{display:flex;justify-content:space-between;border-bottom:3px solid #f97316;padding-bottom:16px;margin-bottom:20px}
+        .brand{font-size:24px;font-weight:900;color:#f97316}.sub{color:#6b7280;line-height:1.5}.meta{text-align:right;line-height:1.6}h2{text-align:center;margin:24px 0}
+        .customer{background:#fff7ed;border:1px solid #fed7aa;padding:14px;border-radius:12px;margin-bottom:18px;line-height:1.8}table{width:100%;border-collapse:collapse}th{background:#f97316;color:white;padding:9px;font-size:12px;text-align:left}td{border-bottom:1px solid #e5e7eb;padding:9px;font-size:12px}
+        .summary{width:520px;margin-left:auto;margin-top:22px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden}.sumrow{display:grid;grid-template-columns:220px 1fr;gap:18px;padding:10px 14px;border-bottom:1px solid #e5e7eb}.sumlabel{font-weight:800}.sumvalue{text-align:right;font-weight:900;white-space:nowrap}.sumfinal{background:#fff7ed;color:#f97316;font-size:18px}.note{margin-top:18px;padding:14px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;color:#7c2d12;line-height:1.8}.signature{display:flex;justify-content:space-between;margin-top:55px;text-align:center}@media print{body{padding:18px}}
       </style></head><body>
-      <div class="header"><div style="display:flex;gap:14px"><img src="/logo.png" style="width:82px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0901371516 · Email: info@seadent.com.vn · Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
+      <div class="header"><div style="display:flex;gap:14px"><img src="/logo.png" style="width:82px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0901371516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
       <h2>BẢNG BÁO GIÁ</h2>
       <div class="customer"><b>Tên khách hàng:</b> ${customerName || "........................"}<br/><b>Số điện thoại:</b> ${customerPhone || "........................"}<br/><b>Địa chỉ:</b> ${customerAddress || "........................"}<br/><b>Ghi chú:</b> ${customerNote || "Không có"}</div>
       <table><thead><tr><th>#</th><th>Sản phẩm</th><th>Danh mục</th><th>Giá niêm yết</th><th>CK</th><th>Đơn giá sau CK</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="summary">
-        <div class="sumrow"><div class="sumlabel">Tổng tiền trước chiết khấu</div><div class="sumvalue">${money(cartTotalBeforeDiscount)}</div></div>
-        <div class="sumrow"><div class="sumlabel">Tổng tiền chiết khấu</div><div class="sumvalue">${money(cartDiscountTotal)}</div></div>
-        <div class="sumrow sumfinal"><div class="sumlabel">Tổng cộng sau chiết khấu</div><div class="sumvalue">${money(cartTotal)}</div></div>
-      </div>
-      <div style="margin-top:18px;padding:14px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;color:#7c2d12;line-height:1.8;font-size:13px">
-      <div><b>• Giá trên đã bao gồm thuế GTGT</b></div>
-      <div><b>• Chất lượng hàng hoá mới 100%</b></div>
-      </div>
+      <div class="summary"><div class="sumrow"><div class="sumlabel">Tổng tiền trước chiết khấu</div><div class="sumvalue">${money(cartBeforeDiscount)}</div></div><div class="sumrow"><div class="sumlabel">Tổng tiền chiết khấu</div><div class="sumvalue">${money(cartDiscount)}</div></div><div class="sumrow sumfinal"><div class="sumlabel">Tổng cộng sau chiết khấu</div><div class="sumvalue">${money(cartTotal)}</div></div></div>
+      <div class="note"><b>• Giá trên đã bao gồm thuế GTGT</b><br/><b>• Chất lượng hàng hoá mới 100%</b></div>
       <div style="margin-top:16px;color:#6b7280">Báo giá được tạo từ SEADENT Quote Center.</div>
       <div class="signature"><div><b>Khách hàng</b><br/><br/><br/>........................</div><div><b>Nhân viên phụ trách</b><br/><br/><br/>........................</div><div><b>Giám đốc kinh doanh</b><br/><br/><br/>........................</div></div>
       <script>window.onload=function(){window.print()}</script></body></html>`);
     win.document.close();
   };
 
-  const styles = {
-    page: { minHeight: "100vh", background: "linear-gradient(135deg,#fff 0%,#f6f7fb 50%,#fff3ea 100%)", color: "#111827", fontFamily: "Arial, Helvetica, sans-serif", padding: 28 },
-    container: { maxWidth: 1280, margin: "0 auto" },
-    card: { background: "#fff", border: "1px solid #eef0f4", borderRadius: 22, padding: 22, boxShadow: "0 18px 45px rgba(15,23,42,.07)" },
-    hero: { display: "flex", justifyContent: "space-between", gap: 24, alignItems: "center", marginBottom: 22, background: "linear-gradient(135deg,#fff,#fff7ed)", border: "1px solid #fed7aa", borderRadius: 28, padding: 26, boxShadow: "0 24px 65px rgba(15,23,42,.08)" },
-    brand: { display: "flex", gap: 16, alignItems: "center" },
-    logo: { width: 72, height: 72, objectFit: "contain", background: "#fff", borderRadius: 20, padding: 8, border: "1px solid #fed7aa" },
-    title: { fontSize: 42, margin: 0, letterSpacing: "-.04em" },
-    muted: { color: "#6b7280", fontSize: 14 },
-    badge: { display: "inline-block", background: "#fff1e7", color: "#ea580c", padding: "6px 10px", borderRadius: 999, fontWeight: 800, fontSize: 12, marginBottom: 8 },
-    statGrid: { display: "grid", gridTemplateColumns: "repeat(3,150px)", gap: 12 },
-    stat: { background: "rgba(255,255,255,.9)", border: "1px solid #eef0f4", borderRadius: 18, padding: 16 },
-    statValue: { color: "#ea580c", fontSize: 22, fontWeight: 900 },
-    grid: { display: "grid", gridTemplateColumns: "1fr 360px", gap: 16, marginBottom: 18 },
-    input: { width: "100%", background: "#f8fafc", color: "#111827", border: "1px solid #e5e7eb", borderRadius: 14, padding: "12px 14px", outline: "none", boxSizing: "border-box" },
-    button: { background: "#f97316", color: "#fff", border: "none", borderRadius: 999, padding: "10px 14px", cursor: "pointer", fontWeight: 900 },
-    secondaryBtn: { background: "#fff", color: "#374151", border: "1px solid #e5e7eb", borderRadius: 999, padding: "10px 13px", cursor: "pointer", fontWeight: 800 },
-    darkBtn: { background: "#111827", color: "#fff", border: "none", borderRadius: 999, padding: "10px 14px", cursor: "pointer", fontWeight: 900 },
-    dangerBtn: { background: "#fff1f2", color: "#e11d48", border: "1px solid #ffe4e6", borderRadius: 999, padding: "10px 14px", cursor: "pointer", fontWeight: 900 },
-    toolbar: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 },
-    tableWrap: { background: "#fff", border: "1px solid #eef0f4", borderRadius: 22, overflow: "hidden", boxShadow: "0 18px 45px rgba(15,23,42,.07)" },
-    table: { width: "100%", borderCollapse: "collapse" },
-    th: { textAlign: "left", padding: 14, background: "#f9fafb", color: "#6b7280", fontSize: 12, textTransform: "uppercase" },
-    td: { padding: 14, borderTop: "1px solid #f1f5f9", color: "#374151" },
-    category: { display: "flex", justifyContent: "space-between", padding: "14px 18px", background: "#fff7ed", cursor: "pointer", fontWeight: 900, color: "#111827" },
-    tag: { background: "#fff1e7", color: "#ea580c", borderRadius: 999, padding: "6px 10px", fontWeight: 800, fontSize: 12 },
-    miniInput: { width: 82, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, padding: 8, fontWeight: 800 },
-    price: { color: "#ea580c", fontWeight: 900 },
-    cart: { marginTop: 22 },
-    cartHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 14 },
-    formGrid: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 14 },
-    summary: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 18, padding: 16 },
-    footer: { textAlign: "center", color: "#9ca3af", marginTop: 28, fontSize: 13 },
-  };
-
-  const ProductRow = ({ product }) => {
-    const discount = getDiscount(product.id);
-    const price = finalPrice(product.price, discount);
-    return (
-      <tr>
-        <td style={{ ...styles.td, fontWeight: 800 }}>{product.name}</td>
-        <td style={styles.td}><span style={styles.tag}>{product.category}</span></td>
-        <td style={styles.td}>{product.stock}</td>
-        <td style={styles.td}>{money(product.price)}</td>
-        <td style={styles.td}><input style={{ ...styles.miniInput, opacity: isUnlocked ? 1 : .45 }} disabled={!isUnlocked} type="number" value={discount} onChange={(e) => updateDiscount(product.id, e.target.value)} /> %</td>
-        <td style={{ ...styles.td, ...styles.price }}>{money(price)}</td>
-        <td style={styles.td}><button style={styles.button} onClick={() => addToCart(product)}>+ Giỏ hàng</button></td>
-      </tr>
-    );
-  };
-
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
-        <section style={styles.hero}>
-          <div style={styles.brand}>
-            <img src="/logo.png" alt="SEADENT" style={styles.logo} />
-            <div>
-              <div style={styles.badge}>● SEADENT PRICING SYSTEM</div>
-              <h1 style={styles.title}>SEADENT Quote Center</h1>
-              <div style={styles.muted}>Internal Pricing & Quotation Dashboard</div>
-            </div>
-          </div>
-          <div style={styles.statGrid}>
-            <div style={styles.stat}><div style={styles.muted}>Products</div><div style={styles.statValue}>{products.length}</div></div>
-            <div style={styles.stat}><div style={styles.muted}>Quote Total</div><div style={styles.statValue}>{money(quoteTotal)}</div></div>
-            <div style={styles.stat}><div style={styles.muted}>Cart Total</div><div style={styles.statValue}>{money(cartTotal)}</div></div>
-          </div>
-        </section>
-
-        <div style={styles.grid}>
-          <div style={styles.card}>
-            <input style={styles.input} placeholder="Tìm nhanh sản phẩm..." value={search} onChange={(e) => setSearch(e.target.value)} />
-            <div style={styles.toolbar}>
-              <button style={isGrouped ? styles.button : styles.secondaryBtn} onClick={() => setIsGrouped(!isGrouped)}>{isGrouped ? "✓ Group by Category" : "Group by Category"}</button>
-              {isGrouped && <><button style={styles.secondaryBtn} onClick={() => setCollapsedCategories({})}>Expand all</button><button style={styles.secondaryBtn} onClick={() => setCollapsedCategories(Object.fromEntries(categories.map((c) => [c, true])))}>Collapse all</button></>}
-            </div>
-            <div style={{ ...styles.muted, marginTop: 12 }}>{syncStatus}</div>
-          </div>
-
-          <div style={styles.card}>
-            <div style={styles.badge}>{isUnlocked ? "🔓 Discount Unlocked" : "🔒 Discount Locked"}</div>
-            <input style={{ ...styles.input, opacity: isUnlocked ? 1 : .45 }} type="number" value={globalDiscount} disabled={!isUnlocked} onChange={(e) => applyGlobalDiscount(e.target.value)} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, marginTop: 12 }}>
-              <input style={styles.input} type="password" placeholder="Password" value={password} disabled={isUnlocked} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlockDiscount()} />
-              <button style={styles.button} onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>{isUnlocked ? "Lock" : "Unlock"}</button>
-            </div>
-            <button style={{ ...styles.dangerBtn, width: "100%", marginTop: 10, opacity: isUnlocked ? 1 : .5 }} onClick={() => isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước")}>Reset Discount</button>
-          </div>
-        </div>
-
-        <div style={styles.tableWrap}>
-          <table style={styles.table}>
-            <thead><tr><th style={styles.th}>Product</th><th style={styles.th}>Category</th><th style={styles.th}>Stock</th><th style={styles.th}>List Price</th><th style={styles.th}>Discount</th><th style={styles.th}>Final Price</th><th style={styles.th}>Cart</th></tr></thead>
-            <tbody>
-              {isGrouped ? categories.map((category) => (
-                <React.Fragment key={category}>
-                  <tr><td colSpan="7" style={{ padding: 0 }}><div style={styles.category} onClick={() => setCollapsedCategories((p) => ({ ...p, [category]: !p[category] }))}><span>{collapsedCategories[category] ? "▸" : "▾"} {category} <span style={styles.tag}>{groupedProducts[category].length}</span></span><span>{collapsedCategories[category] ? "+" : "−"}</span></div></td></tr>
-                  {!collapsedCategories[category] && groupedProducts[category].map((product) => <ProductRow key={product.id} product={product} />)}
-                </React.Fragment>
-              )) : filteredProducts.map((product) => <ProductRow key={product.id} product={product} />)}
-            </tbody>
-          </table>
-        </div>
-
-        <section style={{ ...styles.card, ...styles.cart }}>
-          <div style={styles.cartHeader}>
-            <div><h2 style={{ margin: 0 }}>Giỏ hàng báo giá</h2><div style={styles.muted}>{cartQty} sản phẩm đã chọn</div></div>
-            <div style={styles.toolbar}><button style={styles.darkBtn} onClick={exportQuotePdf}>Xuất PDF báo giá</button><button style={styles.dangerBtn} onClick={() => setCart({})}>Xóa giỏ hàng</button></div>
-          </div>
-
-          <div style={styles.formGrid}>
-            <input style={styles.input} placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
-            <input style={styles.input} placeholder="Số điện thoại" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
-            <input style={styles.input} placeholder="Địa chỉ" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
-            <input style={styles.input} placeholder="Ghi chú" value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} />
-          </div>
-
-          {!cartItems.length ? <div style={{ ...styles.card, textAlign: "center", color: "#64748b" }}>Chưa có sản phẩm trong giỏ hàng.</div> : (
-            <>
-              <div style={styles.tableWrap}>
-                <table style={styles.table}>
-                  <thead><tr><th style={styles.th}>Sản phẩm</th><th style={styles.th}>Đơn giá sau CK</th><th style={styles.th}>Số lượng</th><th style={styles.th}>Thành tiền</th><th style={styles.th}>Xóa</th></tr></thead>
-                  <tbody>{cartItems.map((item) => <tr key={item.id}><td style={styles.td}>{item.name}</td><td style={styles.td}>{money(item.finalPrice)}</td><td style={styles.td}><input style={styles.miniInput} type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item.id, e.target.value)} /></td><td style={{ ...styles.td, ...styles.price }}>{money(item.finalPrice * item.quantity)}</td><td style={styles.td}><button style={styles.dangerBtn} onClick={() => removeFromCart(item.id)}>Xóa</button></td></tr>)}</tbody>
-                </table>
-              </div>
-              <div style={styles.summary}>
+    <>
+      <style>{STYLES}</style>
+      <div className="sq-page">
+        <main className="sq-shell">
+          <section className="sq-hero">
+            <div className="sq-hero-grid">
+              <div className="sq-brand">
+                <img src="/logo.png" alt="SEADENT" className="sq-logo" />
                 <div>
-                  <strong>Tổng cộng {cartQty} sản phẩm trong báo giá</strong>
-                  <div style={styles.muted}>Trước CK: {money(cartTotalBeforeDiscount)} · Tiền CK: {money(cartDiscountTotal)}</div>
+                  <div className="sq-badge">SEADENT PRICING</div>
+                  <h1 className="sq-title">Quote Center</h1>
+                  <div className="sq-muted">Báo giá nhanh trên mọi thiết bị</div>
                 </div>
-                <div style={{ ...styles.statValue, fontSize: 30 }}>{money(cartTotal)}</div>
               </div>
-            </>
-          )}
-        </section>
+              <div className="sq-stats">
+                <div className="sq-stat"><div className="sq-stat-label">Products</div><div className="sq-stat-value">{products.length}</div></div>
+                <div className="sq-stat"><div className="sq-stat-label">Quote Total</div><div className="sq-stat-value">{money(quoteTotal)}</div></div>
+                <div className="sq-stat"><div className="sq-stat-label">Cart Total</div><div className="sq-stat-value">{money(cartTotal)}</div></div>
+              </div>
+            </div>
+          </section>
 
-        <div style={styles.footer}>SEADENT Quote Center © 2026</div>
+          <div className="sq-top-grid">
+            <section className="sq-panel">
+              <input className="sq-input" placeholder="Tìm nhanh sản phẩm..." value={search} onChange={(e) => setSearch(e.target.value)} />
+              <div className="sq-tools">
+                <button className={`sq-btn ${isGrouped ? "" : "sq-btn-light"}`} onClick={() => setIsGrouped(!isGrouped)}>{isGrouped ? "✓ Group" : "Group"}</button>
+                {isGrouped && <button className="sq-btn sq-btn-light" onClick={() => setCollapsed({})}>Mở tất cả</button>}
+                {isGrouped && <button className="sq-btn sq-btn-light" onClick={() => setCollapsed(Object.fromEntries(categories.map((c) => [c, true])))}>Thu gọn</button>}
+              </div>
+              <div className="sq-muted" style={{ marginTop: 10 }}>{syncStatus}</div>
+            </section>
+
+            <section className="sq-panel">
+              <div className="sq-badge">{isUnlocked ? "🔓 Đã mở khóa" : "🔒 Đang khóa"}</div>
+              <div className="sq-stack">
+                <input className="sq-input" style={{ opacity: isUnlocked ? 1 : 0.45 }} type="number" value={globalDiscount} disabled={!isUnlocked} onChange={(e) => applyGlobalDiscount(e.target.value)} />
+                <input className="sq-input" type="password" placeholder="Password" value={password} disabled={isUnlocked} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlockDiscount()} />
+                <button className="sq-btn" onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>{isUnlocked ? "Khóa lại" : "Mở khóa"}</button>
+                <button className="sq-btn sq-btn-danger" style={{ opacity: isUnlocked ? 1 : 0.5 }} onClick={() => isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước")}>Reset Discount</button>
+              </div>
+            </section>
+          </div>
+
+          <section className="sq-stack">
+            {isGrouped ? categories.map((category) => (
+              <React.Fragment key={category}>
+                <div className="sq-category" onClick={() => setCollapsed((prev) => ({ ...prev, [category]: !prev[category] }))}>
+                  <span>{collapsed[category] ? "▸" : "▾"} {category}</span>
+                  <span className="sq-count">{grouped[category].length}</span>
+                </div>
+                {!collapsed[category] && <div className="sq-card-grid">{grouped[category].map((product) => <ProductCard key={product.id} product={product} discount={getDiscount(product.id)} isUnlocked={isUnlocked} updateDiscount={updateDiscount} addToCart={addToCart} />)}</div>}
+              </React.Fragment>
+            )) : <div className="sq-card-grid">{filtered.map((product) => <ProductCard key={product.id} product={product} discount={getDiscount(product.id)} isUnlocked={isUnlocked} updateDiscount={updateDiscount} addToCart={addToCart} />)}</div>}
+          </section>
+
+          <section id="quote-cart" className="sq-panel" style={{ marginTop: 14 }}>
+            <div style={{ marginBottom: 12 }}>
+              <h2 style={{ margin: 0, fontSize: 22 }}>Giỏ hàng báo giá</h2>
+              <div className="sq-muted">{cartQty} sản phẩm đã chọn</div>
+            </div>
+            <div className="sq-tools">
+              <button className="sq-btn sq-btn-dark" onClick={exportQuotePdf}>Xuất PDF</button>
+              <button className="sq-btn sq-btn-danger" onClick={() => setCart({})}>Xóa giỏ hàng</button>
+            </div>
+
+            <div className="sq-form-grid" style={{ marginTop: 12, marginBottom: 12 }}>
+              <input className="sq-input" placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+              <input className="sq-input" placeholder="Số điện thoại" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
+              <input className="sq-input" placeholder="Địa chỉ" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
+              <input className="sq-input" placeholder="Ghi chú" value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} />
+            </div>
+
+            {!cartItems.length ? (
+              <div className="sq-card" style={{ textAlign: "center", color: "#64748b" }}>Chưa có sản phẩm trong giỏ hàng.</div>
+            ) : (
+              <>
+                <div className="sq-card-grid">{cartItems.map((item) => <CartCard key={item.id} item={item} updateQty={updateQty} removeFromCart={removeFromCart} />)}</div>
+                <div className="sq-summary">
+                  <strong>Tổng cộng {cartQty} sản phẩm</strong>
+                  <div className="sq-muted">Trước CK: {money(cartBeforeDiscount)}</div>
+                  <div className="sq-muted">Tiền CK: {money(cartDiscount)}</div>
+                  <div className="sq-stat-value" style={{ fontSize: 26 }}>{money(cartTotal)}</div>
+                </div>
+              </>
+            )}
+          </section>
+
+          <div className="sq-footer">SEADENT Quote Center © 2026</div>
+        </main>
+
+        {cartItems.length > 0 && (
+          <div className="sq-sticky">
+            <div className="sq-sticky-top">
+              <span>Tổng báo giá</span>
+              <strong>{money(cartTotal)}</strong>
+            </div>
+            <button className="sq-btn sq-btn-light" onClick={scrollToCart}>Xem giỏ</button>
+            <button className="sq-btn" onClick={exportQuotePdf}>Xuất PDF</button>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }
