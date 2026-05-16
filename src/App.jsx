@@ -34,10 +34,10 @@ const setLocal = (key, value) => {
 
 const normalizeKey = (key) => String(key || "")
   .toLowerCase()
-  .replaceAll(" ", "")
-  .replaceAll("_", "")
-  .replaceAll("-", "")
-  .replaceAll(".", "")
+  .split(" ").join("")
+  .split("_").join("")
+  .split("-").join("")
+  .split(".").join("")
   .trim();
 
 const pickText = (item, keys) => {
@@ -351,8 +351,8 @@ export default function App() {
         <b>• Chất lượng hàng hoá mới 100%</b><br/>
         <b>• Báo giá được tạo từ SEADENT Quote Center</b>
       </div>
-      ${techDocRows ? `<div class="tech-section"><div class="tech-title">Tài liệu kỹ thuật sản phẩm</div><div class="tech-grid">${techDocRows}</div></div>` : ""}
       <div class="signature"><div><b>Khách hàng</b><br/><br/><br/>........................</div><div><b>Nhân viên phụ trách</b><br/><br/><br/>........................</div><div><b>Giám đốc kinh doanh</b><br/><br/><br/>........................</div></div>
+      ${techDocRows ? `<div class="tech-section"><div class="tech-title">Tài liệu kỹ thuật sản phẩm</div><div class="tech-subtitle">Quét mã QR để xem hoặc tải tài liệu kỹ thuật tương ứng</div><div class="tech-grid">${techDocRows}</div></div>` : ""}
       <script>
         window.onload=function(){
           setTimeout(function(){ window.print(); }, 900);
