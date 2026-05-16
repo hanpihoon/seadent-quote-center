@@ -143,7 +143,10 @@ export default function App() {
   const [password, setPassword] = React.useState("");
   const [syncStatus, setSyncStatus] = React.useState("Đang tải dữ liệu...");
   const [globalDiscount, setGlobalDiscount] = React.useState(10);
-  const [collapsed, setCollapsed] = React.useState({});
+  // Mặc định thu gọn tất cả category khi mở web
+  const [collapsed, setCollapsed] = React.useState(() =>
+    Object.fromEntries(DEMO_PRODUCTS.map((p) => [p.category, true]))
+  );
   const [customerName, setCustomerName] = React.useState("");
   const [customerPhone, setCustomerPhone] = React.useState("");
   const [customerAddress, setCustomerAddress] = React.useState("");
@@ -212,7 +215,9 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const formatted = data.map(normalizeProduct).filter((p) => p.name);
-        setProducts(formatted.length ? formatted : DEMO_PRODUCTS);
+        const finalProducts = formatted.length ? formatted : DEMO_PRODUCTS;
+        setProducts(finalProducts);
+        setCollapsed(Object.fromEntries(finalProducts.map((p) => [p.category, true])));
         setDiscounts(Object.fromEntries((formatted.length ? formatted : DEMO_PRODUCTS).map((p) => [p.id, p.discount])));
         const techCount = formatted.filter((p) => p.techDocUrl).length;
         setSyncStatus(`Đã đồng bộ Google Sheet · ${techCount} sản phẩm có tài liệu kỹ thuật`);
