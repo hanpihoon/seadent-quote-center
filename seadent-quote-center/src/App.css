@@ -28,19 +28,21 @@ body,
   margin:0 auto
 }
 
+/* ===== SEADENT HERO BANNER ===== */
+
 .sq-banner{
   width:100%;
-  border-radius:26px;
+  margin-bottom:20px;
+  border-radius:24px;
   overflow:hidden;
-  margin-bottom:16px;
-  background:#fff
+  background:transparent;
 }
 
 .sq-banner img{
   width:100%;
   height:auto;
   display:block;
-  object-fit:contain
+  border-radius:24px;
 }
 
 .sq-hero,
@@ -135,49 +137,3 @@ body,
   word-break:break-word
 }
 ```
-.sq-banner {
-  width: 100%;
-  margin-bottom: 18px;
-  border-radius: 24px;
-  overflow: hidden;
-  background: #fff;
-  border: 1px solid #fed7aa;
-  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04);
-}
-
-.sq-banner img {
-  width: 100%;
-  display: block;
-  object-fit: cover;
-  border-radius: 24px;
-}
-.sq-banner {
-  width: 100%;
-  margin-bottom: 18px;
-  border-radius: 24px;
-  overflow: hidden;
-  background: #fff;
-}
-
-.sq-banner img {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-}
-.sq-banner {
-  width: 100%;
-  margin-bottom: 18px;
-  border-radius: 24px;
-  overflow: hidden;
-  background: #ffffff;
-  border: none;
-  box-shadow: none;
-}
-
-.sq-banner img {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-}
