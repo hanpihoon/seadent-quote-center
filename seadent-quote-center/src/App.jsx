@@ -12,7 +12,8 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhp4Rv3FCzVY
 const DISCOUNT_PASSWORD = "seadent";
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "seadent";
-const AUTO_LOCK_MS = 60 * 1000;
+// Preview mode: tăng thời gian auto-lock để không che banner khi kiểm tra giao diện.
+const AUTO_LOCK_MS = 24 * 60 * 60 * 1000;
 
 
 const DEMO_PRODUCTS = [
@@ -149,7 +150,8 @@ export default function App() {
   const [customerNote, setCustomerNote] = React.useState("");
   const [isUnlocked, setIsUnlocked] = React.useState(() => getLocal("seadent_discount_unlocked", "false") === "true");
   const [isGrouped, setIsGrouped] = React.useState(() => getLocal("seadent_group_by_category", "true") === "true");
-  const [isLoggedIn, setIsLoggedIn] = React.useState(() => getLocal("seadent_admin_logged_in", "false") === "true");
+  // Preview mode: mặc định mở khóa màn hình để xem nhanh banner và giao diện.
+const [isLoggedIn, setIsLoggedIn] = React.useState(true);
   const [loginUser, setLoginUser] = React.useState("");
   const [loginPassword, setLoginPassword] = React.useState("");
   const [loginError, setLoginError] = React.useState("");
