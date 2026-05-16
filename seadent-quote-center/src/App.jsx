@@ -6,6 +6,7 @@ const GOOGLE_SHEET_TAB = "products";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhp4Rv3FCzVYziwUx-og_5O47HUaazt79G_0DJsu1Oz1v2fiip1yHYxwg81spFAKRKLg/exec";
 const DISCOUNT_PASSWORD = "seadent";
 
+
 const DEMO_PRODUCTS = [
   { id: "1", name: "Planmeca Compact i5", category: "Dental Unit", price: 450000000, stock: 3, discount: 10 },
   { id: "2", name: "Belmont Clesta eIII", category: "Dental Unit", price: 390000000, stock: 2, discount: 12 },
@@ -311,7 +312,7 @@ export default function App() {
               </div>
               <div className="sq-stats">
                 <div className="sq-stat"><div className="sq-stat-label">Products</div><div className="sq-stat-value">{products.length}</div></div>
-                <div className="sq-stat"><div className="sq-stat-label">Quote Total</div><div className="sq-stat-value">{money(quoteTotal)}</div></div>
+                
                 <div className="sq-stat"><div className="sq-stat-label">Cart Total</div><div className="sq-stat-value">{money(cartTotal)}</div></div>
               </div>
             </div>
