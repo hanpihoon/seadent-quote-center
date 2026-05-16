@@ -166,13 +166,14 @@ export default function App() {
   React.useEffect(() => {
     async function loadProducts() {
       try {
-        const res = await fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}`);
+        const res = await fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}?cache=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const formatted = data.map(normalizeProduct).filter((p) => p.name);
         setProducts(formatted.length ? formatted : DEMO_PRODUCTS);
         setDiscounts(Object.fromEntries((formatted.length ? formatted : DEMO_PRODUCTS).map((p) => [p.id, p.discount])));
-        setSyncStatus("Đã đồng bộ dữ liệu từ Google Sheet");
+        const techCount = formatted.filter((p) => p.techDocUrl).length;
+        setSyncStatus(`Đã đồng bộ Google Sheet · ${techCount} sản phẩm có tài liệu kỹ thuật`);
       } catch (error) {
         console.error("Google Sheet Error:", error);
         setProducts(DEMO_PRODUCTS);
