@@ -37,8 +37,6 @@ const normalizeProduct = (item, index) => ({
   discount: num(item.discount),
 });
 
-
-
 function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart }) {
   const price = calcPrice(product.price, discount);
   return (
@@ -59,11 +57,26 @@ function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart 
   );
 }
 
-function CartCard({ item, updateQty, removeFromCart }) {
+function CartCard({ item, updateQty, updateCartDiscount, removeFromCart, isUnlocked }) {
   return (
     <div className="sq-card">
       <div className="sq-product-title">{item.name}</div>
       <div className="sq-line"><span>Đơn giá</span><span className="sq-value">{money(item.finalPrice)}</span></div>
+      <div className="sq-line">
+        <span>Chiết khấu</span>
+        <span className="sq-value">
+          <input
+            className="sq-mini-input"
+            type="number"
+            min="0"
+            max="100"
+            value={item.discount}
+            disabled={!isUnlocked}
+            style={{ opacity: isUnlocked ? 1 : 0.45 }}
+            onChange={(e) => updateCartDiscount(item.id, e.target.value)}
+          /> %
+        </span>
+      </div>
       <div className="sq-line"><span>Số lượng</span><input className="sq-mini-input" type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item.id, e.target.value)} /></div>
       <div className="sq-line"><span>Thành tiền</span><span className="sq-value sq-price">{money(item.finalPrice * item.quantity)}</span></div>
       <button className="sq-btn sq-btn-danger" style={{ marginTop: 12 }} onClick={() => removeFromCart(item.id)}>Xóa sản phẩm</button>
@@ -211,6 +224,25 @@ export default function App() {
     setCart((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], quantity: safeQty } } : prev));
   };
 
+  const updateCartDiscount = (id, value) => {
+    if (!isUnlocked) return;
+    const discount = Math.max(0, Math.min(100, num(value)));
+
+    setCart((prev) => {
+      const item = prev[id];
+      if (!item) return prev;
+
+      return {
+        ...prev,
+        [id]: {
+          ...item,
+          discount,
+          finalPrice: calcPrice(item.price, discount),
+        },
+      };
+    });
+  };
+
   const removeFromCart = (id) => {
     setCart((prev) => {
       const next = { ...prev };
@@ -246,15 +278,18 @@ export default function App() {
         body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;color:#111827;padding:28px;-webkit-font-smoothing:antialiased}.header{display:flex;justify-content:space-between;border-bottom:3px solid #f97316;padding-bottom:16px;margin-bottom:20px}
         .brand{font-size:24px;font-weight:900;color:#f97316}.sub{color:#6b7280;line-height:1.5}.meta{text-align:right;line-height:1.6}h2{text-align:center;margin:24px 0}
         .customer{background:#fff7ed;border:1px solid #fed7aa;padding:14px;border-radius:12px;margin-bottom:18px;line-height:1.8}table{width:100%;border-collapse:collapse}th{background:#f97316;color:white;padding:9px;font-size:12px;text-align:left}td{border-bottom:1px solid #e5e7eb;padding:9px;font-size:12px}
-        .summary{width:520px;margin-left:auto;margin-top:22px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden}.sumrow{display:grid;grid-template-columns:220px 1fr;gap:18px;padding:10px 14px;border-bottom:1px solid #e5e7eb}.sumlabel{font-weight:800}.sumvalue{text-align:right;font-weight:900;white-space:nowrap}.sumfinal{background:#fff7ed;color:#f97316;font-size:18px}.note{margin-top:18px;padding:14px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;color:#7c2d12;line-height:1.8}.signature{display:flex;justify-content:space-between;margin-top:55px;text-align:center}@media print{body{padding:18px}}
+        .summary{width:520px;max-width:100%;margin-left:auto;margin-top:18px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden}.sumrow{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px;padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;align-items:center}.sumlabel{font-weight:700;line-height:1.3}.sumvalue{text-align:right;font-weight:800;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}.sumfinal{background:#fff7ed;color:#f97316;font-size:13px}.sumfinal .sumvalue{font-size:15px;white-space:nowrap}.note{margin-top:16px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#7c2d12;line-height:1.55;font-size:12px}.signature{display:flex;justify-content:space-between;margin-top:40px;text-align:center;font-size:12px}@media print{body{padding:18px}}
       </style></head><body>
-      <div class="header"><div style="display:flex;gap:14px"><img src="/logo.png" style="width:82px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0901371516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
+      <div class="header"><div style="display:flex;gap:14px"><img src="/logo.png" style="width:82px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0934831516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
       <h2>BẢNG BÁO GIÁ</h2>
       <div class="customer"><b>Tên khách hàng:</b> ${customerName || "........................"}<br/><b>Số điện thoại:</b> ${customerPhone || "........................"}<br/><b>Địa chỉ:</b> ${customerAddress || "........................"}<br/><b>Ghi chú:</b> ${customerNote || "Không có"}</div>
       <table><thead><tr><th>#</th><th>Sản phẩm</th><th>Danh mục</th><th>Giá niêm yết</th><th>CK</th><th>Đơn giá sau CK</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="summary"><div class="sumrow"><div class="sumlabel">Tổng tiền trước chiết khấu</div><div class="sumvalue">${money(cartBeforeDiscount)}</div></div><div class="sumrow"><div class="sumlabel">Tổng tiền chiết khấu</div><div class="sumvalue">${money(cartDiscount)}</div></div><div class="sumrow sumfinal"><div class="sumlabel">Tổng cộng sau chiết khấu</div><div class="sumvalue">${money(cartTotal)}</div></div></div>
-      <div class="note"><b>• Giá trên đã bao gồm thuế GTGT</b><br/><b>• Chất lượng hàng hoá mới 100%</b></div>
-      <div style="margin-top:16px;color:#6b7280">Báo giá được tạo từ SEADENT Quote Center.</div>
+      <div class="note">
+        <b>• Giá trên đã bao gồm thuế GTGT</b><br/>
+        <b>• Chất lượng hàng hoá mới 100%</b><br/>
+        <b>• Báo giá được tạo từ SEADENT Quote Center</b>
+      </div>
       <div class="signature"><div><b>Khách hàng</b><br/><br/><br/>........................</div><div><b>Nhân viên phụ trách</b><br/><br/><br/>........................</div><div><b>Giám đốc kinh doanh</b><br/><br/><br/>........................</div></div>
       <script>window.onload=function(){window.print()}</script></body></html>`);
     win.document.close();
@@ -337,7 +372,16 @@ export default function App() {
               <div className="sq-card" style={{ textAlign: "center", color: "#64748b" }}>Chưa có sản phẩm trong giỏ hàng.</div>
             ) : (
               <>
-                <div className="sq-card-grid">{cartItems.map((item) => <CartCard key={item.id} item={item} updateQty={updateQty} removeFromCart={removeFromCart} />)}</div>
+                <div className="sq-card-grid">{cartItems.map((item) => (
+                  <CartCard
+                    key={item.id}
+                    item={item}
+                    updateQty={updateQty}
+                    updateCartDiscount={updateCartDiscount}
+                    removeFromCart={removeFromCart}
+                    isUnlocked={isUnlocked}
+                  />
+                ))}</div>
                 <div className="sq-summary">
                   <strong>Tổng cộng {cartQty} sản phẩm</strong>
                   <div className="sq-muted">Trước CK: {money(cartBeforeDiscount)}</div>
