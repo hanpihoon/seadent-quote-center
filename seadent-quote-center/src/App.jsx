@@ -32,14 +32,40 @@ const setLocal = (key, value) => {
   try { window.localStorage.setItem(key, value); } catch {}
 };
 
+const pickText = (item, keys) => {
+  for (const key of keys) {
+    if (item[key] !== undefined && item[key] !== null && String(item[key]).trim()) {
+      return String(item[key]).trim();
+    }
+  }
+  return "";
+};
+
 const normalizeProduct = (item, index) => ({
-  id: String(item.id || item.name || index + 1),
-  name: String(item.name || "Unnamed product"),
-  category: String(item.category || "Uncategorized"),
-  price: num(item.price),
-  stock: num(item.stock),
-  discount: num(item.discount),
-  techDocUrl: String(item.techDocUrl || item.techurl || item.techdocurl || item.tech_doc_url || item.documentUrl || ""),
+  id: String(item.id || item.ID || item.name || item.Name || index + 1),
+  name: String(item.name || item.Name || item.product || item.Product || "Unnamed product"),
+  category: String(item.category || item.Category || "Uncategorized"),
+  price: num(item.price || item.Price || item.listPrice || item["List Price"]),
+  stock: num(item.stock || item.Stock),
+  discount: num(item.discount || item.Discount),
+  techDocUrl: pickText(item, [
+    "techurl",
+    "techUrl",
+    "techURL",
+    "Techurl",
+    "TechUrl",
+    "TECHURL",
+    "techDocUrl",
+    "techdocurl",
+    "tech_doc_url",
+    "documentUrl",
+    "DocumentUrl",
+    "tech url",
+    "Tech URL",
+    "Tech Url",
+    "Tài liệu",
+    "tai lieu",
+  ]),
 });
 
 function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart }) {
@@ -47,7 +73,10 @@ function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart 
   return (
     <div className="sq-card">
       <div className="sq-product-title">{product.name}</div>
-      <div style={{ marginBottom: 8 }}><span className="sq-tag">{product.category}</span></div>
+      <div style={{ marginBottom: 8 }}>
+        <span className="sq-tag">{product.category}</span>
+        {product.techDocUrl && <span className="sq-tag" style={{ marginLeft: 6, background: "#ecfdf5", color: "#047857" }}>Có tài liệu</span>}
+      </div>
       <div className="sq-line"><span>Giá niêm yết</span><span className="sq-value">{money(product.price)}</span></div>
       <div className="sq-line"><span>Tồn kho</span><span className="sq-value">{product.stock}</span></div>
       <div className="sq-line">
@@ -220,7 +249,7 @@ export default function App() {
         discount,
         finalPrice: calcPrice(product.price, discount),
         quantity: (prev[id]?.quantity || 0) + 1,
-        techDocUrl: product.techDocUrl || "",
+        techDocUrl: String(product.techDocUrl || "").trim(),
       },
     }));
   };
@@ -279,12 +308,13 @@ export default function App() {
     const techDocRows = cartItems
       .filter((item) => item.techDocUrl)
       .map((item) => {
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(item.techDocUrl)}`;
+        const cleanUrl = String(item.techDocUrl || "").trim();
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(cleanUrl)}`;
         return `
           <div class="tech-card">
             <div>
               <div class="tech-name">${item.name}</div>
-              <div class="tech-link">${item.techDocUrl}</div>
+              <div class="tech-link">${cleanUrl}</div>
             </div>
             <img class="tech-qr" src="${qrUrl}" />
           </div>
@@ -313,7 +343,11 @@ export default function App() {
       </div>
       ${techDocRows ? `<div class="tech-section"><div class="tech-title">Tài liệu kỹ thuật sản phẩm</div><div class="tech-grid">${techDocRows}</div></div>` : ""}
       <div class="signature"><div><b>Khách hàng</b><br/><br/><br/>........................</div><div><b>Nhân viên phụ trách</b><br/><br/><br/>........................</div><div><b>Giám đốc kinh doanh</b><br/><br/><br/>........................</div></div>
-      <script>window.onload=function(){window.print()}</script></body></html>`);
+      <script>
+        window.onload=function(){
+          setTimeout(function(){ window.print(); }, 900);
+        }
+      </script></body></html>`);
     win.document.close();
   };
 
