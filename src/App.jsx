@@ -1,13 +1,16 @@
 import React from "react";
 
 const STYLES = `
-*{box-sizing:border-box}html,body,#root{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden;font-family:Arial,sans-serif;background:#f8fafc;color:#111827}.sq-page{min-height:100vh;padding:12px;padding-bottom:110px;background:#f8fafc}.sq-shell{max-width:1180px;margin:0 auto}.sq-hero,.sq-panel,.sq-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 10px 24px rgba(0,0,0,.05)}.sq-hero{padding:16px;margin-bottom:12px}.sq-panel{padding:14px;margin-bottom:12px}.sq-card{padding:14px}.sq-hero-grid{display:grid;gap:14px}.sq-brand{display:flex;align-items:center;gap:12px}.sq-logo{width:58px;height:58px;object-fit:contain;border-radius:14px;background:#fff7ed;padding:8px}.sq-badge{display:inline-block;background:#fff1e7;color:#ea580c;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;margin-bottom:6px}.sq-title{margin:0;font-size:34px;line-height:1}.sq-muted{color:#6b7280;font-size:12px;line-height:1.5}.sq-stats{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}.sq-stat{background:#fff7ed;border-radius:14px;padding:12px}.sq-stat-label{font-size:12px;color:#6b7280;font-weight:700}.sq-stat-value{color:#ea580c;font-size:18px;font-weight:900;line-height:1.2;word-break:break-word}.sq-top-grid{display:grid;gap:12px}.sq-tools{display:grid;gap:10px;margin-top:12px}.sq-stack{display:grid;gap:10px}.sq-card-grid{display:grid;gap:12px}.sq-form-grid{display:grid;gap:10px}.sq-input,.sq-mini-input{border:1px solid #d1d5db;background:#fff;color:#111827;border-radius:12px;outline:none}.sq-input{width:100%;height:46px;padding:0 12px;font-size:15px}.sq-mini-input{width:78px;height:38px;padding:0 8px;text-align:center;font-size:15px;font-weight:800;color:#111827;-webkit-text-fill-color:#111827}.sq-input:focus,.sq-mini-input:focus{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.15)}.sq-btn{border:none;border-radius:12px;padding:12px;font-weight:800;cursor:pointer;background:#f97316;color:#fff}.sq-btn-light{background:#fff;color:#111827;border:1px solid #d1d5db}.sq-btn-dark{background:#111827}.sq-btn-danger{background:#fff1f2;color:#e11d48;border:1px solid #fecdd3}.sq-category{display:flex;justify-content:space-between;align-items:center;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:12px;font-weight:800;cursor:pointer}.sq-count{background:#fff;color:#ea580c;padding:4px 9px;border-radius:999px;font-size:12px}.sq-product-title{font-size:18px;font-weight:900;line-height:1.35;margin-bottom:10px}.sq-tag{display:inline-block;background:#fff1e7;color:#ea580c;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}.sq-line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px}.sq-value{font-weight:800;text-align:right;word-break:break-word}.sq-price{color:#ea580c}.sq-summary{margin-top:14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:14px}.sq-footer{text-align:center;color:#94a3b8;font-size:12px;margin-top:20px}.sq-sticky{position:fixed;left:10px;right:10px;bottom:10px;background:#111827;color:#fff;border-radius:18px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:640px;margin:auto;z-index:999;box-shadow:0 10px 30px rgba(0,0,0,.25)}.sq-sticky-top{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;font-size:13px}@media (min-width:768px){.sq-page{padding:18px;padding-bottom:120px}.sq-hero-grid{grid-template-columns:1fr auto;align-items:center}.sq-top-grid{grid-template-columns:1fr 340px}.sq-tools{grid-template-columns:repeat(2,minmax(0,1fr))}.sq-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sq-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sq-title{font-size:42px}}@media (min-width:1100px){.sq-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.sq-form-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media (max-width:767px){.sq-title{font-size:28px}.sq-brand{align-items:flex-start}.sq-product-title{font-size:16px}.sq-line{font-size:12px}.sq-stat-value{font-size:16px}.sq-btn{min-height:46px}.sq-mini-input{width:70px}}
+*{box-sizing:border-box}html,body,#root{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden;font-family:Arial,sans-serif;background:#f8fafc;color:#111827}.sq-page{min-height:100vh;padding:12px;padding-bottom:110px;background:#f8fafc}.sq-shell{max-width:1180px;margin:0 auto}.sq-hero,.sq-panel,.sq-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 10px 24px rgba(0,0,0,.05)}.sq-hero{padding:16px;margin-bottom:12px}.sq-panel{padding:14px;margin-bottom:12px}.sq-card{padding:14px}.sq-hero-grid{display:grid;gap:14px}.sq-brand{display:flex;align-items:center;gap:12px}.sq-logo{width:58px;height:58px;object-fit:contain;border-radius:14px;background:#fff7ed;padding:8px}.sq-badge{display:inline-block;background:#fff1e7;color:#ea580c;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;margin-bottom:6px}.sq-title{margin:0;font-size:34px;line-height:1}.sq-muted{color:#6b7280;font-size:12px;line-height:1.5}.sq-stats{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}.sq-stat{background:#fff7ed;border-radius:14px;padding:12px}.sq-stat-label{font-size:12px;color:#6b7280;font-weight:700}.sq-stat-value{color:#ea580c;font-size:18px;font-weight:900;line-height:1.2;word-break:break-word}.sq-top-grid{display:grid;gap:12px}.sq-tools{display:grid;gap:10px;margin-top:12px}.sq-stack{display:grid;gap:10px}.sq-card-grid{display:grid;gap:12px}.sq-form-grid{display:grid;gap:10px}.sq-input,.sq-mini-input{border:1px solid #d1d5db;background:#fff;color:#111827;border-radius:12px;outline:none}.sq-input{width:100%;height:46px;padding:0 12px;font-size:15px}.sq-mini-input{width:78px;height:38px;padding:0 8px;text-align:center;font-size:15px;font-weight:800;color:#111827;-webkit-text-fill-color:#111827}.sq-input:focus,.sq-mini-input:focus{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.15)}.sq-btn{border:none;border-radius:12px;padding:12px;font-weight:800;cursor:pointer;background:#f97316;color:#fff}.sq-btn-light{background:#fff;color:#111827;border:1px solid #d1d5db}.sq-btn-dark{background:#111827}.sq-btn-danger{background:#fff1f2;color:#e11d48;border:1px solid #fecdd3}.sq-category{display:flex;justify-content:space-between;align-items:center;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:12px;font-weight:800;cursor:pointer}.sq-count{background:#fff;color:#ea580c;padding:4px 9px;border-radius:999px;font-size:12px}.sq-product-title{font-size:18px;font-weight:900;line-height:1.35;margin-bottom:10px}.sq-tag{display:inline-block;background:#fff1e7;color:#ea580c;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}.sq-line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px}.sq-value{font-weight:800;text-align:right;word-break:break-word}.sq-price{color:#ea580c}.sq-summary{margin-top:14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:14px}.sq-footer{text-align:center;color:#94a3b8;font-size:12px;margin-top:20px}.sq-sticky{position:fixed;left:10px;right:10px;bottom:10px;background:#111827;color:#fff;border-radius:18px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:640px;margin:auto;z-index:999;box-shadow:0 10px 30px rgba(0,0,0,.25)}.sq-sticky-top{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;font-size:13px}.login-blur{filter:blur(9px);pointer-events:none;user-select:none}.login-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(15,23,42,.62);backdrop-filter:blur(12px)}.login-card{width:100%;max-width:420px;background:#fff;border:1px solid rgba(255,255,255,.75);border-radius:28px;padding:26px;box-shadow:0 28px 90px rgba(0,0,0,.28);text-align:center}.login-logo{width:86px;height:86px;object-fit:contain;background:#fff7ed;border:1px solid #fed7aa;border-radius:24px;padding:12px;margin:0 auto 14px}.login-title{font-size:28px;font-weight:950;margin:0;color:#111827;letter-spacing:-.04em}.login-subtitle{font-size:13px;color:#6b7280;margin:8px 0 18px;line-height:1.5}.login-form{display:grid;gap:12px}.login-input{width:100%;height:48px;border:1px solid #e5e7eb;background:#f8fafc;color:#111827;border-radius:15px;padding:0 14px;font-size:16px;outline:none}.login-input:focus{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.16)}.login-button{height:50px;border:0;border-radius:16px;background:#f97316;color:#fff;font-size:15px;font-weight:950;cursor:pointer;box-shadow:0 14px 32px rgba(249,115,22,.28)}.login-error{background:#fff1f2;border:1px solid #fecdd3;color:#be123c;border-radius:14px;padding:10px;font-size:13px;font-weight:800}.login-secure{margin-top:14px;color:#94a3b8;font-size:12px}.welcome-toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:10000;background:#111827;color:#fff;border-radius:999px;padding:12px 18px;font-size:14px;font-weight:900;box-shadow:0 18px 48px rgba(0,0,0,.22)}@media (min-width:768px){.sq-page{padding:18px;padding-bottom:120px}.sq-hero-grid{grid-template-columns:1fr auto;align-items:center}.sq-top-grid{grid-template-columns:1fr 340px}.sq-tools{grid-template-columns:repeat(2,minmax(0,1fr))}.sq-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sq-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sq-title{font-size:42px}}@media (min-width:1100px){.sq-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.sq-form-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media (max-width:767px){.sq-title{font-size:28px}.sq-brand{align-items:flex-start}.sq-product-title{font-size:16px}.sq-line{font-size:12px}.sq-stat-value{font-size:16px}.sq-btn{min-height:46px}.sq-mini-input{width:70px}}
 `;
 
 const GOOGLE_SHEET_ID = "1HAFKnOoIs9VmdlmVuonjNSxpvKfzHlrCJ4l1zQq3HUs";
 const GOOGLE_SHEET_TAB = "products";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhp4Rv3FCzVYziwUx-og_5O47HUaazt79G_0DJsu1Oz1v2fiip1yHYxwg81spFAKRKLg/exec";
 const DISCOUNT_PASSWORD = "seadent";
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "seadent";
+const AUTO_LOCK_MS = 60 * 1000;
 
 
 const DEMO_PRODUCTS = [
@@ -144,6 +147,11 @@ export default function App() {
   const [customerNote, setCustomerNote] = React.useState("");
   const [isUnlocked, setIsUnlocked] = React.useState(() => getLocal("seadent_discount_unlocked", "false") === "true");
   const [isGrouped, setIsGrouped] = React.useState(() => getLocal("seadent_group_by_category", "true") === "true");
+  const [isLoggedIn, setIsLoggedIn] = React.useState(() => getLocal("seadent_admin_logged_in", "false") === "true");
+  const [loginUser, setLoginUser] = React.useState("");
+  const [loginPassword, setLoginPassword] = React.useState("");
+  const [loginError, setLoginError] = React.useState("");
+  const [showWelcome, setShowWelcome] = React.useState(false);
 
   React.useEffect(() => {
     if (!isBrowser()) return undefined;
@@ -162,6 +170,36 @@ export default function App() {
 
   React.useEffect(() => setLocal("seadent_discount_unlocked", String(isUnlocked)), [isUnlocked]);
   React.useEffect(() => setLocal("seadent_group_by_category", String(isGrouped)), [isGrouped]);
+  React.useEffect(() => setLocal("seadent_admin_logged_in", String(isLoggedIn)), [isLoggedIn]);
+
+  React.useEffect(() => {
+    if (!isBrowser() || !isLoggedIn) return undefined;
+
+    let lockTimer;
+    const resetAutoLock = () => {
+      window.clearTimeout(lockTimer);
+      lockTimer = window.setTimeout(() => {
+        setIsLoggedIn(false);
+        setLoginPassword("");
+        setLoginError("Phiên đăng nhập đã tự động khóa sau 1 phút không thao tác.");
+      }, AUTO_LOCK_MS);
+    };
+
+    const events = ["mousemove", "mousedown", "keydown", "touchstart", "scroll"];
+    events.forEach((eventName) => window.addEventListener(eventName, resetAutoLock, { passive: true }));
+    resetAutoLock();
+
+    return () => {
+      window.clearTimeout(lockTimer);
+      events.forEach((eventName) => window.removeEventListener(eventName, resetAutoLock));
+    };
+  }, [isLoggedIn]);
+
+  React.useEffect(() => {
+    if (!showWelcome || !isBrowser()) return undefined;
+    const timer = window.setTimeout(() => setShowWelcome(false), 2200);
+    return () => window.clearTimeout(timer);
+  }, [showWelcome]);
 
   React.useEffect(() => {
     async function loadProducts() {
@@ -246,6 +284,22 @@ export default function App() {
     setIsUnlocked(true);
     setPassword("");
     setSyncStatus("Đã mở khóa chỉnh sửa chiết khấu");
+  };
+
+  const handleAdminLogin = () => {
+    const validUser = loginUser.trim().toLowerCase() === ADMIN_USERNAME;
+    const validPassword = loginPassword === ADMIN_PASSWORD;
+
+    if (!validUser || !validPassword) {
+      setLoginError("Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.");
+      return;
+    }
+
+    setIsLoggedIn(true);
+    setLoginUser("");
+    setLoginPassword("");
+    setLoginError("");
+    setShowWelcome(true);
   };
 
   const addToCart = (product) => {
@@ -364,7 +418,38 @@ export default function App() {
   return (
     <>
       <style>{STYLES}</style>
-      <div className="sq-page">
+      {showWelcome && <div className="welcome-toast">Chào mừng admin trở lại SEADENT Quote Center</div>}
+      {!isLoggedIn && (
+        <div className="login-overlay">
+          <div className="login-card">
+            <img src="/logo.png" alt="SEADENT" className="login-logo" />
+            <h2 className="login-title">SEADENT Login</h2>
+            <div className="login-subtitle">Đăng nhập để truy cập hệ thống báo giá nội bộ</div>
+            <div className="login-form">
+              <input
+                className="login-input"
+                placeholder="User"
+                value={loginUser}
+                onChange={(e) => setLoginUser(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAdminLogin()}
+                autoFocus
+              />
+              <input
+                className="login-input"
+                type="password"
+                placeholder="Password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAdminLogin()}
+              />
+              {loginError && <div className="login-error">{loginError}</div>}
+              <button className="login-button" onClick={handleAdminLogin}>Đăng nhập</button>
+            </div>
+            <div className="login-secure">Hệ thống tự động khóa sau 1 phút không thao tác</div>
+          </div>
+        </div>
+      )}
+      <div className={isLoggedIn ? "sq-page" : "sq-page login-blur"}>
         <main className="sq-shell">
           <section className="sq-hero">
             <div className="sq-hero-grid">
