@@ -166,7 +166,7 @@ export default function App() {
   React.useEffect(() => {
     async function loadProducts() {
       try {
-        const res = await fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}?cache=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const formatted = data.map(normalizeProduct).filter((p) => p.name);
