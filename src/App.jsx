@@ -12,8 +12,8 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhp4Rv3FCzVY
 const DISCOUNT_PASSWORD = "seadent";
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "seadent";
-// Preview mode: tăng thời gian auto-lock để không che banner khi kiểm tra giao diện.
-const AUTO_LOCK_MS = 24 * 60 * 60 * 1000;
+// Auto lock sau 30 giây không thao tác
+const AUTO_LOCK_MS = 30 * 1000;
 
 
 const DEMO_PRODUCTS = [
@@ -150,8 +150,8 @@ export default function App() {
   const [customerNote, setCustomerNote] = React.useState("");
   const [isUnlocked, setIsUnlocked] = React.useState(() => getLocal("seadent_discount_unlocked", "false") === "true");
   const [isGrouped, setIsGrouped] = React.useState(() => getLocal("seadent_group_by_category", "true") === "true");
-  // Preview mode: mặc định mở khóa màn hình để xem nhanh banner và giao diện.
-const [isLoggedIn, setIsLoggedIn] = React.useState(true);
+  // Bắt buộc đăng nhập lại khi refresh trình duyệt
+const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [loginUser, setLoginUser] = React.useState("");
   const [loginPassword, setLoginPassword] = React.useState("");
   const [loginError, setLoginError] = React.useState("");
@@ -174,7 +174,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(true);
 
   React.useEffect(() => setLocal("seadent_discount_unlocked", String(isUnlocked)), [isUnlocked]);
   React.useEffect(() => setLocal("seadent_group_by_category", String(isGrouped)), [isGrouped]);
-  React.useEffect(() => setLocal("seadent_admin_logged_in", String(isLoggedIn)), [isLoggedIn]);
+  // Không lưu trạng thái login để mỗi lần refresh đều yêu cầu đăng nhập
 
   React.useEffect(() => {
     if (!isBrowser() || !isLoggedIn) return undefined;
@@ -185,7 +185,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(true);
       lockTimer = window.setTimeout(() => {
         setIsLoggedIn(false);
         setLoginPassword("");
-        setLoginError("Phiên đăng nhập đã tự động khóa sau 1 phút không thao tác.");
+        setLoginError("Phiên đăng nhập đã tự động khóa sau 30 giây không thao tác.");
       }, AUTO_LOCK_MS);
     };
 
@@ -450,7 +450,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(true);
               {loginError && <div className="login-error">{loginError}</div>}
               <button className="login-button" onClick={handleAdminLogin}>Đăng nhập</button>
             </div>
-            <div className="login-secure">Hệ thống tự động khóa sau 1 phút không thao tác</div>
+            <div className="login-secure">Hệ thống tự động khóa sau 30 giây không thao tác</div>
           </div>
         </div>
       )}
