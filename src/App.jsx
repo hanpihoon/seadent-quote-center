@@ -476,9 +476,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
                   <div className="sq-muted">Báo giá nhanh trên mọi thiết bị</div>
                 </div>
               </div>
-              <div className="sq-stats">
-                <div className="sq-stat"><div className="sq-stat-label">Products</div><div className="sq-stat-value">{products.length}</div></div>
-              </div>
+              <div></div>
             </div>
           </section>
 
@@ -558,6 +556,13 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
               <button className="sq-btn sq-btn-danger" style={{ opacity: isUnlocked ? 1 : 0.5 }} onClick={() => isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước")}>Reset Discount</button>
             </div>
           </section>
+
+          <div className="sq-stats" style={{ justifyContent: "center", marginTop: 18 }}>
+            <div className="sq-stat">
+              <div className="sq-stat-label">Products</div>
+              <div className="sq-stat-value">{products.length}</div>
+            </div>
+          </div>
 
           <div className="sq-footer">SEADENT Quote Center © 2026</div>
         </main>
