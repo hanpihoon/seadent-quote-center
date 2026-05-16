@@ -447,7 +447,7 @@ export default function App() {
       <div className={isLoggedIn ? "sq-page" : "sq-page login-blur"}>
         <main className="sq-shell">
           <div className="sq-banner">
-            <img src="/banner-seadent.jpg" alt="SEADENT Banner" />
+            <img src="/banner-seadent.png?v=2" alt="SEADENT Banner" />
           </div>
           <section className="sq-hero">
             <div className="sq-hero-grid">
