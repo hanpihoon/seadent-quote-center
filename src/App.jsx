@@ -471,7 +471,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
               </div>
               <div className="sq-brand">
                 <div>
-                  <div className="sq-badge">SEADENT PRICING</div>
+                  
                   <h1 className="sq-title"><span className="sq-title-orange">Seadent</span> Quote Center</h1>
                   <div className="sq-muted">Báo giá nhanh trên mọi thiết bị</div>
                 </div>
