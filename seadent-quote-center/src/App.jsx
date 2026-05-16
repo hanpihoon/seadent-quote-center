@@ -11,10 +11,10 @@ const DISCOUNT_PASSWORD = "seadent";
 
 
 const DEMO_PRODUCTS = [
-  { id: "1", name: "Planmeca Compact i5", category: "Dental Unit", price: 450000000, stock: 3, discount: 10 },
-  { id: "2", name: "Belmont Clesta eIII", category: "Dental Unit", price: 390000000, stock: 2, discount: 12 },
-  { id: "3", name: "Durr VS 1200", category: "Suction", price: 89000000, stock: 8, discount: 8 },
-  { id: "4", name: "Melag Vacuklav", category: "Sterilization", price: 125000000, stock: 4, discount: 15 },
+  { id: "1", name: "Planmeca Compact i5", category: "Dental Unit", price: 450000000, stock: 3, discount: 10, techDocUrl: "https://www.planmeca.com/dental-units/planmeca-compact-i5/" },
+  { id: "2", name: "Belmont Clesta eIII", category: "Dental Unit", price: 390000000, stock: 2, discount: 12, techDocUrl: "https://belmontdental.com/products/clesta-eiii/" },
+  { id: "3", name: "Durr VS 1200", category: "Suction", price: 89000000, stock: 8, discount: 8, techDocUrl: "https://www.duerrdental.com/en/products/suction-systems/" },
+  { id: "4", name: "Melag Vacuklav", category: "Sterilization", price: 125000000, stock: 4, discount: 15, techDocUrl: "https://www.melag.com/en/products/autoclaves" },
 ];
 
 const money = (value) => `${new Intl.NumberFormat("vi-VN").format(Number(value) || 0)} đ`;
@@ -39,6 +39,7 @@ const normalizeProduct = (item, index) => ({
   price: num(item.price),
   stock: num(item.stock),
   discount: num(item.discount),
+  techDocUrl: String(item.techDocUrl || item.techdocurl || item.tech_doc_url || item.documentUrl || ""),
 });
 
 function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart }) {
@@ -219,6 +220,7 @@ export default function App() {
         discount,
         finalPrice: calcPrice(product.price, discount),
         quantity: (prev[id]?.quantity || 0) + 1,
+        techDocUrl: product.techDocUrl || "",
       },
     }));
   };
@@ -274,6 +276,21 @@ export default function App() {
         <td>${item.quantity}</td><td>${money(item.finalPrice * item.quantity)}</td>
       </tr>`).join("");
 
+    const techDocRows = cartItems
+      .filter((item) => item.techDocUrl)
+      .map((item) => {
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(item.techDocUrl)}`;
+        return `
+          <div class="tech-card">
+            <div>
+              <div class="tech-name">${item.name}</div>
+              <div class="tech-link">${item.techDocUrl}</div>
+            </div>
+            <img class="tech-qr" src="${qrUrl}" />
+          </div>
+        `;
+      }).join("");
+
     const win = window.open("", "_blank");
     if (!win) return;
     win.document.write(`
@@ -282,7 +299,7 @@ export default function App() {
         body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;color:#111827;padding:28px;-webkit-font-smoothing:antialiased}.header{display:flex;justify-content:space-between;border-bottom:3px solid #f97316;padding-bottom:16px;margin-bottom:20px}
         .brand{font-size:24px;font-weight:900;color:#f97316}.sub{color:#6b7280;line-height:1.5}.meta{text-align:right;line-height:1.6}h2{text-align:center;margin:24px 0}
         .customer{background:#fff7ed;border:1px solid #fed7aa;padding:14px;border-radius:12px;margin-bottom:18px;line-height:1.8}table{width:100%;border-collapse:collapse}th{background:#f97316;color:white;padding:9px;font-size:12px;text-align:left}td{border-bottom:1px solid #e5e7eb;padding:9px;font-size:12px}
-        .summary{width:520px;max-width:100%;margin-left:auto;margin-top:18px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden}.sumrow{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px;padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;align-items:center}.sumlabel{font-weight:700;line-height:1.3}.sumvalue{text-align:right;font-weight:800;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}.sumfinal{background:#fff7ed;color:#f97316;font-size:13px}.sumfinal .sumvalue{font-size:15px;white-space:nowrap}.note{margin-top:16px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#7c2d12;line-height:1.55;font-size:12px}.signature{display:flex;justify-content:space-between;margin-top:40px;text-align:center;font-size:12px}@media print{body{padding:18px}}
+        .summary{width:520px;max-width:100%;margin-left:auto;margin-top:18px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden}.sumrow{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px;padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;align-items:center}.sumlabel{font-weight:700;line-height:1.3}.sumvalue{text-align:right;font-weight:800;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}.sumfinal{background:#fff7ed;color:#f97316;font-size:13px}.sumfinal .sumvalue{font-size:15px;white-space:nowrap}.note{margin-top:16px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#7c2d12;line-height:1.55;font-size:12px}.tech-section{margin-top:16px}.tech-title{font-size:14px;font-weight:900;color:#111827;margin-bottom:8px}.tech-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.tech-card{border:1px solid #e5e7eb;border-radius:10px;padding:10px;display:grid;grid-template-columns:1fr 78px;gap:10px;align-items:center}.tech-name{font-size:12px;font-weight:800;color:#111827;margin-bottom:4px}.tech-link{font-size:9px;color:#6b7280;line-height:1.35;word-break:break-all}.tech-qr{width:78px;height:78px;object-fit:contain}.signature{display:flex;justify-content:space-between;margin-top:40px;text-align:center;font-size:12px}@media print{body{padding:18px}}
       </style></head><body>
       <div class="header"><div style="display:flex;gap:14px"><img src="/logo.png" style="width:82px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0934831516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
       <h2>BẢNG BÁO GIÁ</h2>
@@ -294,6 +311,7 @@ export default function App() {
         <b>• Chất lượng hàng hoá mới 100%</b><br/>
         <b>• Báo giá được tạo từ SEADENT Quote Center</b>
       </div>
+      ${techDocRows ? `<div class="tech-section"><div class="tech-title">Tài liệu kỹ thuật sản phẩm</div><div class="tech-grid">${techDocRows}</div></div>` : ""}
       <div class="signature"><div><b>Khách hàng</b><br/><br/><br/>........................</div><div><b>Nhân viên phụ trách</b><br/><br/><br/>........................</div><div><b>Giám đốc kinh doanh</b><br/><br/><br/>........................</div></div>
       <script>window.onload=function(){window.print()}</script></body></html>`);
     win.document.close();
