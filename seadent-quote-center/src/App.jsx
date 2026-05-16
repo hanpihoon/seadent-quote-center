@@ -32,12 +32,24 @@ const setLocal = (key, value) => {
   try { window.localStorage.setItem(key, value); } catch {}
 };
 
+const normalizeKey = (key) => String(key || "")
+  .toLowerCase()
+  .replaceAll(" ", "")
+  .replaceAll("_", "")
+  .replaceAll("-", "")
+  .replaceAll(".", "")
+  .trim();
+
 const pickText = (item, keys) => {
-  for (const key of keys) {
-    if (item[key] !== undefined && item[key] !== null && String(item[key]).trim()) {
-      return String(item[key]).trim();
+  const wantedKeys = keys.map(normalizeKey);
+
+  for (const [rawKey, rawValue] of Object.entries(item || {})) {
+    const normalized = normalizeKey(rawKey);
+    if (wantedKeys.includes(normalized) && rawValue !== undefined && rawValue !== null && String(rawValue).trim()) {
+      return String(rawValue).trim();
     }
   }
+
   return "";
 };
 
@@ -52,19 +64,18 @@ const normalizeProduct = (item, index) => ({
     "techurl",
     "techUrl",
     "techURL",
-    "Techurl",
-    "TechUrl",
-    "TECHURL",
+    "tech doc url",
     "techDocUrl",
     "techdocurl",
     "tech_doc_url",
     "documentUrl",
-    "DocumentUrl",
-    "tech url",
-    "Tech URL",
-    "Tech Url",
-    "Tài liệu",
+    "document url",
+    "linktailieu",
+    "link tai lieu",
+    "tailieu",
     "tai lieu",
+    "catalogue",
+    "catalog",
   ]),
 });
 
