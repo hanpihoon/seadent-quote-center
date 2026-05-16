@@ -493,15 +493,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
               <div className="sq-muted" style={{ marginTop: 10 }}>{syncStatus}</div>
             </section>
 
-            <section className="sq-panel">
-              <div className="sq-badge">{isUnlocked ? "🔓 Đã mở khóa" : "🔒 Đang khóa"}</div>
-              <div className="sq-stack">
-                <input className="sq-input" style={{ opacity: isUnlocked ? 1 : 0.45 }} type="number" value={globalDiscount} disabled={!isUnlocked} onChange={(e) => applyGlobalDiscount(e.target.value)} />
-                <input className="sq-input" type="password" placeholder="Password" value={password} disabled={isUnlocked} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlockDiscount()} />
-                <button className="sq-btn" onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>{isUnlocked ? "Khóa lại" : "Mở khóa"}</button>
-                <button className="sq-btn sq-btn-danger" style={{ opacity: isUnlocked ? 1 : 0.5 }} onClick={() => isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước")}>Reset Discount</button>
-              </div>
-            </section>
+            
           </div>
 
           <section className="sq-stack">
@@ -555,6 +547,16 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
                 </div>
               </>
             )}
+          </section>
+
+          <section className="sq-panel" style={{ marginTop: 18 }}>
+            <div className="sq-badge">{isUnlocked ? "🔓 Đã mở khóa" : "🔒 Đang khóa"}</div>
+            <div className="sq-stack">
+              <input className="sq-input" style={{ opacity: isUnlocked ? 1 : 0.45 }} type="number" value={globalDiscount} disabled={!isUnlocked} onChange={(e) => applyGlobalDiscount(e.target.value)} />
+              <input className="sq-input" type="password" placeholder="Password" value={password} disabled={isUnlocked} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlockDiscount()} />
+              <button className="sq-btn" onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>{isUnlocked ? "Khóa lại" : "Mở khóa"}</button>
+              <button className="sq-btn sq-btn-danger" style={{ opacity: isUnlocked ? 1 : 0.5 }} onClick={() => isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước")}>Reset Discount</button>
+            </div>
           </section>
 
           <div className="sq-footer">SEADENT Quote Center © 2026</div>
