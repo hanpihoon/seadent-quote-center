@@ -39,7 +39,7 @@ const normalizeProduct = (item, index) => ({
   price: num(item.price),
   stock: num(item.stock),
   discount: num(item.discount),
-  techDocUrl: String(item.techDocUrl || item.techdocurl || item.tech_doc_url || item.documentUrl || ""),
+  techDocUrl: String(item.techDocUrl || item.techurl || item.techdocurl || item.tech_doc_url || item.documentUrl || ""),
 });
 
 function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart }) {
