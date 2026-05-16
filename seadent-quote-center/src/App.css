@@ -135,3 +135,19 @@ body,
   word-break:break-word
 }
 ```
+.sq-banner {
+  width: 100%;
+  margin-bottom: 18px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #fed7aa;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04);
+}
+
+.sq-banner img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 24px;
+}
