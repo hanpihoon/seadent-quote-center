@@ -1,15 +1,20 @@
 import React from "react";
 
+const STYLES = `
+*{box-sizing:border-box}html,body,#root{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden;font-family:Arial,sans-serif;background:#f8fafc;color:#111827}.sq-page{min-height:100vh;padding:12px;padding-bottom:110px;background:#f8fafc}.sq-shell{max-width:1180px;margin:0 auto}.sq-hero,.sq-panel,.sq-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 10px 24px rgba(0,0,0,.05)}.sq-hero{padding:16px;margin-bottom:12px}.sq-panel{padding:14px;margin-bottom:12px}.sq-card{padding:14px}.sq-hero-grid{display:grid;gap:14px}.sq-brand{display:flex;align-items:center;gap:12px}.sq-logo{width:58px;height:58px;object-fit:contain;border-radius:14px;background:#fff7ed;padding:8px}.sq-badge{display:inline-block;background:#fff1e7;color:#ea580c;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;margin-bottom:6px}.sq-title{margin:0;font-size:34px;line-height:1}.sq-muted{color:#6b7280;font-size:12px;line-height:1.5}.sq-stats{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}.sq-stat{background:#fff7ed;border-radius:14px;padding:12px}.sq-stat-label{font-size:12px;color:#6b7280;font-weight:700}.sq-stat-value{color:#ea580c;font-size:18px;font-weight:900;line-height:1.2;word-break:break-word}.sq-top-grid{display:grid;gap:12px}.sq-tools{display:grid;gap:10px;margin-top:12px}.sq-stack{display:grid;gap:10px}.sq-card-grid{display:grid;gap:12px}.sq-form-grid{display:grid;gap:10px}.sq-input,.sq-mini-input{border:1px solid #d1d5db;background:#fff;color:#111827;border-radius:12px;outline:none}.sq-input{width:100%;height:46px;padding:0 12px;font-size:15px}.sq-mini-input{width:78px;height:38px;padding:0 8px;text-align:center;font-size:15px;font-weight:800;color:#111827;-webkit-text-fill-color:#111827}.sq-input:focus,.sq-mini-input:focus{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.15)}.sq-btn{border:none;border-radius:12px;padding:12px;font-weight:800;cursor:pointer;background:#f97316;color:#fff}.sq-btn-light{background:#fff;color:#111827;border:1px solid #d1d5db}.sq-btn-dark{background:#111827}.sq-btn-danger{background:#fff1f2;color:#e11d48;border:1px solid #fecdd3}.sq-category{display:flex;justify-content:space-between;align-items:center;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:12px;font-weight:800;cursor:pointer}.sq-count{background:#fff;color:#ea580c;padding:4px 9px;border-radius:999px;font-size:12px}.sq-product-title{font-size:18px;font-weight:900;line-height:1.35;margin-bottom:10px}.sq-tag{display:inline-block;background:#fff1e7;color:#ea580c;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}.sq-line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px}.sq-value{font-weight:800;text-align:right;word-break:break-word}.sq-price{color:#ea580c}.sq-summary{margin-top:14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:14px}.sq-footer{text-align:center;color:#94a3b8;font-size:12px;margin-top:20px}.sq-sticky{position:fixed;left:10px;right:10px;bottom:10px;background:#111827;color:#fff;border-radius:18px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:640px;margin:auto;z-index:999;box-shadow:0 10px 30px rgba(0,0,0,.25)}.sq-sticky-top{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;font-size:13px}@media (min-width:768px){.sq-page{padding:18px;padding-bottom:120px}.sq-hero-grid{grid-template-columns:1fr auto;align-items:center}.sq-top-grid{grid-template-columns:1fr 340px}.sq-tools{grid-template-columns:repeat(2,minmax(0,1fr))}.sq-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sq-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sq-title{font-size:42px}}@media (min-width:1100px){.sq-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.sq-form-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media (max-width:767px){.sq-title{font-size:28px}.sq-brand{align-items:flex-start}.sq-product-title{font-size:16px}.sq-line{font-size:12px}.sq-stat-value{font-size:16px}.sq-btn{min-height:46px}.sq-mini-input{width:70px}}
+`;
+
 const GOOGLE_SHEET_ID = "1HAFKnOoIs9VmdlmVuonjNSxpvKfzHlrCJ4l1zQq3HUs";
 const GOOGLE_SHEET_TAB = "products";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhp4Rv3FCzVYziwUx-og_5O47HUaazt79G_0DJsu1Oz1v2fiip1yHYxwg81spFAKRKLg/exec";
 const DISCOUNT_PASSWORD = "seadent";
 
+
 const DEMO_PRODUCTS = [
-  { id: "1", name: "Planmeca Compact i5", category: "Dental Unit", price: 450000000, stock: 3, discount: 10 },
-  { id: "2", name: "Belmont Clesta eIII", category: "Dental Unit", price: 390000000, stock: 2, discount: 12 },
-  { id: "3", name: "Durr VS 1200", category: "Suction", price: 89000000, stock: 8, discount: 8 },
-  { id: "4", name: "Melag Vacuklav", category: "Sterilization", price: 125000000, stock: 4, discount: 15 },
+  { id: "1", name: "Planmeca Compact i5", category: "Dental Unit", price: 450000000, stock: 3, discount: 10, techDocUrl: "https://www.planmeca.com/dental-units/planmeca-compact-i5/" },
+  { id: "2", name: "Belmont Clesta eIII", category: "Dental Unit", price: 390000000, stock: 2, discount: 12, techDocUrl: "https://belmontdental.com/products/clesta-eiii/" },
+  { id: "3", name: "Durr VS 1200", category: "Suction", price: 89000000, stock: 8, discount: 8, techDocUrl: "https://www.duerrdental.com/en/products/suction-systems/" },
+  { id: "4", name: "Melag Vacuklav", category: "Sterilization", price: 125000000, stock: 4, discount: 15, techDocUrl: "https://www.melag.com/en/products/autoclaves" },
 ];
 
 const money = (value) => `${new Intl.NumberFormat("vi-VN").format(Number(value) || 0)} đ`;
@@ -27,85 +32,62 @@ const setLocal = (key, value) => {
   try { window.localStorage.setItem(key, value); } catch {}
 };
 
+const normalizeKey = (key) => String(key || "")
+  .toLowerCase()
+  .replaceAll(" ", "")
+  .replaceAll("_", "")
+  .replaceAll("-", "")
+  .replaceAll(".", "")
+  .trim();
+
+const pickText = (item, keys) => {
+  const wantedKeys = keys.map(normalizeKey);
+
+  for (const [rawKey, rawValue] of Object.entries(item || {})) {
+    const normalized = normalizeKey(rawKey);
+    if (wantedKeys.includes(normalized) && rawValue !== undefined && rawValue !== null && String(rawValue).trim()) {
+      return String(rawValue).trim();
+    }
+  }
+
+  return "";
+};
+
 const normalizeProduct = (item, index) => ({
-  id: String(item.id || item.name || index + 1),
-  name: String(item.name || "Unnamed product"),
-  category: String(item.category || "Uncategorized"),
-  price: num(item.price),
-  stock: num(item.stock),
-  discount: num(item.discount),
+  id: String(item.id || item.ID || item.name || item.Name || index + 1),
+  name: String(item.name || item.Name || item.product || item.Product || "Unnamed product"),
+  category: String(item.category || item.Category || "Uncategorized"),
+  price: num(item.price || item.Price || item.listPrice || item["List Price"]),
+  stock: num(item.stock || item.Stock),
+  discount: num(item.discount || item.Discount),
+  techDocUrl: pickText(item, [
+    "techurl",
+    "techUrl",
+    "techURL",
+    "tech doc url",
+    "techDocUrl",
+    "techdocurl",
+    "tech_doc_url",
+    "documentUrl",
+    "document url",
+    "linktailieu",
+    "link tai lieu",
+    "tailieu",
+    "tai lieu",
+    "catalogue",
+    "catalog",
+  ]),
 });
-
-const STYLES = `
-  * { box-sizing: border-box; }
-  html, body, #root { width: 100%; max-width: 100%; margin: 0; overflow-x: hidden; }
-  body { background: #f8fafc; font-family: Arial, Helvetica, sans-serif; color: #111827; }
-  button, input { font-family: inherit; }
-
-  .sq-page { min-height: 100vh; width: 100%; max-width: 100vw; overflow-x: hidden; padding: 12px 12px 112px; background: #f8fafc; }
-  .sq-shell { width: 100%; max-width: 1180px; margin: 0 auto; }
-  .sq-hero { background: linear-gradient(135deg,#fff,#fff7ed); border: 1px solid #fed7aa; border-radius: 22px; padding: 16px; box-shadow: 0 16px 38px rgba(15,23,42,.08); margin-bottom: 12px; }
-  .sq-brand { display: flex; gap: 12px; align-items: center; min-width: 0; }
-  .sq-logo { width: 52px; height: 52px; object-fit: contain; border-radius: 16px; background: #fff; border: 1px solid #fed7aa; padding: 7px; flex: 0 0 auto; }
-  .sq-badge { display: inline-block; background: #fff1e7; color: #ea580c; padding: 5px 9px; border-radius: 999px; font-weight: 900; font-size: 11px; margin-bottom: 6px; }
-  .sq-title { margin: 0; font-size: 25px; line-height: 1.05; letter-spacing: -.04em; }
-  .sq-muted { color: #6b7280; font-size: 12px; line-height: 1.45; }
-  .sq-stats { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 14px; }
-  .sq-stat { background: rgba(255,255,255,.92); border: 1px solid #eef0f4; border-radius: 16px; padding: 12px; min-width: 0; }
-  .sq-stat-label { color: #6b7280; font-size: 12px; font-weight: 800; }
-  .sq-stat-value { color: #ea580c; font-weight: 950; font-size: 18px; margin-top: 3px; overflow-wrap: anywhere; }
-
-  .sq-panel { background: #fff; border: 1px solid #eef0f4; border-radius: 20px; padding: 14px; box-shadow: 0 14px 32px rgba(15,23,42,.06); margin-bottom: 12px; min-width: 0; }
-  .sq-input { width: 100%; height: 46px; background: #f8fafc; color: #111827; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0 13px; font-size: 16px; outline: none; }
-  .sq-btn { width: 100%; min-height: 46px; border: none; border-radius: 15px; padding: 11px 13px; font-size: 14px; font-weight: 900; cursor: pointer; background: #f97316; color: #fff; }
-  .sq-btn-dark { background: #111827; color: #fff; }
-  .sq-btn-light { background: #fff; color: #374151; border: 1px solid #e5e7eb; }
-  .sq-btn-danger { background: #fff1f2; color: #e11d48; border: 1px solid #ffe4e6; }
-  .sq-stack { display: grid; grid-template-columns: 1fr; gap: 10px; }
-  .sq-tools { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
-
-  .sq-category { display: flex; justify-content: space-between; align-items: center; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; padding: 12px 14px; font-weight: 950; color: #111827; }
-  .sq-count { background: #fff1e7; color: #ea580c; border-radius: 999px; padding: 5px 9px; font-size: 12px; font-weight: 900; }
-  .sq-card-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-  .sq-card { background: #fff; border: 1px solid #eef0f4; border-radius: 18px; padding: 14px; box-shadow: 0 14px 32px rgba(15,23,42,.06); min-width: 0; }
-  .sq-product-title { font-size: 16px; font-weight: 950; line-height: 1.35; margin-bottom: 8px; overflow-wrap: anywhere; }
-  .sq-tag { display: inline-block; background: #fff1e7; color: #ea580c; border-radius: 999px; padding: 5px 9px; font-size: 12px; font-weight: 900; }
-  .sq-line { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #4b5563; font-size: 13px; }
-  .sq-value { color: #111827; font-weight: 900; text-align: right; overflow-wrap: anywhere; }
-  .sq-price { color: #ea580c; font-weight: 950; }
-  .sq-mini-input { width: 78px; height: 38px; background: #ffffff; color: #111827; border: 1px solid #d1d5db; border-radius: 10px; padding: 0 8px; font-size: 16px; font-weight: 900; text-align: center; outline: none; opacity: 1; -webkit-text-fill-color: #111827; caret-color: #111827; }
-  .sq-mini-input:disabled { background: #f3f4f6; color: #111827; -webkit-text-fill-color: #111827; opacity: .65; }
-  .sq-mini-input:focus { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,.15); }
-  .sq-summary { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; padding: 14px; display: grid; gap: 6px; margin-top: 12px; }
-
-  .sq-sticky { position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 99; background: #111827; color: #fff; border-radius: 20px; padding: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.25); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 640px; margin: 0 auto; }
-  .sq-sticky-top { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 0 4px 2px; }
-  .sq-footer { text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px; }
-
-  @media (min-width: 768px) {
-    .sq-page { padding: 24px 24px 112px; }
-    .sq-hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 16px; align-items: center; }
-    .sq-title { font-size: 42px; }
-    .sq-logo { width: 72px; height: 72px; }
-    .sq-stats { grid-template-columns: repeat(3, minmax(0,1fr)); margin-top: 0; }
-    .sq-top-grid { display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 12px; }
-    .sq-tools { grid-template-columns: repeat(3, minmax(0,1fr)); }
-    .sq-card-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-    .sq-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
-  }
-
-  @media (min-width: 1100px) {
-    .sq-card-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
-    .sq-form-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
-  }
-`;
 
 function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart }) {
   const price = calcPrice(product.price, discount);
   return (
     <div className="sq-card">
       <div className="sq-product-title">{product.name}</div>
-      <div style={{ marginBottom: 8 }}><span className="sq-tag">{product.category}</span></div>
+      <div style={{ marginBottom: 8 }}>
+        <span className="sq-tag">{product.category}</span>
+        {product.techDocUrl && <span className="sq-tag" style={{ marginLeft: 6, background: "#ecfdf5", color: "#047857" }}>Có tài liệu</span>}
+      </div>
       <div className="sq-line"><span>Giá niêm yết</span><span className="sq-value">{money(product.price)}</span></div>
       <div className="sq-line"><span>Tồn kho</span><span className="sq-value">{product.stock}</span></div>
       <div className="sq-line">
@@ -184,13 +166,14 @@ export default function App() {
   React.useEffect(() => {
     async function loadProducts() {
       try {
-        const res = await fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}`);
+        const res = await fetch(`https://opensheet.elk.sh/${GOOGLE_SHEET_ID}/${GOOGLE_SHEET_TAB}?cache=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const formatted = data.map(normalizeProduct).filter((p) => p.name);
         setProducts(formatted.length ? formatted : DEMO_PRODUCTS);
         setDiscounts(Object.fromEntries((formatted.length ? formatted : DEMO_PRODUCTS).map((p) => [p.id, p.discount])));
-        setSyncStatus("Đã đồng bộ dữ liệu từ Google Sheet");
+        const techCount = formatted.filter((p) => p.techDocUrl).length;
+        setSyncStatus(`Đã đồng bộ Google Sheet · ${techCount} sản phẩm có tài liệu kỹ thuật`);
       } catch (error) {
         console.error("Google Sheet Error:", error);
         setProducts(DEMO_PRODUCTS);
@@ -278,6 +261,7 @@ export default function App() {
         discount,
         finalPrice: calcPrice(product.price, discount),
         quantity: (prev[id]?.quantity || 0) + 1,
+        techDocUrl: String(product.techDocUrl || "").trim(),
       },
     }));
   };
@@ -333,6 +317,22 @@ export default function App() {
         <td>${item.quantity}</td><td>${money(item.finalPrice * item.quantity)}</td>
       </tr>`).join("");
 
+    const techDocRows = cartItems
+      .filter((item) => item.techDocUrl)
+      .map((item) => {
+        const cleanUrl = String(item.techDocUrl || "").trim();
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(cleanUrl)}`;
+        return `
+          <div class="tech-card">
+            <div>
+              <div class="tech-name">${item.name}</div>
+              <div class="tech-link">${cleanUrl}</div>
+            </div>
+            <img class="tech-qr" src="${qrUrl}" />
+          </div>
+        `;
+      }).join("");
+
     const win = window.open("", "_blank");
     if (!win) return;
     win.document.write(`
@@ -341,7 +341,7 @@ export default function App() {
         body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;color:#111827;padding:28px;-webkit-font-smoothing:antialiased}.header{display:flex;justify-content:space-between;border-bottom:3px solid #f97316;padding-bottom:16px;margin-bottom:20px}
         .brand{font-size:24px;font-weight:900;color:#f97316}.sub{color:#6b7280;line-height:1.5}.meta{text-align:right;line-height:1.6}h2{text-align:center;margin:24px 0}
         .customer{background:#fff7ed;border:1px solid #fed7aa;padding:14px;border-radius:12px;margin-bottom:18px;line-height:1.8}table{width:100%;border-collapse:collapse}th{background:#f97316;color:white;padding:9px;font-size:12px;text-align:left}td{border-bottom:1px solid #e5e7eb;padding:9px;font-size:12px}
-        .summary{width:460px;margin-left:auto;margin-top:18px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden}.sumrow{display:grid;grid-template-columns:210px 1fr;gap:14px;padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:12px}.sumlabel{font-weight:700}.sumvalue{text-align:right;font-weight:800;white-space:nowrap}.sumfinal{background:#fff7ed;color:#f97316;font-size:14px}.sumfinal .sumvalue{font-size:16px}.note{margin-top:16px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#7c2d12;line-height:1.55;font-size:12px}.signature{display:flex;justify-content:space-between;margin-top:40px;text-align:center;font-size:12px}@media print{body{padding:18px}}
+        .summary{width:520px;max-width:100%;margin-left:auto;margin-top:18px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden}.sumrow{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px;padding:8px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;align-items:center}.sumlabel{font-weight:700;line-height:1.3}.sumvalue{text-align:right;font-weight:800;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}.sumfinal{background:#fff7ed;color:#f97316;font-size:13px}.sumfinal .sumvalue{font-size:15px;white-space:nowrap}.note{margin-top:16px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#7c2d12;line-height:1.55;font-size:12px}.tech-section{margin-top:16px}.tech-title{font-size:14px;font-weight:900;color:#111827;margin-bottom:8px}.tech-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.tech-card{border:1px solid #e5e7eb;border-radius:10px;padding:10px;display:grid;grid-template-columns:1fr 78px;gap:10px;align-items:center}.tech-name{font-size:12px;font-weight:800;color:#111827;margin-bottom:4px}.tech-link{font-size:9px;color:#6b7280;line-height:1.35;word-break:break-all}.tech-qr{width:78px;height:78px;object-fit:contain}.signature{display:flex;justify-content:space-between;margin-top:40px;text-align:center;font-size:12px}@media print{body{padding:18px}}
       </style></head><body>
       <div class="header"><div style="display:flex;gap:14px"><img src="/logo.png" style="width:82px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0934831516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
       <h2>BẢNG BÁO GIÁ</h2>
@@ -353,8 +353,13 @@ export default function App() {
         <b>• Chất lượng hàng hoá mới 100%</b><br/>
         <b>• Báo giá được tạo từ SEADENT Quote Center</b>
       </div>
+      ${techDocRows ? `<div class="tech-section"><div class="tech-title">Tài liệu kỹ thuật sản phẩm</div><div class="tech-grid">${techDocRows}</div></div>` : ""}
       <div class="signature"><div><b>Khách hàng</b><br/><br/><br/>........................</div><div><b>Nhân viên phụ trách</b><br/><br/><br/>........................</div><div><b>Giám đốc kinh doanh</b><br/><br/><br/>........................</div></div>
-      <script>window.onload=function(){window.print()}</script></body></html>`);
+      <script>
+        window.onload=function(){
+          setTimeout(function(){ window.print(); }, 900);
+        }
+      </script></body></html>`);
     win.document.close();
   };
 
@@ -375,7 +380,7 @@ export default function App() {
               </div>
               <div className="sq-stats">
                 <div className="sq-stat"><div className="sq-stat-label">Products</div><div className="sq-stat-value">{products.length}</div></div>
-                <div className="sq-stat"><div className="sq-stat-label">Quote Total</div><div className="sq-stat-value">{money(quoteTotal)}</div></div>
+                
                 <div className="sq-stat"><div className="sq-stat-label">Cart Total</div><div className="sq-stat-value">{money(cartTotal)}</div></div>
               </div>
             </div>
