@@ -790,4 +790,27 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
       {cartItems.length > 0 && (
         <div className="sq-sticky">
-          <div className="sq-
+  <div className="sq-sticky-top">
+    <span>Tổng báo giá</span>
+    <strong>{money(cartTotal)}</strong>
+  </div>
+
+  <button
+    className="sq-btn sq-btn-light"
+    onClick={scrollToCart}
+  >
+    Xem giỏ
+  </button>
+
+  <button
+    className="sq-btn"
+    onClick={exportQuotePdf}
+  >
+    Xuất PDF
+  </button>
+</div>
+)}
+
+</>
+);
+}
