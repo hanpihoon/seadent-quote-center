@@ -443,7 +443,11 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
       .filter((item) => item.techDocUrl || item.imageUrl)
       .map((item) => {
         const cleanUrl = String(item.techDocUrl || "").trim();
-        const imageUrl = String(item.imageUrl || "").trim();
+        const imageUrlRaw = String(item.imageUrl || "").trim();
+
+const imageUrl = imageUrlRaw.startsWith("http")
+  ? imageUrlRaw
+  : `${window.location.origin}${imageUrlRaw}`;
         const qrUrl = cleanUrl
           ? `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(cleanUrl)}`
           : "";
