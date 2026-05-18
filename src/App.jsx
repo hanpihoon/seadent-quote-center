@@ -88,6 +88,18 @@ const normalizeProduct = (item, index) => ({
     "catalogue",
     "catalog",
   ]),
+  imageUrl: pickText(item, [
+    "image",
+    "imageUrl",
+    "imageurl",
+    "productImage",
+    "product image",
+    "hinhanh",
+    "hinh anh",
+    "anh",
+    "photo",
+    "picture",
+  ]),
 });
 
 function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart }) {
@@ -97,7 +109,16 @@ function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart 
       <div className="sq-product-title">{product.name}</div>
       <div style={{ marginBottom: 8 }}>
         <span className="sq-tag">{product.category}</span>
-        {product.techDocUrl && <span className="sq-tag" style={{ marginLeft: 6, background: "#ecfdf5", color: "#047857" }}>Có tài liệu</span>}
+        {product.techDocUrl ? (
+          <span className="sq-tag" style={{ marginLeft: 6, background: "#ecfdf5", color: "#047857" }}>Có tài liệu</span>
+        ) : (
+          <span className="sq-tag" style={{ marginLeft: 6, background: "#f8fafc", color: "#64748b" }}>Chưa có tài liệu</span>
+        )}
+        {product.imageUrl ? (
+          <span className="sq-tag" style={{ marginLeft: 6, background: "#eff6ff", color: "#2563eb" }}>Có hình ảnh</span>
+        ) : (
+          <span className="sq-tag" style={{ marginLeft: 6, background: "#f8fafc", color: "#64748b" }}>Chưa có hình</span>
+        )}
       </div>
       <div className="sq-line"><span>Giá niêm yết</span><span className="sq-value">{money(product.price)}</span></div>
       <div className="sq-line"><span>Tồn kho</span><span className="sq-value">{product.stock}</span></div>
@@ -246,7 +267,8 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
         setCollapsed(Object.fromEntries(finalProducts.map((p) => [p.category, true])));
         setDiscounts(Object.fromEntries((formatted.length ? formatted : DEMO_PRODUCTS).map((p) => [p.id, p.discount])));
         const techCount = formatted.filter((p) => p.techDocUrl).length;
-        setSyncStatus(`Đã đồng bộ Google Sheet · ${techCount} sản phẩm có tài liệu kỹ thuật`);
+        const imageCount = formatted.filter((p) => p.imageUrl).length;
+        setSyncStatus(`Đã đồng bộ Google Sheet · ${techCount} sản phẩm có tài liệu kỹ thuật · ${imageCount} sản phẩm có hình ảnh`);
       } catch (error) {
         console.error("Google Sheet Error:", error);
         setProducts(DEMO_PRODUCTS);
@@ -360,6 +382,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
           finalPrice: calcPrice(product.price, cartDiscount),
           quantity: (currentItem?.quantity || 0) + 1,
           techDocUrl: String(product.techDocUrl || "").trim(),
+          imageUrl: String(product.imageUrl || "").trim(),
         },
       };
     });
@@ -432,13 +455,22 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
         `;
       }).join("");
 
+    const productImageRows = cartItems
+      .filter((item) => item.imageUrl)
+      .map((item) => `
+        <div class="product-image-card">
+          <img src="${String(item.imageUrl || "").trim()}" />
+          <div class="product-image-name">${item.name}</div>
+        </div>
+      `).join("");
+
     const win = window.open("", "_blank");
     if (!win) return;
     win.document.write(`
       <!doctype html><html><head><meta charset="UTF-8" /><title>SEADENT Quotation</title>
       <style>
         body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;color:#111827;padding:16px 18px;-webkit-font-smoothing:antialiased;font-size:11px}.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #f97316;padding-bottom:9px;margin-bottom:10px;margin-top:0}.brand{font-size:16px;font-weight:900;color:#f97316;line-height:1.2}.sub{color:#6b7280;line-height:1.35;font-size:9.5px}.meta{text-align:right;line-height:1.45;font-size:10px;white-space:nowrap}h2{text-align:center;margin:10px 0 12px;font-size:18px;line-height:1.1}.customer{background:#fff7ed;border:1px solid #fed7aa;padding:9px 12px;border-radius:10px;margin-bottom:10px;line-height:1.55;font-size:10.5px}table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:10px;border:1px solid #e5e7eb}th{background:#f97316;color:white;padding:7px 8px;font-size:9.5px;text-align:left;font-weight:800;line-height:1.25}td{border-bottom:1px solid #eef2f7;padding:7px 8px;font-size:9.5px;vertical-align:middle;line-height:1.3}tr:nth-child(even) td{background:#fcfcfd}tr:last-child td{border-bottom:none}
-        .summary{width:54%;margin:12px 0 0 auto;border:1px solid #fed7aa;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 3px 10px rgba(249,115,22,.05)}.sumrow{display:grid;grid-template-columns:1fr 150px;gap:10px;padding:6px 10px;border-bottom:1px solid #e5e7eb;font-size:10px;align-items:center}.sumlabel{font-weight:700;line-height:1.25}.sumvalue{text-align:right;font-weight:800;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}.sumfinal{background:#fff7ed;color:#f97316;font-size:10.5px}.sumfinal .sumvalue{font-size:12px;white-space:nowrap}.note{margin-top:12px;padding:8px 10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;color:#7c2d12;line-height:1.45;font-size:10.5px}.tech-section{margin-top:16px;padding-top:10px;border-top:2px solid #f97316;page-break-inside:avoid}.tech-title{font-size:12.5px;font-weight:900;color:#111827;margin-bottom:3px;text-align:center}.tech-subtitle{font-size:9px;color:#6b7280;text-align:center;margin-bottom:8px}.tech-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:8px}.tech-card{border:1px solid #fed7aa;border-radius:12px;padding:9px 8px;background:linear-gradient(180deg,#fffaf5 0%,#ffffff 100%);text-align:center;page-break-inside:avoid;box-shadow:0 2px 8px rgba(249,115,22,.06);display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:145px}.tech-name{font-size:9.5px;font-weight:900;color:#111827;line-height:1.3;min-height:28px;margin-bottom:7px;display:flex;align-items:center;justify-content:center;text-align:center}.tech-qr-wrap{display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;background:#fff;border:1px solid #fed7aa;border-radius:10px;padding:5px;text-decoration:none;cursor:pointer;transition:.2s}.tech-qr-wrap:hover{border-color:#f97316;transform:translateY(-2px)}.tech-qr{width:64px;height:64px;object-fit:contain}.tech-caption{display:block;font-size:8px;color:#ea580c;font-weight:900;margin-top:6px;text-decoration:none;line-height:1.25;padding:0 4px}.tech-caption:hover{text-decoration:underline}.signature-wrap{margin-top:24px;page-break-inside:avoid;break-inside:avoid}.signature-note{font-size:9.5px;color:#6b7280;text-align:right;margin-bottom:6px;font-style:italic}.signature{display:flex;justify-content:space-between;gap:22px;text-align:center;font-size:10.5px;page-break-inside:avoid;break-inside:avoid}.signature-box{flex:1;min-height:82px;display:flex;flex-direction:column;justify-content:flex-start}.signature-title{font-weight:800;margin-bottom:46px}.signature-line{color:#6b7280}.signature-date{text-align:right;margin-top:14px;margin-bottom:8px;color:#374151;font-size:10px;font-style:italic;page-break-inside:avoid;break-inside:avoid}@media print{body{padding:12mm}.header,.customer,.summary,.note,.signature-wrap,.signature,.signature-date{page-break-inside:avoid!important;break-inside:avoid!important}thead{display:table-header-group}tr{page-break-inside:avoid;break-inside:avoid}}
+        .summary{width:54%;margin:12px 0 0 auto;border:1px solid #fed7aa;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 3px 10px rgba(249,115,22,.05)}.sumrow{display:grid;grid-template-columns:1fr 150px;gap:10px;padding:6px 10px;border-bottom:1px solid #e5e7eb;font-size:10px;align-items:center}.sumlabel{font-weight:700;line-height:1.25}.sumvalue{text-align:right;font-weight:800;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}.sumfinal{background:#fff7ed;color:#f97316;font-size:10.5px}.sumfinal .sumvalue{font-size:12px;white-space:nowrap}.note{margin-top:12px;padding:8px 10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;color:#7c2d12;line-height:1.45;font-size:10.5px}.tech-section{margin-top:16px;padding-top:10px;border-top:2px solid #f97316;page-break-inside:avoid}.tech-title{font-size:12.5px;font-weight:900;color:#111827;margin-bottom:3px;text-align:center}.tech-subtitle{font-size:9px;color:#6b7280;text-align:center;margin-bottom:8px}.tech-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:8px}.tech-card{border:1px solid #fed7aa;border-radius:12px;padding:9px 8px;background:linear-gradient(180deg,#fffaf5 0%,#ffffff 100%);text-align:center;page-break-inside:avoid;box-shadow:0 2px 8px rgba(249,115,22,.06);display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:145px}.tech-name{font-size:9.5px;font-weight:900;color:#111827;line-height:1.3;min-height:28px;margin-bottom:7px;display:flex;align-items:center;justify-content:center;text-align:center}.tech-qr-wrap{display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;background:#fff;border:1px solid #fed7aa;border-radius:10px;padding:5px;text-decoration:none;cursor:pointer;transition:.2s}.tech-qr-wrap:hover{border-color:#f97316;transform:translateY(-2px)}.tech-qr{width:64px;height:64px;object-fit:contain}.tech-caption{display:block;font-size:8px;color:#ea580c;font-weight:900;margin-top:6px;text-decoration:none;line-height:1.25;padding:0 4px}.tech-caption:hover{text-decoration:underline}.product-image-section{margin-top:16px;padding-top:10px;border-top:2px solid #f97316;page-break-inside:avoid}.product-image-title{font-size:12.5px;font-weight:900;color:#111827;text-align:center;margin-bottom:8px}.product-image-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.product-image-card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:8px;text-align:center;page-break-inside:avoid;break-inside:avoid}.product-image-card img{width:100%;height:96px;object-fit:contain;background:#fff;border-radius:8px}.product-image-name{font-size:9px;font-weight:800;line-height:1.25;margin-top:6px;color:#111827}.signature-wrap{margin-top:24px;page-break-inside:avoid;break-inside:avoid}.signature-note{font-size:9.5px;color:#6b7280;text-align:right;margin-bottom:6px;font-style:italic}.signature{display:flex;justify-content:space-between;gap:22px;text-align:center;font-size:10.5px;page-break-inside:avoid;break-inside:avoid}.signature-box{flex:1;min-height:82px;display:flex;flex-direction:column;justify-content:flex-start}.signature-title{font-weight:800;margin-bottom:46px}.signature-line{color:#6b7280}.signature-date{text-align:right;margin-top:14px;margin-bottom:8px;color:#374151;font-size:10px;font-style:italic;page-break-inside:avoid;break-inside:avoid}@media print{body{padding:12mm}.header,.customer,.summary,.note,.signature-wrap,.signature,.signature-date{page-break-inside:avoid!important;break-inside:avoid!important}thead{display:table-header-group}tr{page-break-inside:avoid;break-inside:avoid}}
       </style></head><body>
       <div class="header"><div style="display:flex;gap:10px"><img src="/logo.png" style="width:54px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0934831516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
       <h2>BẢNG BÁO GIÁ</h2>
@@ -452,6 +484,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
       </div>
       <div class="signature-wrap"><div class="signature-date">TP.HCM, ngày ${new Date().toLocaleDateString("vi-VN")}</div><div class="signature-note">(Ký và ghi rõ họ tên)</div><div class="signature"><div class="signature-box"><div class="signature-title">Khách hàng</div><div class="signature-line">........................</div></div><div class="signature-box"><div class="signature-title">Nhân viên phụ trách</div><div class="signature-line">........................</div></div><div class="signature-box"><div class="signature-title">Giám đốc kinh doanh</div><div class="signature-line">........................</div></div></div></div>
       ${techDocRows ? `<div class="tech-section"><div class="tech-title">Tài liệu kỹ thuật sản phẩm</div><div class="tech-subtitle">Quét mã QR để xem hoặc tải tài liệu kỹ thuật tương ứng</div><div class="tech-grid">${techDocRows}</div></div>` : ""}
+      ${productImageRows ? `<div class="product-image-section"><div class="product-image-title">Hình ảnh sản phẩm trong báo giá</div><div class="product-image-grid">${productImageRows}</div></div>` : ""}
       <script>
         window.onload=function(){
           setTimeout(function(){ window.print(); }, 900);
