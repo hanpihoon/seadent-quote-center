@@ -192,7 +192,6 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [loginError, setLoginError] = React.useState("");
   const [showWelcome, setShowWelcome] = React.useState(false);
   const [userRole, setUserRole] = React.useState("guest");
-  const [currentTime, setCurrentTime] = React.useState(new Date());
 
   React.useEffect(() => {
     if (!isBrowser()) return undefined;
@@ -248,11 +247,6 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
       events.forEach((eventName) => window.removeEventListener(eventName, resetAutoLock));
     };
   }, [isLoggedIn]);
-
-  React.useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   React.useEffect(() => {
     if (!showWelcome || !isBrowser()) return undefined;
@@ -599,43 +593,13 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
           <div className="sq-top-grid" style={{ display: "block", width: "100%" }}>
             <section className="sq-panel sq-search-panel" style={{ width: "100%", maxWidth: "none", marginBottom: 18 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 260px 240px", gap: 14, marginBottom: 14, alignItems: "center" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 240px", gap: 14, marginBottom: 14 }}>
                 <input
                   className="sq-input"
                   placeholder="Tìm nhanh sản phẩm..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
-                <div
-                  style={{
-                    height: 54,
-                    borderRadius: 14,
-                    background: "linear-gradient(135deg,#fff7ed 0%,#ffffff 100%)",
-                    border: "1px solid #fed7aa",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    boxShadow: "0 4px 14px rgba(249,115,22,.08)",
-                    lineHeight: 1.15,
-                  }}
-                >
-                  <div style={{ fontSize: 11, color: "#9a3412", fontWeight: 700 }}>
-                    {currentTime.toLocaleDateString("vi-VN", {
-                      weekday: "short",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
-                  </div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: "#ea580c", letterSpacing: "1px" }}>
-                    {currentTime.toLocaleTimeString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    })}
-                  </div>
-                </div>
 
                 <select
                   className="sq-input"
@@ -790,27 +754,14 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
       {cartItems.length > 0 && (
         <div className="sq-sticky">
-  <div className="sq-sticky-top">
-    <span>Tổng báo giá</span>
-    <strong>{money(cartTotal)}</strong>
-  </div>
-
-  <button
-    className="sq-btn sq-btn-light"
-    onClick={scrollToCart}
-  >
-    Xem giỏ
-  </button>
-
-  <button
-    className="sq-btn"
-    onClick={exportQuotePdf}
-  >
-    Xuất PDF
-  </button>
-</div>
-)}
-
-</>
-);
+          <div className="sq-sticky-top">
+            <span>Tổng báo giá</span>
+            <strong>{money(cartTotal)}</strong>
+          </div>
+          <button className="sq-btn sq-btn-light" onClick={scrollToCart}>Xem giỏ</button>
+          <button className="sq-btn" onClick={exportQuotePdf}>Xuất PDF</button>
+        </div>
+      )}
+    </>
+  );
 }
