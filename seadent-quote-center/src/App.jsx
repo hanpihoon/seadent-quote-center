@@ -171,6 +171,7 @@ export default function App() {
   const [discounts, setDiscounts] = React.useState({});
   const [cart, setCart] = React.useState({});
   const [search, setSearch] = React.useState("");
+  const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [password, setPassword] = React.useState("");
   const [syncStatus, setSyncStatus] = React.useState("Đang tải dữ liệu...");
   const [globalDiscount, setGlobalDiscount] = React.useState(10);
@@ -278,7 +279,11 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   }, []);
 
   const getDiscount = (id) => discounts[String(id)] ?? 0;
-  const filtered = products.filter((p) => `${p.name} ${p.category}`.toLowerCase().includes(search.toLowerCase()));
+  const filtered = products.filter((p) => {
+    const matchSearch = `${p.name} ${p.category}`.toLowerCase().includes(search.toLowerCase());
+    const matchCategory = selectedCategory === "all" || p.category === selectedCategory;
+    return matchSearch && matchCategory;
+  });
   const grouped = filtered.reduce((acc, product) => {
     const category = product.category || "Uncategorized";
     acc[category] = acc[category] || [];
@@ -588,7 +593,30 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
           <div className="sq-top-grid" style={{ display: "block", width: "100%" }}>
             <section className="sq-panel sq-search-panel" style={{ width: "100%", maxWidth: "none", marginBottom: 18 }}>
-              <input className="sq-input" placeholder="Tìm nhanh sản phẩm..." value={search} onChange={(e) => setSearch(e.target.value)} />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 240px", gap: 14, marginBottom: 14 }}>
+                <input
+                  className="sq-input"
+                  placeholder="Tìm nhanh sản phẩm..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+
+                <select
+                  className="sq-input"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  style={{ cursor: "pointer", background: "#fff" }}
+                >
+                  <option value="all">Tất cả danh mục</option>
+                  {Array.from(new Set(products.map((p) => p.category)))
+                    .sort((a, b) => a.localeCompare(b))
+                    .map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                </select>
+              </div>
               <div className="sq-tools">
                 <button className="sq-btn" onClick={() => setIsGrouped((v) => !v)}>{isGrouped ? "✓ Group" : "Group"}</button>
                 <button className="sq-btn sq-btn-light" onClick={() => setCollapsed({})}>Mở tất cả</button>
