@@ -4,10 +4,9 @@ const BANNER_URL = "/banner-seadent.png?v=2026-final";
 const SITE_TITLE = "Seadent Quote Center";
 const SITE_FAVICON = "/logo.png";
 
-const STYLES = `
-*{box-sizing:border-box}html,body,#root{margin:0;padding:0;width:100%;min-height:100%;overflow-x:hidden;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#f8fafc;color:#111827}body{background:#f5f7fb;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}img{max-width:100%;display:block}.sq-page{min-height:100vh;background:#f5f7fb;padding:16px;padding-bottom:120px}.sq-shell{width:100%;max-width:1280px;margin:0 auto}.seadent-banner-v2{width:100%;margin-bottom:18px;border-radius:24px;overflow:hidden;background:#fff;border:1px solid #fed7aa;box-shadow:0 8px 24px rgba(15,23,42,.05);line-height:0}.seadent-banner-v2__image{width:100%;aspect-ratio:1920/620;background-position:center;background-repeat:no-repeat;background-size:contain;background-color:#fff}.sq-hero,.sq-panel,.sq-card{background:#fff;border:1px solid #e5e7eb;border-radius:22px;box-shadow:0 8px 24px rgba(15,23,42,.05)}.sq-hero{padding:18px;margin-bottom:16px}.sq-hero-grid{display:grid;grid-template-columns:160px 1fr 160px;gap:18px;align-items:center}.sq-brand{display:flex;align-items:center;justify-content:center;gap:22px;text-align:center}.sq-hero-left{display:flex;align-items:center;justify-content:center;border-right:1px solid #e5e7eb;height:90px}.sq-title-orange{color:#ea580c}.sq-logo{width:74px;height:74px;object-fit:contain;background:#fff7ed;padding:10px;border-radius:18px}.sq-badge{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:999px;background:#fff1e7;color:#ea580c;font-size:13px;font-weight:800;margin-bottom:10px}.sq-title{margin:0;font-size:64px;font-weight:900;line-height:1}.sq-muted{color:#6b7280;font-size:14px;line-height:1.6}.sq-stats{display:flex;gap:14px;justify-content:flex-end}.sq-stat{min-width:130px;background:#fff7ed;border-radius:18px;padding:18px;text-align:center}.sq-stat-label{font-size:14px;color:#6b7280;margin-bottom:8px;font-weight:700}.sq-stat-value{font-size:36px;font-weight:900;color:#ea580c}.sq-top-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:18px}.sq-search-panel{width:100%}.sq-search-panel .sq-tools{display:grid;grid-template-columns:160px 160px 160px;justify-content:start}.sq-panel{padding:18px}.sq-stack{display:flex;flex-direction:column;gap:12px}.sq-tools{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}.sq-input{width:100%;height:54px;border-radius:16px;border:1px solid #d1d5db;padding:0 18px;font-size:18px;background:#ffffff!important;color:#111827!important;-webkit-text-fill-color:#111827!important;caret-color:#111827!important;opacity:1!important;outline:none}.sq-input:focus{border-color:#f97316}.sq-btn{height:52px;border:none;border-radius:16px;padding:0 22px;background:#ff730f;color:#fff;font-size:17px;font-weight:800;cursor:pointer;transition:.2s}.sq-btn:hover{opacity:.92}.sq-btn-light{background:#fff;color:#111827;border:1px solid #d1d5db}.sq-btn-dark{background:#111827}.sq-btn-danger{background:#fff5f5;color:#ef4444;border:1px solid #fecaca}.sq-category{display:flex;align-items:center;justify-content:space-between;background:#fffaf3;border:1px solid #fed7aa;border-radius:22px;padding:18px 22px;font-size:20px;font-weight:800;cursor:pointer;margin-bottom:14px}.sq-count{width:42px;height:42px;border-radius:999px;background:#fff;color:#f97316;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px}.sq-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:18px}.sq-card{padding:18px}.sq-product-title{font-size:18px;font-weight:900;margin-bottom:14px}.sq-tag{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:999px;background:#fff1e7;color:#ea580c;font-size:13px;font-weight:800}.sq-line{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #f1f5f9;gap:10px}.sq-value{font-weight:800}.sq-price{color:#ea580c}.sq-mini-input{width:70px;height:42px;border-radius:12px;border:1px solid #d1d5db;text-align:center;font-size:16px;background:#ffffff!important;color:#111827!important;-webkit-text-fill-color:#111827!important;caret-color:#111827!important;opacity:1!important}.sq-summary{margin-top:18px;background:#fff7ed;border-radius:18px;padding:18px;border:1px solid #fed7aa}.sq-form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.login-overlay{position:fixed;inset:0;z-index:999;background:rgba(15,23,42,.65);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(12px)}.login-card{width:100%;max-width:420px;background:#fff;border-radius:28px;padding:34px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)}.login-logo{width:100px;margin:0 auto 20px}.login-title{margin:0;font-size:32px;font-weight:900;color:#111827;line-height:1.1}.login-subtitle{margin-top:10px;color:#64748b;font-size:15px;line-height:1.5}.login-form{margin-top:24px;display:flex;flex-direction:column;gap:14px}.login-input{width:100%;height:54px;border-radius:16px;border:1px solid #d1d5db;padding:0 16px;font-size:16px;background:#ffffff!important;color:#111827!important;-webkit-text-fill-color:#111827!important;caret-color:#111827!important;opacity:1!important}.login-button{height:54px;border:none;border-radius:16px;background:#ff730f;color:#fff;font-size:18px;font-weight:800;cursor:pointer;transition:.2s}.login-button:hover{opacity:.92}.login-secure{margin-top:18px;font-size:13px;color:#64748b;font-weight:600}.login-error{color:#ef4444;font-size:14px;font-weight:700}.login-blur{filter:blur(8px);pointer-events:none;user-select:none}.sq-sticky{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-top:1px solid #e5e7eb;padding:14px;display:flex;gap:12px;align-items:center;justify-content:center;box-shadow:0 -8px 24px rgba(15,23,42,.08)}.sq-sticky-top{display:flex;flex-direction:column;margin-right:12px}.sq-footer{text-align:center;padding:30px 0;color:#94a3b8;font-size:14px}.welcome-toast{position:fixed;top:24px;right:24px;z-index:9999;background:#111827;color:#fff;padding:16px 22px;border-radius:18px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.25)}@media(max-width:1024px){.sq-top-grid{grid-template-columns:1fr}.sq-hero-grid{grid-template-columns:1fr}.sq-hero-left{border-right:0;height:auto}.sq-stats{width:100%;justify-content:center}.sq-title{font-size:44px}}input,textarea,select{background:#ffffff!important;color:#111827!important;-webkit-text-fill-color:#111827!important;caret-color:#111827!important;opacity:1!important}input::placeholder,textarea::placeholder{color:#6b7280!important;-webkit-text-fill-color:#6b7280!important;opacity:1!important}input:disabled,textarea:disabled,select:disabled{background:#f8fafc!important;color:#111827!important;-webkit-text-fill-color:#111827!important;opacity:.65!important}
-@media(max-width:768px){.login-card{padding:26px;border-radius:24px;background:#fff;color:#111827}.login-title{font-size:28px;color:#111827}.login-subtitle{font-size:14px;color:#64748b}.login-input{font-size:16px;color:#111827;background:#fff;border-color:#d1d5db;-webkit-text-fill-color:#111827}.login-button{font-size:17px;background:#ff730f;color:#fff}.login-secure{color:#64748b}.sq-page{padding:10px;padding-bottom:140px;background:#f5f7fb;color:#111827}.sq-hero,.sq-panel,.sq-card{background:#fff;border-color:#e5e7eb;color:#111827}.sq-title{font-size:36px;color:#111827}.sq-title-orange{color:#ea580c}.sq-muted{color:#6b7280}.sq-input{background:#ffffff!important;color:#111827!important;border-color:#d1d5db!important;-webkit-text-fill-color:#111827!important;caret-color:#111827!important;opacity:1!important}.sq-btn{width:100%;background:#ff730f;color:#fff}.sq-btn-light{background:#fff;color:#111827;border-color:#d1d5db}.sq-btn-dark{background:#111827;color:#fff}.sq-btn-danger{background:#fff5f5;color:#ef4444;border-color:#fecaca}.sq-category{font-size:18px;background:#fffaf3;border-color:#fed7aa;color:#111827}.sq-count{background:#fff;color:#f97316}.sq-tag{background:#fff1e7;color:#ea580c}.sq-summary{background:#fff7ed;border-color:#fed7aa}.sq-stat{background:#fff7ed}.sq-stat-label{color:#6b7280}.sq-stat-value{color:#ea580c}.seadent-banner-v2{border-radius:18px;background:#fff;border-color:#fed7aa}.sq-form-grid{grid-template-columns:1fr}.sq-card-grid{grid-template-columns:1fr}.sq-tools{flex-direction:column}.sq-stats{flex-direction:column}}
-`;
+import "./App.css";
+
+// Đã chuyển toàn bộ CSS sang file App.css để tối ưu độ dài App.jsx
 
 const GOOGLE_SHEET_ID = "1HAFKnOoIs9VmdlmVuonjNSxpvKfzHlrCJ4l1zQq3HUs";
 const GOOGLE_SHEET_TAB = "products";
@@ -443,7 +442,15 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
       .filter((item) => item.techDocUrl || item.imageUrl)
       .map((item) => {
         const cleanUrl = String(item.techDocUrl || "").trim();
-        const imageUrl = String(item.imageUrl || "").trim();
+        const imageUrlRaw = String(item.imageUrl || "").trim();
+        const imageUrlBase = imageUrlRaw
+          ? imageUrlRaw.startsWith("http")
+            ? imageUrlRaw
+            : `${window.location.origin}${imageUrlRaw.startsWith("/") ? "" : "/"}${imageUrlRaw}`
+          : "";
+        const imageUrl = imageUrlBase
+          ? `${imageUrlBase}${imageUrlBase.includes("?") ? "&" : "?"}v=${Date.now()}`
+          : "";
         const qrUrl = cleanUrl
           ? `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(cleanUrl)}`
           : "";
@@ -452,7 +459,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
           <div class="product-info-card">
             <div class="product-info-name">${item.name}</div>
             <div class="product-photo-box">
-              ${imageUrl ? `<img src="${imageUrl}" />` : `<div class="product-photo-missing">Chưa có hình ảnh</div>`}
+              ${imageUrl ? `<img src="${imageUrl}" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=&quot;product-photo-missing&quot;>Không tải được ảnh<br/>${imageUrlRaw}</div>'" />` : `<div class="product-photo-missing">Chưa có hình ảnh</div>`}
             </div>
             <div class="product-qr-box">
               ${cleanUrl ? `<a class="product-qr-link" href="${cleanUrl}" target="_blank" rel="noopener noreferrer" title="Bấm để tải tài liệu kỹ thuật"><img src="${qrUrl}" /></a><a class="product-qr-caption" href="${cleanUrl}" target="_blank" rel="noopener noreferrer">Bấm hoặc quét QR</a>` : `<div class="product-qr-missing">Chưa có QR tài liệu</div>`}
@@ -469,7 +476,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
         body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;color:#111827;padding:16px 18px;-webkit-font-smoothing:antialiased;font-size:11px}.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #f97316;padding-bottom:9px;margin-bottom:10px;margin-top:0}.brand{font-size:16px;font-weight:900;color:#f97316;line-height:1.2}.sub{color:#6b7280;line-height:1.35;font-size:9.5px}.meta{text-align:right;line-height:1.45;font-size:10px;white-space:nowrap}h2{text-align:center;margin:10px 0 12px;font-size:18px;line-height:1.1}.customer{background:#fff7ed;border:1px solid #fed7aa;padding:9px 12px;border-radius:10px;margin-bottom:10px;line-height:1.55;font-size:10.5px}table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:10px;border:1px solid #e5e7eb}th{background:#f97316;color:white;padding:7px 8px;font-size:9.5px;text-align:left;font-weight:800;line-height:1.25}td{border-bottom:1px solid #eef2f7;padding:7px 8px;font-size:9.5px;vertical-align:middle;line-height:1.3}tr:nth-child(even) td{background:#fcfcfd}tr:last-child td{border-bottom:none}
         .summary{width:54%;margin:12px 0 0 auto;border:1px solid #fed7aa;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 3px 10px rgba(249,115,22,.05)}.sumrow{display:grid;grid-template-columns:1fr 150px;gap:10px;padding:6px 10px;border-bottom:1px solid #e5e7eb;font-size:10px;align-items:center}.sumlabel{font-weight:700;line-height:1.25}.sumvalue{text-align:right;font-weight:800;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}.sumfinal{background:#fff7ed;color:#f97316;font-size:10.5px}.sumfinal .sumvalue{font-size:12px;white-space:nowrap}.note{margin-top:12px;padding:8px 10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;color:#7c2d12;line-height:1.45;font-size:10.5px}.product-info-section{margin-top:16px;padding-top:10px;border-top:2px solid #f97316;page-break-inside:avoid}.product-info-title{font-size:12.5px;font-weight:900;color:#111827;text-align:center;margin-bottom:3px}.product-info-subtitle{font-size:9px;color:#6b7280;text-align:center;margin-bottom:8px}.product-info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px}.product-info-card{border:1px solid #fed7aa;border-radius:12px;background:linear-gradient(180deg,#fffaf5 0%,#ffffff 100%);padding:9px;page-break-inside:avoid;break-inside:avoid;display:grid;grid-template-columns:1fr 86px;gap:9px;align-items:center;min-height:128px}.product-info-name{grid-column:1/-1;font-size:9.5px;font-weight:900;color:#111827;line-height:1.3;text-align:center;margin-bottom:2px}.product-photo-box{width:100%;height:86px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}.product-photo-box img{width:100%;height:100%;object-fit:contain;padding:4px}.product-photo-missing{font-size:8px;color:#94a3b8;text-align:center;line-height:1.3;padding:8px}.product-qr-box{display:flex;flex-direction:column;align-items:center;justify-content:center}.product-qr-link{display:flex;align-items:center;justify-content:center;width:72px;height:72px;background:#fff;border:1px solid #fed7aa;border-radius:10px;padding:5px;text-decoration:none}.product-qr-link img{width:60px;height:60px;object-fit:contain}.product-qr-caption{display:block;font-size:7.5px;color:#ea580c;font-weight:900;text-align:center;line-height:1.2;margin-top:5px;text-decoration:none}.product-qr-missing{width:72px;height:72px;border:1px dashed #cbd5e1;border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:7.5px;color:#94a3b8;line-height:1.2;padding:6px}.signature-wrap{margin-top:24px;page-break-inside:avoid;break-inside:avoid}.signature-note{font-size:9.5px;color:#6b7280;text-align:right;margin-bottom:6px;font-style:italic}.signature{display:flex;justify-content:space-between;gap:22px;text-align:center;font-size:10.5px;page-break-inside:avoid;break-inside:avoid}.signature-box{flex:1;min-height:82px;display:flex;flex-direction:column;justify-content:flex-start}.signature-title{font-weight:800;margin-bottom:46px}.signature-line{color:#6b7280}.signature-date{text-align:right;margin-top:14px;margin-bottom:8px;color:#374151;font-size:10px;font-style:italic;page-break-inside:avoid;break-inside:avoid}@media print{body{padding:12mm}.header,.customer,.summary,.note,.signature-wrap,.signature,.signature-date{page-break-inside:avoid!important;break-inside:avoid!important}thead{display:table-header-group}tr{page-break-inside:avoid;break-inside:avoid}}
       </style></head><body>
-      <div class="header"><div style="display:flex;gap:10px"><img src="/logo.png" style="width:54px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0934831516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
+      <div class="header"><div style="display:flex;gap:10px"><img src="${window.location.origin}/logo.png" style="width:54px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0934831516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
       <h2>BẢNG BÁO GIÁ</h2>
       <div class="customer"><b>Tên khách hàng:</b> ${customerName || "........................"}<br/><b>Số điện thoại:</b> ${customerPhone || "........................"}<br/><b>Địa chỉ:</b> ${customerAddress || "........................"}<br/><b>Ghi chú:</b> ${customerNote || "Không có"}</div>
       <table><thead><tr><th>#</th><th>Sản phẩm</th><th>Danh mục</th><th>Giá niêm yết</th><th>CK</th><th>Đơn giá sau CK</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>${rows}</tbody></table>
@@ -483,7 +490,33 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
       ${productInfoRows ? `<div class="product-info-section"><div class="product-info-title">Thông tin sản phẩm trong báo giá</div><div class="product-info-subtitle">Mỗi sản phẩm hiển thị hình ảnh và mã QR tài liệu kỹ thuật tương ứng</div><div class="product-info-grid">${productInfoRows}</div></div>` : ""}
       <script>
         window.onload=function(){
-          setTimeout(function(){ window.print(); }, 900);
+          var imgs = Array.from(document.images || []);
+          if (!imgs.length) {
+            setTimeout(function(){ window.print(); }, 400);
+            return;
+          }
+          var done = 0;
+          var printOnce = false;
+          function tryPrint(){
+            done++;
+            if (!printOnce && done >= imgs.length) {
+              printOnce = true;
+              setTimeout(function(){ window.print(); }, 500);
+            }
+          }
+          imgs.forEach(function(img){
+            if (img.complete) tryPrint();
+            else {
+              img.onload = tryPrint;
+              img.onerror = tryPrint;
+            }
+          });
+          setTimeout(function(){
+            if (!printOnce) {
+              printOnce = true;
+              window.print();
+            }
+          }, 4500);
         }
       </script></body></html>`);
     win.document.close();
@@ -491,7 +524,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   return (
     <>
-      <style>{STYLES}</style>
+      
       {showWelcome && <div className="welcome-toast">Chào mừng admin trở lại SEADENT Quote Center</div>}
       {!isLoggedIn && (
         <div className="login-overlay">
@@ -609,6 +642,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
               <input className="sq-input" placeholder="Địa chỉ" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
               <input className="sq-input" placeholder="Ghi chú" value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} />
             </div>
+
             {cartItems.length ? (
               <>
                 <div className="sq-card-grid" style={{ marginTop: 16 }}>
@@ -631,7 +665,9 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
                 </div>
               </>
             ) : (
-              <div className="sq-summary" style={{ textAlign: "center", color: "#64748b" }}>Chưa có sản phẩm trong giỏ hàng.</div>
+              <div className="sq-summary" style={{ textAlign: "center", color: "#64748b" }}>
+                Chưa có sản phẩm trong giỏ hàng.
+              </div>
             )}
           </section>
 
