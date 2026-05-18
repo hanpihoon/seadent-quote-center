@@ -15,6 +15,8 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhp4Rv3FCzVY
 const DISCOUNT_PASSWORD = "seadent";
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "seadent";
+const GUEST_USERNAME = "guest";
+const GUEST_PASSWORD = "2026";
 // Auto lock sau 30 giây không thao tác
 const AUTO_LOCK_MS = 30 * 1000;
 
@@ -102,7 +104,14 @@ function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart 
       <div className="sq-line">
         <span>Chiết khấu</span>
         <span className="sq-value">
-          <input className="sq-mini-input" style={{ opacity: isUnlocked ? 1 : 0.45 }} disabled={!isUnlocked} type="number" value={discount} onChange={(e) => updateDiscount(product.id, e.target.value)} /> %
+          <input
+            className="sq-mini-input"
+            type="number"
+            value={discount}
+            disabled={!isUnlocked}
+            title={isUnlocked ? "Có thể chỉnh chiết khấu" : "Chỉ Admin mới được chỉnh chiết khấu"}
+            onChange={(e) => updateDiscount(product.id, e.target.value)}
+          /> %
         </span>
       </div>
       <div className="sq-line"><span>Giá bán</span><span className="sq-value sq-price">{money(price)}</span></div>
@@ -126,7 +135,7 @@ function CartCard({ item, updateQty, updateCartDiscount, removeFromCart, isUnloc
             max="100"
             value={item.discount}
             disabled={!isUnlocked}
-            style={{ opacity: isUnlocked ? 1 : 0.45 }}
+            title={isUnlocked ? "Có thể chỉnh chiết khấu" : "Chỉ Admin mới được chỉnh chiết khấu"}
             onChange={(e) => updateCartDiscount(item.id, e.target.value)}
           /> %
         </span>
@@ -162,6 +171,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [loginPassword, setLoginPassword] = React.useState("");
   const [loginError, setLoginError] = React.useState("");
   const [showWelcome, setShowWelcome] = React.useState(false);
+  const [userRole, setUserRole] = React.useState("guest");
 
   React.useEffect(() => {
     if (!isBrowser()) return undefined;
@@ -279,7 +289,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   };
 
   const updateDiscount = async (id, value) => {
-    if (!isUnlocked) return;
+    if (!isUnlocked || userRole !== "admin") return;
     const productId = String(id);
     const discount = num(value);
     setDiscounts((prev) => ({ ...prev, [productId]: discount }));
@@ -292,7 +302,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   };
 
   const applyGlobalDiscount = async (value) => {
-    if (!isUnlocked) return;
+    if (!isUnlocked || userRole !== "admin") return;
     const discount = num(value);
     setGlobalDiscount(discount);
     setDiscounts(Object.fromEntries(products.map((p) => [p.id, discount])));
@@ -311,19 +321,24 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   };
 
   const handleAdminLogin = () => {
-    const validUser = loginUser.trim().toLowerCase() === ADMIN_USERNAME;
-    const validPassword = loginPassword === ADMIN_PASSWORD;
+    const username = loginUser.trim().toLowerCase();
 
-    if (!validUser || !validPassword) {
+    const isAdmin = username === ADMIN_USERNAME && loginPassword === ADMIN_PASSWORD;
+    const isGuest = username === GUEST_USERNAME && loginPassword === GUEST_PASSWORD;
+
+    if (!isAdmin && !isGuest) {
       setLoginError("Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.");
       return;
     }
 
+    setUserRole(isAdmin ? "admin" : "guest");
+    setIsUnlocked(isAdmin);
     setIsLoggedIn(true);
     setLoginUser("");
     setLoginPassword("");
     setLoginError("");
     setShowWelcome(true);
+    setSyncStatus(isAdmin ? "Đăng nhập Admin thành công" : "Đăng nhập Guest - chỉ xem báo giá");
   };
 
   const addToCart = (product) => {
@@ -350,7 +365,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   };
 
   const updateCartDiscount = (id, value) => {
-    if (!isUnlocked) return;
+    if (!isUnlocked || userRole !== "admin") return;
     const discount = Math.max(0, Math.min(100, num(value)));
 
     setCart((prev) => {
@@ -448,7 +463,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
           <div className="login-card">
             <img src="/logo.png" alt="SEADENT" className="login-logo" />
             <h2 className="login-title">SEADENT Login</h2>
-            <div className="login-subtitle">Đăng nhập để truy cập hệ thống báo giá nội bộ</div>
+            <div className="login-subtitle">Admin: toàn quyền chỉnh sửa • Guest: chỉ xem báo giá</div>
             <div className="login-form">
               <input
                 className="login-input"
@@ -469,6 +484,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
               {loginError && <div className="login-error">{loginError}</div>}
               <button className="login-button" onClick={handleAdminLogin}>Đăng nhập</button>
             </div>
+            <div className="login-secure">Guest ID: Guest • Password: 2026</div>
             <div className="login-secure">Hệ thống tự động khóa sau 30 giây không thao tác</div>
           </div>
         </div>
@@ -584,38 +600,40 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
             )}
           </section>
 
-          <section className="sq-panel" style={{ marginTop: 18 }}>
-            <div className="sq-badge">{isUnlocked ? "🔓 Đã mở khóa" : "🔒 Đang khóa"}</div>
-            <div className="sq-stack">
-              <input
-                className="sq-input"
-                style={{ opacity: isUnlocked ? 1 : 0.45 }}
-                type="number"
-                value={globalDiscount}
-                disabled={!isUnlocked}
-                onChange={(e) => applyGlobalDiscount(e.target.value)}
-              />
-              <input
-                className="sq-input"
-                type="password"
-                placeholder="Password"
-                value={password}
-                disabled={isUnlocked}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && unlockDiscount()}
-              />
-              <button className="sq-btn" onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>
-                {isUnlocked ? "Khóa lại" : "Mở khóa"}
-              </button>
-              <button
-                className="sq-btn sq-btn-danger"
-                style={{ opacity: isUnlocked ? 1 : 0.5 }}
-                onClick={() => (isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước"))}
-              >
-                Reset Discount
-              </button>
-            </div>
-          </section>
+          {userRole === "admin" && (
+            <section className="sq-panel" style={{ marginTop: 18 }}>
+              <div className="sq-badge">{isUnlocked ? "🔓 Đã mở khóa" : "🔒 Đang khóa"}</div>
+              <div className="sq-stack">
+                <input
+                  className="sq-input"
+                  style={{ opacity: isUnlocked ? 1 : 0.45 }}
+                  type="number"
+                  value={globalDiscount}
+                  disabled={!isUnlocked}
+                  onChange={(e) => applyGlobalDiscount(e.target.value)}
+                />
+                <input
+                  className="sq-input"
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  disabled={isUnlocked}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && unlockDiscount()}
+                />
+                <button className="sq-btn" onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>
+                  {isUnlocked ? "Khóa lại" : "Mở khóa"}
+                </button>
+                <button
+                  className="sq-btn sq-btn-danger"
+                  style={{ opacity: isUnlocked ? 1 : 0.5 }}
+                  onClick={() => (isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước"))}
+                >
+                  Reset Discount
+                </button>
+              </div>
+            </section>
+          )}
 
           <div className="sq-stats" style={{ justifyContent: "center", marginTop: 18 }}>
             <div className="sq-stat">
