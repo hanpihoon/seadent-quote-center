@@ -1,7 +1,7 @@
 import React from "react";
 import "./App.css";
 
-const BANNER_URL = "/banner-seadent.png?v=2026-final";
+const BANNER_URL = `${window.location.origin}/banner-seadent.png?v=${Date.now()}`;
 const SITE_TITLE = "Seadent Quote Center";
 const SITE_FAVICON = "/logo.png";
 
@@ -559,8 +559,16 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
       <main className={isLoggedIn ? "sq-page" : "sq-page login-blur"}>
         <div className="sq-shell">
-          <div className="seadent-banner-v2">
-            <div className="seadent-banner-v2__image" style={{ backgroundImage: `url(${BANNER_URL})` }} />
+          <div className="seadent-banner-v2" style={{ width: "100%", marginBottom: 16, borderRadius: 24, overflow: "hidden", background: "#fff" }}>
+            <img
+              src={BANNER_URL}
+              alt="SEADENT Banner"
+              style={{ width: "100%", height: "auto", display: "block", borderRadius: 24 }}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+                e.currentTarget.parentElement.innerHTML = "<div style='padding:12px;text-align:center;color:#ef4444;border:1px solid #fed7aa;border-radius:18px;background:#fff7ed'>Không tải được banner: /banner-seadent.png</div>";
+              }}
+            />
           </div>
 
           <section className="sq-hero">
