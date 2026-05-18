@@ -659,22 +659,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
           <div className="sq-top-grid" style={{ display: "block", width: "100%" }}>
             <section className="sq-panel sq-search-panel" style={{ width: "100%", maxWidth: "none", marginBottom: 18 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 240px", gap: 14, marginBottom: 14 }}>
-                <input
-                  className="sq-input"
-                  placeholder="Tìm nhanh sản phẩm..."
-                  value={search}
-                  onChange={(e) => handleSearchInput(e.target.value)}
-                />
-
-                <button
-                  className={vietnameseInput ? "sq-btn" : "sq-btn sq-btn-light"}
-                  type="button"
-                  onClick={() => setVietnameseInput((v) => !v)}
-                  title="Bật/tắt bộ gõ tiếng Việt Telex cho ô tìm kiếm"
-                  style={{ whiteSpace: "nowrap" }}
-                >
-                  {vietnameseInput ? "✓ Telex VN" : "Telex VN"}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 180px 240px", gap: 14, marginBottom: 14, alignItems: " ? "✓ Telex VN" : "Telex VN"}
                 </button>
 
                 <select
@@ -805,39 +790,4 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
                 />
                 <button className="sq-btn" onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>
                   {isUnlocked ? "Khóa lại" : "Mở khóa"}
-                </button>
-                <button
-                  className="sq-btn sq-btn-danger"
-                  style={{ opacity: isUnlocked ? 1 : 0.5 }}
-                  onClick={() => (isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước"))}
-                >
-                  Reset Discount
-                </button>
-              </div>
-            </section>
-          )}
-
-          <div className="sq-stats" style={{ justifyContent: "center", marginTop: 18 }}>
-            <div className="sq-stat">
-              <div className="sq-stat-label">Products</div>
-              <div className="sq-stat-value">{products.length}</div>
-            </div>
-          </div>
-
-          <div className="sq-footer">SEADENT Quote Center © 2026</div>
-        </div>
-      </main>
-
-      {cartItems.length > 0 && (
-        <div className="sq-sticky">
-          <div className="sq-sticky-top">
-            <span>Tổng báo giá</span>
-            <strong>{money(cartTotal)}</strong>
-          </div>
-          <button className="sq-btn sq-btn-light" onClick={scrollToCart}>Xem giỏ</button>
-          <button className="sq-btn" onClick={exportQuotePdf}>Xuất PDF</button>
-        </div>
-      )}
-    </>
-  );
-}
+  
