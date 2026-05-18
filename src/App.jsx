@@ -343,20 +343,26 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   const addToCart = (product) => {
     const id = String(product.id);
-    const discount = getDiscount(id);
-    setCart((prev) => ({
-      ...prev,
-      [id]: {
-        id,
-        name: product.name,
-        category: product.category,
-        price: product.price,
-        discount,
-        finalPrice: calcPrice(product.price, discount),
-        quantity: (prev[id]?.quantity || 0) + 1,
-        techDocUrl: String(product.techDocUrl || "").trim(),
-      },
-    }));
+    const defaultDiscount = getDiscount(id);
+
+    setCart((prev) => {
+      const currentItem = prev[id];
+      const cartDiscount = currentItem ? currentItem.discount : defaultDiscount;
+
+      return {
+        ...prev,
+        [id]: {
+          id,
+          name: product.name,
+          category: product.category,
+          price: product.price,
+          discount: cartDiscount,
+          finalPrice: calcPrice(product.price, cartDiscount),
+          quantity: (currentItem?.quantity || 0) + 1,
+          techDocUrl: String(product.techDocUrl || "").trim(),
+        },
+      };
+    });
   };
 
   const updateQty = (id, quantity) => {
