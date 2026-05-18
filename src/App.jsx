@@ -1,6 +1,8 @@
 import React from "react";
 
 const BANNER_URL = "/banner-seadent.png?v=2026-final";
+const SITE_TITLE = "Seadent Quote Center";
+const SITE_FAVICON = "/logo.png";
 
 const STYLES = `
 *{box-sizing:border-box}html,body,#root{margin:0;padding:0;width:100%;min-height:100%;overflow-x:hidden;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#f8fafc;color:#111827}body{background:#f5f7fb;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}img{max-width:100%;display:block}.sq-page{min-height:100vh;background:#f5f7fb;padding:16px;padding-bottom:120px}.sq-shell{width:100%;max-width:1280px;margin:0 auto}.seadent-banner-v2{width:100%;margin-bottom:18px;border-radius:24px;overflow:hidden;background:#fff;border:1px solid #fed7aa;box-shadow:0 8px 24px rgba(15,23,42,.05);line-height:0}.seadent-banner-v2__image{width:100%;aspect-ratio:1920/620;background-position:center;background-repeat:no-repeat;background-size:contain;background-color:#fff}.sq-hero,.sq-panel,.sq-card{background:#fff;border:1px solid #e5e7eb;border-radius:22px;box-shadow:0 8px 24px rgba(15,23,42,.05)}.sq-hero{padding:18px;margin-bottom:16px}.sq-hero-grid{display:grid;grid-template-columns:160px 1fr 160px;gap:18px;align-items:center}.sq-brand{display:flex;align-items:center;justify-content:center;gap:22px;text-align:center}.sq-hero-left{display:flex;align-items:center;justify-content:center;border-right:1px solid #e5e7eb;height:90px}.sq-title-orange{color:#ea580c}.sq-logo{width:74px;height:74px;object-fit:contain;background:#fff7ed;padding:10px;border-radius:18px}.sq-badge{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:999px;background:#fff1e7;color:#ea580c;font-size:13px;font-weight:800;margin-bottom:10px}.sq-title{margin:0;font-size:64px;font-weight:900;line-height:1}.sq-muted{color:#6b7280;font-size:14px;line-height:1.6}.sq-stats{display:flex;gap:14px;justify-content:flex-end}.sq-stat{min-width:130px;background:#fff7ed;border-radius:18px;padding:18px;text-align:center}.sq-stat-label{font-size:14px;color:#6b7280;margin-bottom:8px;font-weight:700}.sq-stat-value{font-size:36px;font-weight:900;color:#ea580c}.sq-top-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:18px}.sq-search-panel{width:100%}.sq-search-panel .sq-tools{display:grid;grid-template-columns:160px 160px 160px;justify-content:start}.sq-panel{padding:18px}.sq-stack{display:flex;flex-direction:column;gap:12px}.sq-tools{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}.sq-input{width:100%;height:54px;border-radius:16px;border:1px solid #d1d5db;padding:0 18px;font-size:18px;background:#ffffff!important;color:#111827!important;-webkit-text-fill-color:#111827!important;caret-color:#111827!important;opacity:1!important;outline:none}.sq-input:focus{border-color:#f97316}.sq-btn{height:52px;border:none;border-radius:16px;padding:0 22px;background:#ff730f;color:#fff;font-size:17px;font-weight:800;cursor:pointer;transition:.2s}.sq-btn:hover{opacity:.92}.sq-btn-light{background:#fff;color:#111827;border:1px solid #d1d5db}.sq-btn-dark{background:#111827}.sq-btn-danger{background:#fff5f5;color:#ef4444;border:1px solid #fecaca}.sq-category{display:flex;align-items:center;justify-content:space-between;background:#fffaf3;border:1px solid #fed7aa;border-radius:22px;padding:18px 22px;font-size:20px;font-weight:800;cursor:pointer;margin-bottom:14px}.sq-count{width:42px;height:42px;border-radius:999px;background:#fff;color:#f97316;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px}.sq-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:18px}.sq-card{padding:18px}.sq-product-title{font-size:18px;font-weight:900;margin-bottom:14px}.sq-tag{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:999px;background:#fff1e7;color:#ea580c;font-size:13px;font-weight:800}.sq-line{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #f1f5f9;gap:10px}.sq-value{font-weight:800}.sq-price{color:#ea580c}.sq-mini-input{width:70px;height:42px;border-radius:12px;border:1px solid #d1d5db;text-align:center;font-size:16px;background:#ffffff!important;color:#111827!important;-webkit-text-fill-color:#111827!important;caret-color:#111827!important;opacity:1!important}.sq-summary{margin-top:18px;background:#fff7ed;border-radius:18px;padding:18px;border:1px solid #fed7aa}.sq-form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.login-overlay{position:fixed;inset:0;z-index:999;background:rgba(15,23,42,.65);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(12px)}.login-card{width:100%;max-width:420px;background:#fff;border-radius:28px;padding:34px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)}.login-logo{width:100px;margin:0 auto 20px}.login-title{margin:0;font-size:32px;font-weight:900;color:#111827;line-height:1.1}.login-subtitle{margin-top:10px;color:#64748b;font-size:15px;line-height:1.5}.login-form{margin-top:24px;display:flex;flex-direction:column;gap:14px}.login-input{width:100%;height:54px;border-radius:16px;border:1px solid #d1d5db;padding:0 16px;font-size:16px;background:#ffffff!important;color:#111827!important;-webkit-text-fill-color:#111827!important;caret-color:#111827!important;opacity:1!important}.login-button{height:54px;border:none;border-radius:16px;background:#ff730f;color:#fff;font-size:18px;font-weight:800;cursor:pointer;transition:.2s}.login-button:hover{opacity:.92}.login-secure{margin-top:18px;font-size:13px;color:#64748b;font-weight:600}.login-error{color:#ef4444;font-size:14px;font-weight:700}.login-blur{filter:blur(8px);pointer-events:none;user-select:none}.sq-sticky{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-top:1px solid #e5e7eb;padding:14px;display:flex;gap:12px;align-items:center;justify-content:center;box-shadow:0 -8px 24px rgba(15,23,42,.08)}.sq-sticky-top{display:flex;flex-direction:column;margin-right:12px}.sq-footer{text-align:center;padding:30px 0;color:#94a3b8;font-size:14px}.welcome-toast{position:fixed;top:24px;right:24px;z-index:9999;background:#111827;color:#fff;padding:16px 22px;border-radius:18px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.25)}@media(max-width:1024px){.sq-top-grid{grid-template-columns:1fr}.sq-hero-grid{grid-template-columns:1fr}.sq-hero-left{border-right:0;height:auto}.sq-stats{width:100%;justify-content:center}.sq-title{font-size:44px}}input,textarea,select{background:#ffffff!important;color:#111827!important;-webkit-text-fill-color:#111827!important;caret-color:#111827!important;opacity:1!important}input::placeholder,textarea::placeholder{color:#6b7280!important;-webkit-text-fill-color:#6b7280!important;opacity:1!important}input:disabled,textarea:disabled,select:disabled{background:#f8fafc!important;color:#111827!important;-webkit-text-fill-color:#111827!important;opacity:.65!important}
@@ -160,6 +162,19 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [loginPassword, setLoginPassword] = React.useState("");
   const [loginError, setLoginError] = React.useState("");
   const [showWelcome, setShowWelcome] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isBrowser()) return undefined;
+    document.title = SITE_TITLE;
+    let favicon = document.querySelector("link[rel='icon']");
+    if (!favicon) {
+      favicon = document.createElement("link");
+      favicon.setAttribute("rel", "icon");
+      document.head.appendChild(favicon);
+    }
+    favicon.setAttribute("href", SITE_FAVICON);
+    return undefined;
+  }, []);
 
   React.useEffect(() => {
     if (!isBrowser()) return undefined;
@@ -439,19 +454,19 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
             <div className="login-form">
               <input
                 className="login-input"
-                placeholder="User"
                 value={loginUser}
                 onChange={(e) => setLoginUser(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAdminLogin()}
-                autoFocus
+                placeholder="User"
+                autoComplete="username"
               />
               <input
                 className="login-input"
                 type="password"
-                placeholder="Password"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAdminLogin()}
+                placeholder="Password"
+                autoComplete="current-password"
               />
               {loginError && <div className="login-error">{loginError}</div>}
               <button className="login-button" onClick={handleAdminLogin}>Đăng nhập</button>
@@ -460,11 +475,13 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
           </div>
         </div>
       )}
-      <div className={isLoggedIn ? "sq-page" : "sq-page login-blur"}>
-        <main className="sq-shell">
+
+      <main className={isLoggedIn ? "sq-page" : "sq-page login-blur"}>
+        <div className="sq-shell">
           <div className="seadent-banner-v2">
             <div className="seadent-banner-v2__image" style={{ backgroundImage: `url(${BANNER_URL})` }} />
           </div>
+
           <section className="sq-hero">
             <div className="sq-hero-grid">
               <div className="sq-hero-left">
@@ -472,7 +489,6 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
               </div>
               <div className="sq-brand">
                 <div>
-                  
                   <h1 className="sq-title"><span className="sq-title-orange">Seadent</span> Quote Center</h1>
                   <div className="sq-muted">Báo giá nhanh trên mọi thiết bị</div>
                 </div>
@@ -485,66 +501,88 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
             <section className="sq-panel sq-search-panel">
               <input className="sq-input" placeholder="Tìm nhanh sản phẩm..." value={search} onChange={(e) => setSearch(e.target.value)} />
               <div className="sq-tools">
-                <button className={`sq-btn ${isGrouped ? "" : "sq-btn-light"}`} onClick={() => setIsGrouped(!isGrouped)}>{isGrouped ? "✓ Group" : "Group"}</button>
-                {isGrouped && <button className="sq-btn sq-btn-light" onClick={() => setCollapsed({})}>Mở tất cả</button>}
-                {isGrouped && <button className="sq-btn sq-btn-light" onClick={() => setCollapsed(Object.fromEntries(categories.map((c) => [c, true])))}>Thu gọn</button>}
+                <button className="sq-btn" onClick={() => setIsGrouped((v) => !v)}>{isGrouped ? "✓ Group" : "Group"}</button>
+                <button className="sq-btn sq-btn-light" onClick={() => setCollapsed({})}>Mở tất cả</button>
+                <button className="sq-btn sq-btn-light" onClick={() => setCollapsed(Object.fromEntries(categories.map((c) => [c, true])))}>Thu gọn</button>
               </div>
               <div className="sq-muted" style={{ marginTop: 10 }}>{syncStatus}</div>
             </section>
-
-            
           </div>
 
-          <section className="sq-stack">
-            {isGrouped ? categories.map((category) => (
-              <React.Fragment key={category}>
+          {isGrouped ? (
+            categories.map((category) => (
+              <section key={category}>
                 <div className="sq-category" onClick={() => setCollapsed((prev) => ({ ...prev, [category]: !prev[category] }))}>
                   <span>{collapsed[category] ? "▸" : "▾"} {category}</span>
                   <span className="sq-count">{grouped[category].length}</span>
                 </div>
-                {!collapsed[category] && <div className="sq-card-grid">{grouped[category].map((product) => <ProductCard key={product.id} product={product} discount={getDiscount(product.id)} isUnlocked={isUnlocked} updateDiscount={updateDiscount} addToCart={addToCart} />)}</div>}
-              </React.Fragment>
-            )) : <div className="sq-card-grid">{filtered.map((product) => <ProductCard key={product.id} product={product} discount={getDiscount(product.id)} isUnlocked={isUnlocked} updateDiscount={updateDiscount} addToCart={addToCart} />)}</div>}
-          </section>
-
-          <section id="quote-cart" className="sq-panel" style={{ marginTop: 14 }}>
-            <div style={{ marginBottom: 12 }}>
-              <h2 style={{ margin: 0, fontSize: 22 }}>Giỏ hàng báo giá</h2>
-              <div className="sq-muted">{cartQty} sản phẩm đã chọn</div>
+                {!collapsed[category] && (
+                  <div className="sq-card-grid">
+                    {grouped[category].map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        discount={getDiscount(product.id)}
+                        isUnlocked={isUnlocked}
+                        updateDiscount={updateDiscount}
+                        addToCart={addToCart}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            ))
+          ) : (
+            <div className="sq-card-grid">
+              {filtered.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  discount={getDiscount(product.id)}
+                  isUnlocked={isUnlocked}
+                  updateDiscount={updateDiscount}
+                  addToCart={addToCart}
+                />
+              ))}
             </div>
+          )}
+
+          <section id="quote-cart" className="sq-panel">
+            <h2 style={{ textAlign: "center", margin: 0 }}>Giỏ hàng báo giá</h2>
+            <div className="sq-muted" style={{ textAlign: "center", marginBottom: 14 }}>{cartQty} sản phẩm đã chọn</div>
             <div className="sq-tools">
               <button className="sq-btn sq-btn-dark" onClick={exportQuotePdf}>Xuất PDF</button>
               <button className="sq-btn sq-btn-danger" onClick={() => setCart({})}>Xóa giỏ hàng</button>
             </div>
-
-            <div className="sq-form-grid" style={{ marginTop: 12, marginBottom: 12 }}>
+            <div className="sq-form-grid" style={{ marginTop: 14 }}>
               <input className="sq-input" placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
               <input className="sq-input" placeholder="Số điện thoại" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
               <input className="sq-input" placeholder="Địa chỉ" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
               <input className="sq-input" placeholder="Ghi chú" value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} />
             </div>
-
-            {!cartItems.length ? (
-              <div className="sq-card" style={{ textAlign: "center", color: "#64748b" }}>Chưa có sản phẩm trong giỏ hàng.</div>
-            ) : (
+            {cartItems.length ? (
               <>
-                <div className="sq-card-grid">{cartItems.map((item) => (
-                  <CartCard
-                    key={item.id}
-                    item={item}
-                    updateQty={updateQty}
-                    updateCartDiscount={updateCartDiscount}
-                    removeFromCart={removeFromCart}
-                    isUnlocked={isUnlocked}
-                  />
-                ))}</div>
-                <div className="sq-summary">
+                <div className="sq-card-grid" style={{ marginTop: 16 }}>
+                  {cartItems.map((item) => (
+                    <CartCard
+                      key={item.id}
+                      item={item}
+                      updateQty={updateQty}
+                      updateCartDiscount={updateCartDiscount}
+                      removeFromCart={removeFromCart}
+                      isUnlocked={isUnlocked}
+                    />
+                  ))}
+                </div>
+                <div className="sq-summary" style={{ textAlign: "center" }}>
                   <strong>Tổng cộng {cartQty} sản phẩm</strong>
                   <div className="sq-muted">Trước CK: {money(cartBeforeDiscount)}</div>
                   <div className="sq-muted">Tiền CK: {money(cartDiscount)}</div>
-                  <div className="sq-stat-value" style={{ fontSize: 26 }}>{money(cartTotal)}</div>
+                  <div className="sq-stat-value">{money(cartTotal)}</div>
                 </div>
               </>
+            ) : (
+              <div className="sq-summary" style={{ textAlign: "center", color: "#64748b" }}>Chưa có sản phẩm trong giỏ hàng.</div>
             )}
           </section>
 
@@ -566,19 +604,19 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
           </div>
 
           <div className="sq-footer">SEADENT Quote Center © 2026</div>
-        </main>
+        </div>
+      </main>
 
-        {cartItems.length > 0 && (
-          <div className="sq-sticky">
-            <div className="sq-sticky-top">
-              <span>Tổng báo giá</span>
-              <strong>{money(cartTotal)}</strong>
-            </div>
-            <button className="sq-btn sq-btn-light" onClick={scrollToCart}>Xem giỏ</button>
-            <button className="sq-btn" onClick={exportQuotePdf}>Xuất PDF</button>
+      {cartItems.length > 0 && (
+        <div className="sq-sticky">
+          <div className="sq-sticky-top">
+            <span>Tổng báo giá</span>
+            <strong>{money(cartTotal)}</strong>
           </div>
-        )}
-      </div>
+          <button className="sq-btn sq-btn-light" onClick={scrollToCart}>Xem giỏ</button>
+          <button className="sq-btn" onClick={exportQuotePdf}>Xuất PDF</button>
+        </div>
+      )}
     </>
   );
 }
