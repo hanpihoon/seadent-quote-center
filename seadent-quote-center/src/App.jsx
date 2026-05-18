@@ -62,66 +62,6 @@ const pickText = (item, keys) => {
   return "";
 };
 
-const applyVietnameseTone = (word, tone) => {
-  if (!tone) return word;
-  const toneMap = {
-    s: { a: "á", ă: "ắ", â: "ấ", e: "é", ê: "ế", i: "í", o: "ó", ô: "ố", ơ: "ớ", u: "ú", ư: "ứ", y: "ý" },
-    f: { a: "à", ă: "ằ", â: "ầ", e: "è", ê: "ề", i: "ì", o: "ò", ô: "ồ", ơ: "ờ", u: "ù", ư: "ừ", y: "ỳ" },
-    r: { a: "ả", ă: "ẳ", â: "ẩ", e: "ẻ", ê: "ể", i: "ỉ", o: "ỏ", ô: "ổ", ơ: "ở", u: "ủ", ư: "ử", y: "ỷ" },
-    x: { a: "ã", ă: "ẵ", â: "ẫ", e: "ẽ", ê: "ễ", i: "ĩ", o: "õ", ô: "ỗ", ơ: "ỡ", u: "ũ", ư: "ữ", y: "ỹ" },
-    j: { a: "ạ", ă: "ặ", â: "ậ", e: "ẹ", ê: "ệ", i: "ị", o: "ọ", ô: "ộ", ơ: "ợ", u: "ụ", ư: "ự", y: "ỵ" },
-  };
-  const vowels = "aăâeêioôơuưy";
-  const lower = word.toLowerCase();
-  let index = -1;
-  for (let i = lower.length - 1; i >= 0; i--) {
-    if (vowels.includes(lower[i])) {
-      index = i;
-      break;
-    }
-  }
-  if (index < 0) return word;
-  const original = word[index];
-  const changed = toneMap[tone]?.[lower[index]] || original;
-  const finalChar = original === original.toUpperCase() ? changed.toUpperCase() : changed;
-  return word.slice(0, index) + finalChar + word.slice(index + 1);
-};
-
-const telexWordToVietnamese = (rawWord) => {
-  let word = rawWord;
-  let tail = "";
-  while (word && ",.;:!?()[]{}".includes(word.slice(-1))) {
-    tail = word.slice(-1) + tail;
-    word = word.slice(0, -1);
-  }
-
-  let tone = "";
-  const last = word.slice(-1).toLowerCase();
-  if (["s", "f", "r", "x", "j"].includes(last)) {
-    tone = last;
-    word = word.slice(0, -1);
-  }
-
-  word = word
-    .replace(/dd/g, "đ").replace(/DD/g, "Đ").replace(/Dd/g, "Đ")
-    .replace(/aw/g, "ă").replace(/Aw/g, "Ă").replace(/AW/g, "Ă")
-    .replace(/aa/g, "â").replace(/Aa/g, "Â").replace(/AA/g, "Â")
-    .replace(/ee/g, "ê").replace(/Ee/g, "Ê").replace(/EE/g, "Ê")
-    .replace(/oo/g, "ô").replace(/Oo/g, "Ô").replace(/OO/g, "Ô")
-    .replace(/ow/g, "ơ").replace(/Ow/g, "Ơ").replace(/OW/g, "Ơ")
-    .replace(/uw/g, "ư").replace(/Uw/g, "Ư").replace(/UW/g, "Ư");
-
-  return applyVietnameseTone(word, tone) + tail;
-};
-
-const telexToVietnamese = (text) => text
-  .split(" ")
-  .map((part) => part.includes("
-") ? part.split("
-").map(telexWordToVietnamese).join("
-") : telexWordToVietnamese(part))
-  .join(" ");
-
 const normalizeProduct = (item, index) => ({
   id: String(item.id || item.ID || item.name || item.Name || index + 1),
   name: String(item.name || item.Name || item.product || item.Product || "Unnamed product"),
@@ -232,7 +172,6 @@ export default function App() {
   const [cart, setCart] = React.useState({});
   const [search, setSearch] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
-  const [vietnameseInput, setVietnameseInput] = React.useState(() => getLocal("seadent_vietnamese_input", "false") === "true");
   const [password, setPassword] = React.useState("");
   const [syncStatus, setSyncStatus] = React.useState("Đang tải dữ liệu...");
   const [globalDiscount, setGlobalDiscount] = React.useState(10);
@@ -284,7 +223,6 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   React.useEffect(() => setLocal("seadent_discount_unlocked", String(isUnlocked)), [isUnlocked]);
   React.useEffect(() => setLocal("seadent_group_by_category", String(isGrouped)), [isGrouped]);
-  React.useEffect(() => setLocal("seadent_vietnamese_input", String(vietnameseInput)), [vietnameseInput]);
   // Không lưu trạng thái login để mỗi lần refresh đều yêu cầu đăng nhập
 
   React.useEffect(() => {
@@ -490,10 +428,6 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
     document.getElementById("quote-cart")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const handleSearchInput = (value) => {
-    setSearch(vietnameseInput ? telexToVietnamese(value) : value);
-  };
-
   const exportQuotePdf = () => {
     if (!isBrowser()) return;
     if (!cartItems.length) {
@@ -659,9 +593,13 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
           <div className="sq-top-grid" style={{ display: "block", width: "100%" }}>
             <section className="sq-panel sq-search-panel" style={{ width: "100%", maxWidth: "none", marginBottom: 18 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 180px 240px", gap: 14, marginBottom: 14, alignItems: " ? "✓ Telex VN" : "Telex VN"}
-                </button>
-
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 240px", gap: 14, marginBottom: 14, alignItems: "center" }}>
+                <input
+                  className="sq-input"
+                  placeholder="Tìm nhanh sản phẩm..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
                 <select
                   className="sq-input"
                   value={selectedCategory}
