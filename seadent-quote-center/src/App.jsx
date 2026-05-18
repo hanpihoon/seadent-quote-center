@@ -571,23 +571,23 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
             />
           </div>
 
-          <section className="sq-hero">
-            <div className="sq-hero-grid">
-              <div className="sq-hero-left">
-                <img src="/logo.png" alt="SEADENT" className="sq-logo" />
-              </div>
-              <div className="sq-brand">
-                <div>
-                  <h1 className="sq-title"><span className="sq-title-orange">Seadent</span> Quote Center</h1>
-                  <div className="sq-muted">Báo giá nhanh trên mọi thiết bị</div>
-                </div>
-              </div>
-              <div></div>
+          <section className="sq-hero" style={{ position: "relative", minHeight: 150, display: "flex", alignItems: "center", justifyContent: "center", padding: "28px 120px" }}>
+            <img
+              src="/logo.png"
+              alt="SEADENT"
+              className="sq-logo"
+              style={{ position: "absolute", left: 32, top: "50%", transform: "translateY(-50%)" }}
+            />
+            <div style={{ textAlign: "center", width: "100%" }}>
+              <h1 className="sq-title" style={{ margin: 0, fontSize: "clamp(40px, 5vw, 72px)", lineHeight: 1.05, letterSpacing: "-1.5px" }}>
+                <span className="sq-title-orange">Seadent</span> Quote Center
+              </h1>
+              <div className="sq-muted" style={{ marginTop: 8, fontSize: 16 }}>Báo giá nhanh trên mọi thiết bị</div>
             </div>
           </section>
 
-          <div className="sq-top-grid">
-            <section className="sq-panel sq-search-panel">
+          <div className="sq-top-grid" style={{ display: "block", width: "100%" }}>
+            <section className="sq-panel sq-search-panel" style={{ width: "100%", maxWidth: "none", marginBottom: 18 }}>
               <input className="sq-input" placeholder="Tìm nhanh sản phẩm..." value={search} onChange={(e) => setSearch(e.target.value)} />
               <div className="sq-tools">
                 <button className="sq-btn" onClick={() => setIsGrouped((v) => !v)}>{isGrouped ? "✓ Group" : "Group"}</button>
