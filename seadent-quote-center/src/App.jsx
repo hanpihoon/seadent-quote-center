@@ -1,10 +1,9 @@
 import React from "react";
+import "./App.css";
 
 const BANNER_URL = "/banner-seadent.png?v=2026-final";
 const SITE_TITLE = "Seadent Quote Center";
 const SITE_FAVICON = "/logo.png";
-
-import "./App.css";
 
 // Đã chuyển toàn bộ CSS sang file App.css để tối ưu độ dài App.jsx
 
