@@ -100,68 +100,6 @@ const normalizeProduct = (item, index) => ({
   ]),
 });
 
-function SeadentDragon() {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: "absolute",
-        inset: 0,
-        overflow: "hidden",
-        borderRadius: 24,
-        pointerEvents: "none",
-        opacity: 0.42,
-        zIndex: 1,
-      }}
-    >
-      <style>{`
-        @keyframes seadentDragonFloat{
-          0%{transform:translate3d(-4%,2%,0) scale(1.04);opacity:.55}
-          50%{transform:translate3d(4%,-2%,0) scale(1.08);opacity:.85}
-          100%{transform:translate3d(-4%,2%,0) scale(1.04);opacity:.55}
-        }
-        .seadent-dragon-line{animation:seadentDragonFloat 16s ease-in-out infinite;transform-origin:center;will-change:transform,opacity}
-        @media(max-width:768px){.seadent-dragon-wrap{opacity:.55!important}.seadent-dragon-line{animation-duration:24s}}
-        @media(prefers-reduced-motion:reduce){.seadent-dragon-line{animation:none!important}}
-      `}</style>
-      <svg
-        className="seadent-dragon-wrap"
-        viewBox="0 0 900 260"
-        style={{ width: "100%", height: "100%", display: "block" }}
-        preserveAspectRatio="xMidYMid slice"
-      >
-        <defs>
-          <linearGradient id="dragonOrange" x1="0" x2="1">
-            <stop offset="0%" stopColor="#fb923c" />
-            <stop offset="60%" stopColor="#f97316" />
-            <stop offset="100%" stopColor="#ea580c" />
-          </linearGradient>
-          <filter id="softGlow">
-            <feGaussianBlur stdDeviation="3.2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        <g className="seadent-dragon-line" fill="none" stroke="url(#dragonOrange)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter="url(#softGlow)">
-          <path d="M80 154 C170 78 280 82 356 130 C430 176 518 184 612 120 C708 54 812 76 868 128" />
-          <path d="M150 146 C218 104 292 112 350 146 C418 184 512 160 582 118 C660 70 742 70 830 118" opacity=".65" />
-          <path d="M316 126 C294 94 306 62 344 44 C342 76 362 94 396 104" />
-          <path d="M348 46 L386 18 L374 62 L424 32 L400 82" />
-          <path d="M332 86 C300 82 282 98 260 118 C302 112 322 124 344 146" />
-          <path d="M322 94 C344 82 372 84 394 98" />
-          <path d="M384 94 C404 88 426 94 444 108" />
-          <path d="M470 164 C496 142 516 132 544 124 M532 170 C552 148 574 136 604 124 M592 154 C614 134 642 118 676 108" opacity=".65" />
-          <path d="M640 98 C674 70 722 48 786 50 C762 66 750 82 744 104 C788 94 828 100 866 128" opacity=".55" />
-          <circle cx="370" cy="88" r="3.4" fill="#f97316" stroke="none" />
-          <path d="M250 120 C220 116 198 126 172 150 M170 150 C150 160 130 160 108 156" opacity=".65" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
 function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart }) {
   const price = calcPrice(product.price, discount);
   return (
@@ -646,15 +584,14 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
             />
           </div>
 
-          <section className="sq-hero" style={{ position: "relative", minHeight: 150, display: "flex", alignItems: "center", justifyContent: "center", padding: "28px 120px", overflow: "hidden" }}>
-            <SeadentDragon />
+          <section className="sq-hero" style={{ position: "relative", minHeight: 150, display: "flex", alignItems: "center", justifyContent: "center", padding: "28px 120px" }}>
             <img
               src="/logo.png"
               alt="SEADENT"
               className="sq-logo"
-              style={{ position: "absolute", left: 32, top: "50%", transform: "translateY(-50%)", zIndex: 2 }}
+              style={{ position: "absolute", left: 32, top: "50%", transform: "translateY(-50%)" }}
             />
-            <div style={{ textAlign: "center", width: "100%", position: "relative", zIndex: 2 }}>
+            <div style={{ textAlign: "center", width: "100%" }}>
               <h1 className="sq-title" style={{ margin: 0, fontSize: "clamp(40px, 5vw, 72px)", lineHeight: 1.05, letterSpacing: "-1.5px" }}>
                 <span className="sq-title-orange">Seadent</span> Quote Center
               </h1>
