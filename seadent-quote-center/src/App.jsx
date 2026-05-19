@@ -110,17 +110,17 @@ function SeadentDragon() {
         overflow: "hidden",
         borderRadius: 24,
         pointerEvents: "none",
-        opacity: 0.14,
-        zIndex: 0,
+        opacity: 0.42,
+        zIndex: 1,
       }}
     >
       <style>{`
         @keyframes seadentDragonFloat{
-          0%{transform:translate3d(-3%,2%,0);opacity:.12}
-          50%{transform:translate3d(3%,-2%,0);opacity:.18}
-          100%{transform:translate3d(-3%,2%,0);opacity:.12}
+          0%{transform:translate3d(-4%,2%,0) scale(1.04);opacity:.55}
+          50%{transform:translate3d(4%,-2%,0) scale(1.08);opacity:.85}
+          100%{transform:translate3d(-4%,2%,0) scale(1.04);opacity:.55}
         }
-        .seadent-dragon-line{animation:seadentDragonFloat 18s ease-in-out infinite;transform-origin:center;will-change:transform,opacity}
+        .seadent-dragon-line{animation:seadentDragonFloat 16s ease-in-out infinite;transform-origin:center;will-change:transform,opacity}
         @media(max-width:768px){.seadent-dragon-wrap{opacity:.55!important}.seadent-dragon-line{animation-duration:24s}}
         @media(prefers-reduced-motion:reduce){.seadent-dragon-line{animation:none!important}}
       `}</style>
@@ -137,14 +137,14 @@ function SeadentDragon() {
             <stop offset="100%" stopColor="#ea580c" />
           </linearGradient>
           <filter id="softGlow">
-            <feGaussianBlur stdDeviation="2.2" result="blur" />
+            <feGaussianBlur stdDeviation="3.2" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
-        <g className="seadent-dragon-line" fill="none" stroke="url(#dragonOrange)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" filter="url(#softGlow)">
+        <g className="seadent-dragon-line" fill="none" stroke="url(#dragonOrange)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter="url(#softGlow)">
           <path d="M80 154 C170 78 280 82 356 130 C430 176 518 184 612 120 C708 54 812 76 868 128" />
           <path d="M150 146 C218 104 292 112 350 146 C418 184 512 160 582 118 C660 70 742 70 830 118" opacity=".65" />
           <path d="M316 126 C294 94 306 62 344 44 C342 76 362 94 396 104" />
