@@ -1,5 +1,6 @@
 import React from "react";
 import "./App.css";
+import "./salesMode.css";
 
 const BANNER_URL = `${window.location.origin}/banner-seadent.png?v=${Date.now()}`;
 const SITE_TITLE = "Seadent Quote Center";
