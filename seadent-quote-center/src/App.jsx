@@ -193,6 +193,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [loginError, setLoginError] = React.useState("");
   const [showWelcome, setShowWelcome] = React.useState(false);
   const [userRole, setUserRole] = React.useState("guest");
+  const [salesMode, setSalesMode] = React.useState(false);
 
   React.useEffect(() => {
     if (!isBrowser()) return undefined;
