@@ -788,5 +788,88 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
                   className="sq-input"
                   style={{ opacity: isUnlocked ? 1 : 0.45 }}
                   type="number"
-                  value={globalDiscount}
+                 value={globalDiscount}
+disabled={!isUnlocked}
+onChange={(e) => applyGlobalDiscount(e.target.value)}
+/>
+
+<input
+  className="sq-input"
+  type="password"
+  placeholder="Password"
+  value={password}
+  disabled={isUnlocked}
+  onChange={(e) => setPassword(e.target.value)}
+  onKeyDown={(e) => e.key === "Enter" && unlockDiscount()}
+/>
+
+<button
+  className="sq-btn"
+  onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}
+>
+  {isUnlocked ? "Khóa lại" : "Mở khóa"}
+</button>
+
+<button
+  className="sq-btn sq-btn-danger"
+  style={{ opacity: isUnlocked ? 1 : 0.5 }}
+  onClick={() =>
+    isUnlocked
+      ? applyGlobalDiscount(0)
+      : alert("Vui lòng mở khóa trước")
+  }
+>
+  Reset Discount
+</button>
+</div>
+</section>
+)}
+
+<div className="sq-stats" style={{ justifyContent: "center", marginTop: 18 }}>
+  <div className="sq-stat">
+    <div className="sq-stat-label">Products</div>
+    <div className="sq-stat-value">{products.length}</div>
+  </div>
+</div>
+
+<div className="sq-footer">
+  SEADENT Quote Center © 2026
+</div>
+</div>
+</main>
+
+{isLoggedIn && (
+  <button
+    className="sales-mode-toggle"
+    onClick={() => setSalesMode((v) => !v)}
+  >
+    {salesMode ? "Thoát Sales Mode" : "Sales Mode"}
+  </button>
+)}
+
+{cartItems.length > 0 && (
+  <div className="sq-sticky">
+    <div className="sq-sticky-top">
+      <span>Tổng báo giá</span>
+      <strong>{money(cartTotal)}</strong>
+    </div>
+
+    <button
+      className="sq-btn sq-btn-light"
+      onClick={scrollToCart}
+    >
+      Xem giỏ
+    </button>
+
+    <button
+      className="sq-btn"
+      onClick={exportQuotePdf}
+    >
+      Xuất PDF
+    </button>
+  </div>
+)}
+</>
+);
+}
             
