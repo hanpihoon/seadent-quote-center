@@ -1,127 +1,31 @@
-.sales-mode .seadent-banner-v2 {
-  display: none !important;
-}
-
-.sales-mode .sq-page {
-  background: #ffffff;
-}
-
-.sales-mode .sq-shell {
-  max-width: 1500px;
-}
-
-.sales-mode .sq-hero {
-  min-height: 110px !important;
-  margin-bottom: 14px;
+.sales-mode .sq-panel,
+.sales-mode .sq-card,
+.sales-mode .sq-category {
+  backdrop-filter: blur(18px);
+  background: rgba(255,255,255,0.75);
+  transition: all .35s ease;
 }
 
 .sales-mode .sq-title {
-  font-size: clamp(42px, 5vw, 76px) !important;
+  font-size: clamp(52px, 7vw, 96px) !important;
 }
 
-.sales-mode .sq-search-panel {
-  display: none;
-}
-
-.sales-mode .sq-category {
-  font-size: 24px;
-  padding: 24px 28px;
-}
-
-.sales-mode .sq-count {
-  font-size: 18px;
-  padding: 8px 14px;
-}
-
-.sales-mode .sq-card-grid {
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 22px;
-}
-
-.sales-mode .sq-card {
-  padding: 24px;
-  border-radius: 24px;
-}
-
-.sales-mode .sq-product-title {
-  font-size: 24px;
-  line-height: 1.25;
-}
-
-.sales-mode .sq-line {
-  font-size: 18px;
-  margin-bottom: 14px;
-}
-
-.sales-mode .sq-tag {
-  font-size: 14px;
-  padding: 7px 12px;
-}
-
-.sales-mode .sq-btn {
-  font-size: 18px;
-  padding: 15px 20px;
-  border-radius: 16px;
-}
-
-.sales-mode .sq-mini-input {
-  font-size: 18px;
-  width: 86px;
-}
-
-.sales-mode #quote-cart {
-  margin-top: 28px;
-}
-
-.sales-mode #quote-cart h2 {
-  font-size: 34px;
-}
-
-.sales-mode .sq-form-grid {
-  display: none;
-}
-
-.sales-mode .sq-footer {
-  display: none;
-}
-
-.sales-mode .sq-sticky {
-  transform: scale(1.05);
-  transform-origin: bottom center;
+.sales-mode .sq-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
 }
 
 .sales-mode-toggle {
   position: fixed;
-  right: 18px;
-  bottom: 92px;
-  z-index: 80;
+  right: 24px;
+  bottom: 24px;
+  z-index: 9999;
   border: none;
   border-radius: 999px;
-  padding: 14px 18px;
-  background: #111827;
-  color: white;
-  font-weight: 900;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.22);
-  cursor: pointer;
-}
-
-.sales-mode .sales-mode-toggle {
+  padding: 14px 22px;
   background: #f97316;
-}
-
-@media (max-width: 768px) {
-  .sales-mode .sq-card-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .sales-mode .sq-category {
-    font-size: 20px;
-  }
-
-  .sales-mode-toggle {
-    right: 12px;
-    bottom: 86px;
-    padding: 12px 14px;
-    font-size: 13px;
-  }
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(249,115,22,.3);
 }
