@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-
+import { saveQuoteDraft, loadQuoteDraft, clearQuoteDraft } from "./utils/quoteStorage";
 const BANNER_URL = `${window.location.origin}/banner-seadent.png?v=${Date.now()}`;
 const SITE_TITLE = "Seadent Quote Center";
 const SITE_FAVICON = "/logo.png";
