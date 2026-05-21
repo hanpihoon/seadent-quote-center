@@ -692,7 +692,14 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
               <input className="sq-input" placeholder="Địa chỉ" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
               <input className="sq-input" placeholder="Ghi chú" value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} />
             </div>
-
+{isLoggedIn && (
+  <button
+    className="sales-mode-toggle"
+    onClick={() => setSalesMode((v) => !v)}
+  >
+    {salesMode ? "Thoát Sales Mode" : "Sales Mode"}
+  </button>
+)}
             {cartItems.length ? (
               <>
                 <div className="sq-card-grid" style={{ marginTop: 16 }}>
