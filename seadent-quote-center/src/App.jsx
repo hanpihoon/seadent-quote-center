@@ -572,7 +572,12 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
         </div>
       )}
 
-      <main className={isLoggedIn ? "sq-page" : "sq-page login-blur"}>
+      <<main
+  className={[
+    isLoggedIn ? "sq-page" : "sq-page login-blur",
+    salesMode ? "sales-mode" : "",
+  ].join(" ")}
+>>
         <div className="sq-shell">
           <div className="seadent-banner-v2" style={{ width: "100%", marginBottom: 16, borderRadius: 24, overflow: "hidden", background: "#fff" }}>
             <img
