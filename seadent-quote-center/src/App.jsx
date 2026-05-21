@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-
+import { saveQuoteDraft, loadQuoteDraft, clearQuoteDraft } from "./utils/quoteStorage";
 const BANNER_URL = `${window.location.origin}/banner-seadent.png?v=${Date.now()}`;
 const SITE_TITLE = "Seadent Quote Center";
 const SITE_FAVICON = "/logo.png";
@@ -220,6 +220,17 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [loginError, setLoginError] = React.useState("");
   const [showWelcome, setShowWelcome] = React.useState(false);
   const [userRole, setUserRole] = React.useState("guest");
+  React.useEffect(() => {
+  const draft = loadQuoteDraft();
+
+  if (!draft) return;
+
+  setCart(draft.cart || {});
+  setCustomerName(draft.customerName || "");
+  setCustomerPhone(draft.customerPhone || "");
+  setCustomerAddress(draft.customerAddress || "");
+  setCustomerNote(draft.customerNote || "");
+}, []);
 
   React.useEffect(() => {
     if (!isBrowser()) return undefined;
@@ -251,6 +262,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   React.useEffect(() => setLocal("seadent_discount_unlocked", String(isUnlocked)), [isUnlocked]);
   React.useEffect(() => setLocal("seadent_group_by_category", String(isGrouped)), [isGrouped]);
+<<<<<<< HEAD
 
   React.useEffect(() => {
     saveQuoteDraft({
@@ -263,6 +275,24 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
     });
   }, [cart, customerName, customerPhone, customerAddress, customerNote]);
 
+=======
+  React.useEffect(() => {
+  saveQuoteDraft({
+    cart,
+    customerName,
+    customerPhone,
+    customerAddress,
+    customerNote,
+    updatedAt: new Date().toISOString(),
+  });
+}, [
+  cart,
+  customerName,
+  customerPhone,
+  customerAddress,
+  customerNote,
+]);
+>>>>>>> 6e14fe87af3a2310f63dc80cca2c0143d6ba42d2
   // Không lưu trạng thái login để mỗi lần refresh đều yêu cầu đăng nhập
 
   React.useEffect(() => {
@@ -718,6 +748,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
             <div className="sq-tools">
               <button className="sq-btn sq-btn-dark" onClick={exportQuotePdf}>Xuất PDF</button>
               <button
+<<<<<<< HEAD
                 className="sq-btn sq-btn-danger"
                 onClick={() => {
                   setCart({});
@@ -730,6 +761,20 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
               >
                 Xóa giỏ hàng
               </button>
+=======
+  className="sq-btn sq-btn-danger"
+  onClick={() => {
+    setCart({});
+    setCustomerName("");
+    setCustomerPhone("");
+    setCustomerAddress("");
+    setCustomerNote("");
+    clearQuoteDraft();
+  }}
+>
+  Xóa giỏ hàng
+</button>
+>>>>>>> 6e14fe87af3a2310f63dc80cca2c0143d6ba42d2
             </div>
             <div className="sq-form-grid" style={{ marginTop: 14 }}>
               <input className="sq-input" placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
