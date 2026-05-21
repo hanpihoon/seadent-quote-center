@@ -41,6 +41,32 @@ const setLocal = (key, value) => {
   try { window.localStorage.setItem(key, value); } catch {}
 };
 
+const QUOTE_DRAFT_KEY = "seadent_quote_draft_v1";
+
+const loadQuoteDraft = () => {
+  if (!isBrowser()) return null;
+  try {
+    const raw = window.localStorage.getItem(QUOTE_DRAFT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveQuoteDraft = (data) => {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.setItem(QUOTE_DRAFT_KEY, JSON.stringify(data));
+  } catch {}
+};
+
+const clearQuoteDraft = () => {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.removeItem(QUOTE_DRAFT_KEY);
+  } catch {}
+};
+
 const normalizeKey = (key) => String(key || "")
   .toLowerCase()
   .split(" ").join("")
@@ -167,9 +193,11 @@ function CartCard({ item, updateQty, updateCartDiscount, removeFromCart, isUnloc
 }
 
 export default function App() {
+  const initialDraft = React.useMemo(() => loadQuoteDraft(), []);
+
   const [products, setProducts] = React.useState(DEMO_PRODUCTS);
   const [discounts, setDiscounts] = React.useState({});
-  const [cart, setCart] = React.useState({});
+  const [cart, setCart] = React.useState(() => initialDraft?.cart || {});
   const [search, setSearch] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [password, setPassword] = React.useState("");
@@ -179,10 +207,10 @@ export default function App() {
   const [collapsed, setCollapsed] = React.useState(() =>
     Object.fromEntries(DEMO_PRODUCTS.map((p) => [p.category, true]))
   );
-  const [customerName, setCustomerName] = React.useState("");
-  const [customerPhone, setCustomerPhone] = React.useState("");
-  const [customerAddress, setCustomerAddress] = React.useState("");
-  const [customerNote, setCustomerNote] = React.useState("");
+  const [customerName, setCustomerName] = React.useState(() => initialDraft?.customerName || "");
+  const [customerPhone, setCustomerPhone] = React.useState(() => initialDraft?.customerPhone || "");
+  const [customerAddress, setCustomerAddress] = React.useState(() => initialDraft?.customerAddress || "");
+  const [customerNote, setCustomerNote] = React.useState(() => initialDraft?.customerNote || "");
   const [isUnlocked, setIsUnlocked] = React.useState(() => getLocal("seadent_discount_unlocked", "false") === "true");
   const [isGrouped, setIsGrouped] = React.useState(() => getLocal("seadent_group_by_category", "true") === "true");
   // Bắt buộc đăng nhập lại khi refresh trình duyệt
@@ -223,6 +251,18 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   React.useEffect(() => setLocal("seadent_discount_unlocked", String(isUnlocked)), [isUnlocked]);
   React.useEffect(() => setLocal("seadent_group_by_category", String(isGrouped)), [isGrouped]);
+
+  React.useEffect(() => {
+    saveQuoteDraft({
+      cart,
+      customerName,
+      customerPhone,
+      customerAddress,
+      customerNote,
+      updatedAt: new Date().toISOString(),
+    });
+  }, [cart, customerName, customerPhone, customerAddress, customerNote]);
+
   // Không lưu trạng thái login để mỗi lần refresh đều yêu cầu đăng nhập
 
   React.useEffect(() => {
@@ -677,7 +717,19 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
             <div className="sq-muted" style={{ textAlign: "center", marginBottom: 14 }}>{cartQty} sản phẩm đã chọn</div>
             <div className="sq-tools">
               <button className="sq-btn sq-btn-dark" onClick={exportQuotePdf}>Xuất PDF</button>
-              <button className="sq-btn sq-btn-danger" onClick={() => setCart({})}>Xóa giỏ hàng</button>
+              <button
+                className="sq-btn sq-btn-danger"
+                onClick={() => {
+                  setCart({});
+                  setCustomerName("");
+                  setCustomerPhone("");
+                  setCustomerAddress("");
+                  setCustomerNote("");
+                  clearQuoteDraft();
+                }}
+              >
+                Xóa giỏ hàng
+              </button>
             </div>
             <div className="sq-form-grid" style={{ marginTop: 14 }}>
               <input className="sq-input" placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
@@ -723,53 +775,4 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
                   style={{ opacity: isUnlocked ? 1 : 0.45 }}
                   type="number"
                   value={globalDiscount}
-                  disabled={!isUnlocked}
-                  onChange={(e) => applyGlobalDiscount(e.target.value)}
-                />
-                <input
-                  className="sq-input"
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  disabled={isUnlocked}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && unlockDiscount()}
-                />
-                <button className="sq-btn" onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>
-                  {isUnlocked ? "Khóa lại" : "Mở khóa"}
-                </button>
-                <button
-                  className="sq-btn sq-btn-danger"
-                  style={{ opacity: isUnlocked ? 1 : 0.5 }}
-                  onClick={() => (isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước"))}
-                >
-                  Reset Discount
-                </button>
-              </div>
-            </section>
-          )}
-
-          <div className="sq-stats" style={{ justifyContent: "center", marginTop: 18 }}>
-            <div className="sq-stat">
-              <div className="sq-stat-label">Products</div>
-              <div className="sq-stat-value">{products.length}</div>
-            </div>
-          </div>
-
-          <div className="sq-footer">SEADENT Quote Center © 2026</div>
-        </div>
-      </main>
-
-      {cartItems.length > 0 && (
-        <div className="sq-sticky">
-          <div className="sq-sticky-top">
-            <span>Tổng báo giá</span>
-            <strong>{money(cartTotal)}</strong>
-          </div>
-          <button className="sq-btn sq-btn-light" onClick={scrollToCart}>Xem giỏ</button>
-          <button className="sq-btn" onClick={exportQuotePdf}>Xuất PDF</button>
-        </div>
-      )}
-    </>
-  );
-}
+            
