@@ -41,32 +41,6 @@ const setLocal = (key, value) => {
   try { window.localStorage.setItem(key, value); } catch {}
 };
 
-const QUOTE_DRAFT_KEY = "seadent_quote_draft_v1";
-
-const loadQuoteDraft = () => {
-  if (!isBrowser()) return null;
-  try {
-    const raw = window.localStorage.getItem(QUOTE_DRAFT_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-};
-
-const saveQuoteDraft = (data) => {
-  if (!isBrowser()) return;
-  try {
-    window.localStorage.setItem(QUOTE_DRAFT_KEY, JSON.stringify(data));
-  } catch {}
-};
-
-const clearQuoteDraft = () => {
-  if (!isBrowser()) return;
-  try {
-    window.localStorage.removeItem(QUOTE_DRAFT_KEY);
-  } catch {}
-};
-
 const normalizeKey = (key) => String(key || "")
   .toLowerCase()
   .split(" ").join("")
@@ -193,11 +167,9 @@ function CartCard({ item, updateQty, updateCartDiscount, removeFromCart, isUnloc
 }
 
 export default function App() {
-  const initialDraft = React.useMemo(() => loadQuoteDraft(), []);
-
   const [products, setProducts] = React.useState(DEMO_PRODUCTS);
   const [discounts, setDiscounts] = React.useState({});
-  const [cart, setCart] = React.useState(() => initialDraft?.cart || {});
+  const [cart, setCart] = React.useState({});
   const [search, setSearch] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [password, setPassword] = React.useState("");
@@ -207,10 +179,10 @@ export default function App() {
   const [collapsed, setCollapsed] = React.useState(() =>
     Object.fromEntries(DEMO_PRODUCTS.map((p) => [p.category, true]))
   );
-  const [customerName, setCustomerName] = React.useState(() => initialDraft?.customerName || "");
-  const [customerPhone, setCustomerPhone] = React.useState(() => initialDraft?.customerPhone || "");
-  const [customerAddress, setCustomerAddress] = React.useState(() => initialDraft?.customerAddress || "");
-  const [customerNote, setCustomerNote] = React.useState(() => initialDraft?.customerNote || "");
+  const [customerName, setCustomerName] = React.useState("");
+  const [customerPhone, setCustomerPhone] = React.useState("");
+  const [customerAddress, setCustomerAddress] = React.useState("");
+  const [customerNote, setCustomerNote] = React.useState("");
   const [isUnlocked, setIsUnlocked] = React.useState(() => getLocal("seadent_discount_unlocked", "false") === "true");
   const [isGrouped, setIsGrouped] = React.useState(() => getLocal("seadent_group_by_category", "true") === "true");
   // Bắt buộc đăng nhập lại khi refresh trình duyệt
@@ -251,18 +223,6 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   React.useEffect(() => setLocal("seadent_discount_unlocked", String(isUnlocked)), [isUnlocked]);
   React.useEffect(() => setLocal("seadent_group_by_category", String(isGrouped)), [isGrouped]);
-
-  React.useEffect(() => {
-    saveQuoteDraft({
-      cart,
-      customerName,
-      customerPhone,
-      customerAddress,
-      customerNote,
-      updatedAt: new Date().toISOString(),
-    });
-  }, [cart, customerName, customerPhone, customerAddress, customerNote]);
-
   // Không lưu trạng thái login để mỗi lần refresh đều yêu cầu đăng nhập
 
   React.useEffect(() => {
@@ -503,7 +463,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
           <div class="product-info-card">
             <div class="product-info-name">${item.name}</div>
             <div class="product-photo-box">
-              ${imageUrl ? `<a class="product-photo-link" href="${imageUrl}" target="_blank" rel="noopener noreferrer" title="Bấm để xem ảnh sản phẩm cỡ lớn"><img src="${imageUrl}" onerror="this.style.display='none';this.parentElement.parentElement.innerHTML='<div class=&quot;product-photo-missing&quot;>Không tải được ảnh<br/>${imageUrlRaw}</div>'" /></a>` : `<div class="product-photo-missing">Chưa có hình ảnh</div>`}
+              ${imageUrl ? `<img src="${imageUrl}" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=&quot;product-photo-missing&quot;>Không tải được ảnh<br/>${imageUrlRaw}</div>'" />` : `<div class="product-photo-missing">Chưa có hình ảnh</div>`}
             </div>
             <div class="product-qr-box">
               ${cleanUrl ? `<a class="product-qr-link" href="${cleanUrl}" target="_blank" rel="noopener noreferrer" title="Bấm để tải tài liệu kỹ thuật"><img src="${qrUrl}" /></a><a class="product-qr-caption" href="${cleanUrl}" target="_blank" rel="noopener noreferrer">Bấm hoặc quét QR</a>` : `<div class="product-qr-missing">Chưa có QR tài liệu</div>`}
@@ -526,7 +486,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
       <!doctype html><html><head><meta charset="UTF-8" /><title>SEADENT Quotation</title>
       <style>
         body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;color:#111827;padding:16px 18px;-webkit-font-smoothing:antialiased;font-size:11px}.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #f97316;padding-bottom:9px;margin-bottom:10px;margin-top:0}.brand{font-size:16px;font-weight:900;color:#f97316;line-height:1.2}.sub{color:#6b7280;line-height:1.35;font-size:9.5px}.meta{text-align:right;line-height:1.45;font-size:10px;white-space:nowrap}h2{text-align:center;margin:10px 0 12px;font-size:18px;line-height:1.1}.customer{background:#fff7ed;border:1px solid #fed7aa;padding:9px 12px;border-radius:10px;margin-bottom:10px;line-height:1.55;font-size:10.5px}table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:10px;border:1px solid #e5e7eb}th{background:#f97316;color:white;padding:7px 8px;font-size:9.5px;text-align:left;font-weight:800;line-height:1.25}td{border-bottom:1px solid #eef2f7;padding:7px 8px;font-size:9.5px;vertical-align:middle;line-height:1.3}tr:nth-child(even) td{background:#fcfcfd}tr:last-child td{border-bottom:none}
-        .summary{width:54%;margin:12px 0 0 auto;border:1px solid #fed7aa;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 3px 10px rgba(249,115,22,.05)}.sumrow{display:grid;grid-template-columns:1fr 150px;gap:10px;padding:6px 10px;border-bottom:1px solid #e5e7eb;font-size:10px;align-items:center}.sumlabel{font-weight:700;line-height:1.25}.sumvalue{text-align:right;font-weight:800;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}.sumfinal{background:#fff7ed;color:#f97316;font-size:10.5px}.sumfinal .sumvalue{font-size:12px;white-space:nowrap}.note{margin-top:12px;padding:8px 10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;color:#7c2d12;line-height:1.45;font-size:10.5px}.product-info-section{margin-top:16px;padding-top:12px;border-top:2.5px solid #f97316}.product-info-header{page-break-after:avoid;break-after:avoid;page-break-inside:avoid;break-inside:avoid;margin-bottom:10px}.product-info-first-block{page-break-inside:avoid;break-inside:avoid;margin-bottom:10px}.product-info-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:start;page-break-inside:avoid;break-inside:avoid;margin-bottom:10px}.product-info-title{font-size:18px;font-weight:900;color:#111827;text-align:center;letter-spacing:.8px;line-height:1.1;margin-bottom:4px;text-transform:uppercase}.product-info-subtitle{font-size:9px;color:#6b7280;text-align:center;margin-bottom:0}.product-info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:start}.product-info-card{border:1px solid #fed7aa;border-radius:14px;background:linear-gradient(180deg,#fffaf5 0%,#ffffff 100%);padding:10px 12px;page-break-inside:avoid!important;break-inside:avoid!important;display:grid;grid-template-columns:1fr 108px;gap:12px;align-items:center;min-height:190px;margin-bottom:0;overflow:hidden}.product-info-name{grid-column:1/-1;font-size:10px;font-weight:900;color:#111827;line-height:1.3;text-align:center;margin-bottom:4px}.product-photo-box{width:142px;height:142px;margin:0 auto;border:1.5px solid #fed7aa;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 2px 8px rgba(249,115,22,.06)}.product-photo-link{display:flex;width:100%;height:100%;align-items:center;justify-content:center;text-decoration:none;cursor:pointer}.product-photo-box img{width:100%;height:100%;object-fit:contain;padding:6px}.product-photo-missing{font-size:8.5px;color:#94a3b8;text-align:center;line-height:1.35;padding:8px}.product-qr-box{display:flex;flex-direction:column;align-items:center;justify-content:center}.product-qr-link{display:flex;align-items:center;justify-content:center;width:96px;height:96px;background:#fff;border:1.5px solid #fed7aa;border-radius:12px;padding:7px;text-decoration:none;box-shadow:0 2px 8px rgba(249,115,22,.06)}.product-qr-link img{width:78px;height:78px;object-fit:contain}.product-qr-caption{display:block;font-size:7.5px;color:#ea580c;font-weight:900;text-align:center;line-height:1.2;margin-top:7px;text-decoration:none}.product-qr-missing{width:96px;height:96px;border:1.5px dashed #fed7aa;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:7.5px;color:#94a3b8;line-height:1.2;padding:6px;background:#fff}.signature-wrap{margin-top:24px;page-break-inside:avoid;break-inside:avoid}.signature-note{font-size:9.5px;color:#6b7280;text-align:right;margin-bottom:6px;font-style:italic}.signature{display:flex;justify-content:space-between;gap:22px;text-align:center;font-size:10.5px;page-break-inside:avoid;break-inside:avoid}.signature-box{flex:1;min-height:82px;display:flex;flex-direction:column;justify-content:flex-start}.signature-title{font-weight:800;margin-bottom:46px}.signature-line{color:#6b7280}.signature-date{text-align:right;margin-top:14px;margin-bottom:8px;color:#374151;font-size:10px;font-style:italic;page-break-inside:avoid;break-inside:avoid}@media print{body{padding:12mm}.header,.customer,.summary,.note,.signature-wrap,.signature,.signature-date{page-break-inside:avoid!important;break-inside:avoid!important}thead{display:table-header-group}tr{page-break-inside:avoid;break-inside:avoid}.product-info-section{break-inside:auto!important}.product-info-row{align-items:start!important;page-break-inside:avoid!important;break-inside:avoid!important}.product-info-first-block{page-break-inside:avoid!important;break-inside:avoid!important}.product-info-card{page-break-inside:avoid!important;break-inside:avoid!important;-webkit-column-break-inside:avoid!important}}
+        .summary{width:54%;margin:12px 0 0 auto;border:1px solid #fed7aa;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 3px 10px rgba(249,115,22,.05)}.sumrow{display:grid;grid-template-columns:1fr 150px;gap:10px;padding:6px 10px;border-bottom:1px solid #e5e7eb;font-size:10px;align-items:center}.sumlabel{font-weight:700;line-height:1.25}.sumvalue{text-align:right;font-weight:800;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}.sumfinal{background:#fff7ed;color:#f97316;font-size:10.5px}.sumfinal .sumvalue{font-size:12px;white-space:nowrap}.note{margin-top:12px;padding:8px 10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;color:#7c2d12;line-height:1.45;font-size:10.5px}.product-info-section{margin-top:16px;padding-top:12px;border-top:2.5px solid #f97316}.product-info-header{page-break-after:avoid;break-after:avoid;page-break-inside:avoid;break-inside:avoid;margin-bottom:10px}.product-info-first-block{page-break-inside:avoid;break-inside:avoid;margin-bottom:10px}.product-info-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:start;page-break-inside:avoid;break-inside:avoid;margin-bottom:10px}.product-info-title{font-size:18px;font-weight:900;color:#111827;text-align:center;letter-spacing:.8px;line-height:1.1;margin-bottom:4px;text-transform:uppercase}.product-info-subtitle{font-size:9px;color:#6b7280;text-align:center;margin-bottom:0}.product-info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:start}.product-info-card{border:1px solid #fed7aa;border-radius:14px;background:linear-gradient(180deg,#fffaf5 0%,#ffffff 100%);padding:10px 12px;page-break-inside:avoid!important;break-inside:avoid!important;display:grid;grid-template-columns:1fr 108px;gap:12px;align-items:center;min-height:190px;margin-bottom:0;overflow:hidden}.product-info-name{grid-column:1/-1;font-size:10px;font-weight:900;color:#111827;line-height:1.3;text-align:center;margin-bottom:4px}.product-photo-box{width:142px;height:142px;margin:0 auto;border:1.5px solid #fed7aa;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 2px 8px rgba(249,115,22,.06)}.product-photo-box img{width:100%;height:100%;object-fit:contain;padding:6px}.product-photo-missing{font-size:8.5px;color:#94a3b8;text-align:center;line-height:1.35;padding:8px}.product-qr-box{display:flex;flex-direction:column;align-items:center;justify-content:center}.product-qr-link{display:flex;align-items:center;justify-content:center;width:96px;height:96px;background:#fff;border:1.5px solid #fed7aa;border-radius:12px;padding:7px;text-decoration:none;box-shadow:0 2px 8px rgba(249,115,22,.06)}.product-qr-link img{width:78px;height:78px;object-fit:contain}.product-qr-caption{display:block;font-size:7.5px;color:#ea580c;font-weight:900;text-align:center;line-height:1.2;margin-top:7px;text-decoration:none}.product-qr-missing{width:96px;height:96px;border:1.5px dashed #fed7aa;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:7.5px;color:#94a3b8;line-height:1.2;padding:6px;background:#fff}.signature-wrap{margin-top:24px;page-break-inside:avoid;break-inside:avoid}.signature-note{font-size:9.5px;color:#6b7280;text-align:right;margin-bottom:6px;font-style:italic}.signature{display:flex;justify-content:space-between;gap:22px;text-align:center;font-size:10.5px;page-break-inside:avoid;break-inside:avoid}.signature-box{flex:1;min-height:82px;display:flex;flex-direction:column;justify-content:flex-start}.signature-title{font-weight:800;margin-bottom:46px}.signature-line{color:#6b7280}.signature-date{text-align:right;margin-top:14px;margin-bottom:8px;color:#374151;font-size:10px;font-style:italic;page-break-inside:avoid;break-inside:avoid}@media print{body{padding:12mm}.header,.customer,.summary,.note,.signature-wrap,.signature,.signature-date{page-break-inside:avoid!important;break-inside:avoid!important}thead{display:table-header-group}tr{page-break-inside:avoid;break-inside:avoid}.product-info-section{break-inside:auto!important}.product-info-row{align-items:start!important;page-break-inside:avoid!important;break-inside:avoid!important}.product-info-first-block{page-break-inside:avoid!important;break-inside:avoid!important}.product-info-card{page-break-inside:avoid!important;break-inside:avoid!important;-webkit-column-break-inside:avoid!important}}
       </style></head><body>
       <div class="header"><div style="display:flex;gap:10px"><img src="${window.location.origin}/logo.png" style="width:54px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0934831516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
       <h2>BẢNG BÁO GIÁ</h2>
@@ -629,9 +589,9 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
               src="/logo.png"
               alt="SEADENT"
               className="sq-logo"
-              style={{ position: "absolute", left: 32, top: "50%", transform: "translateY(-50%)", zIndex: 2 }}
+              style={{ position: "absolute", left: 32, top: "50%", transform: "translateY(-50%)" }}
             />
-            <div style={{ textAlign: "center", width: "100%", position: "relative", zIndex: 2 }}>
+            <div style={{ textAlign: "center", width: "100%" }}>
               <h1 className="sq-title" style={{ margin: 0, fontSize: "clamp(40px, 5vw, 72px)", lineHeight: 1.05, letterSpacing: "-1.5px" }}>
                 <span className="sq-title-orange">Seadent</span> Quote Center
               </h1>
@@ -717,19 +677,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
             <div className="sq-muted" style={{ textAlign: "center", marginBottom: 14 }}>{cartQty} sản phẩm đã chọn</div>
             <div className="sq-tools">
               <button className="sq-btn sq-btn-dark" onClick={exportQuotePdf}>Xuất PDF</button>
-              <button
-                className="sq-btn sq-btn-danger"
-                onClick={() => {
-                  setCart({});
-                  setCustomerName("");
-                  setCustomerPhone("");
-                  setCustomerAddress("");
-                  setCustomerNote("");
-                  clearQuoteDraft();
-                }}
-              >
-                Xóa giỏ hàng
-              </button>
+              <button className="sq-btn sq-btn-danger" onClick={() => setCart({})}>Xóa giỏ hàng</button>
             </div>
             <div className="sq-form-grid" style={{ marginTop: 14 }}>
               <input className="sq-input" placeholder="Tên khách hàng / phòng khám" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
@@ -775,4 +723,53 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
                   style={{ opacity: isUnlocked ? 1 : 0.45 }}
                   type="number"
                   value={globalDiscount}
-            
+                  disabled={!isUnlocked}
+                  onChange={(e) => applyGlobalDiscount(e.target.value)}
+                />
+                <input
+                  className="sq-input"
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  disabled={isUnlocked}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && unlockDiscount()}
+                />
+                <button className="sq-btn" onClick={isUnlocked ? () => setIsUnlocked(false) : unlockDiscount}>
+                  {isUnlocked ? "Khóa lại" : "Mở khóa"}
+                </button>
+                <button
+                  className="sq-btn sq-btn-danger"
+                  style={{ opacity: isUnlocked ? 1 : 0.5 }}
+                  onClick={() => (isUnlocked ? applyGlobalDiscount(0) : alert("Vui lòng mở khóa trước"))}
+                >
+                  Reset Discount
+                </button>
+              </div>
+            </section>
+          )}
+
+          <div className="sq-stats" style={{ justifyContent: "center", marginTop: 18 }}>
+            <div className="sq-stat">
+              <div className="sq-stat-label">Products</div>
+              <div className="sq-stat-value">{products.length}</div>
+            </div>
+          </div>
+
+          <div className="sq-footer">SEADENT Quote Center © 2026</div>
+        </div>
+      </main>
+
+      {cartItems.length > 0 && (
+        <div className="sq-sticky">
+          <div className="sq-sticky-top">
+            <span>Tổng báo giá</span>
+            <strong>{money(cartTotal)}</strong>
+          </div>
+          <button className="sq-btn sq-btn-light" onClick={scrollToCart}>Xem giỏ</button>
+          <button className="sq-btn" onClick={exportQuotePdf}>Xuất PDF</button>
+        </div>
+      )}
+    </>
+  );
+}
