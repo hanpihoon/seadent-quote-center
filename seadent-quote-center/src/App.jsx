@@ -206,7 +206,8 @@ const decodeQuoteData = (text) => {
   } catch {
     return null;
   }
-};
+};const encodeQuoteData = ...
+const decodeQuoteData = ...
 export default function App() {
   const initialDraft = React.useMemo(() => loadQuoteDraft(), []);
 
@@ -269,15 +270,16 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   React.useEffect(() => setLocal("seadent_group_by_category", String(isGrouped)), [isGrouped]);
 
   React.useEffect(() => {
-    saveQuoteDraft({
-      cart,
-      customerName,
-      customerPhone,
-      customerAddress,
-      customerNote,
-      updatedAt: new Date().toISOString(),
-    });
-    React.useEffect(() => {
+  saveQuoteDraft({
+    cart,
+    customerName,
+    customerPhone,
+    customerAddress,
+    customerNote,
+    updatedAt: new Date().toISOString(),
+  });
+}, [cart, customerName, customerPhone, customerAddress, customerNote]);
+React.useEffect(() => {
   if (!isBrowser()) return;
 
   const hash = window.location.hash || "";
@@ -296,9 +298,9 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   setCustomerPhone(data.customerPhone || "");
   setCustomerAddress(data.customerAddress || "");
   setCustomerNote(data.customerNote || "");
+
   setSyncStatus("Đã mở báo giá từ link chia sẻ online");
 }, []);
-  }, [cart, customerName, customerPhone, customerAddress, customerNote]);
 
   // Không lưu trạng thái login để mỗi lần refresh đều yêu cầu đăng nhập
 
