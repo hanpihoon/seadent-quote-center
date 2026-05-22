@@ -167,13 +167,7 @@ function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart 
   );
 }
 
-function CartCard({ item, updateQty, updateCartDiscount, removeFromCart, isUnlocked })const encodeQuoteData = (data) => {
-  try {
-    return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-  } catch {
-    return "";
-  }
-};
+function CartCard({ item, updateQty, updateCartDiscount, removeFromCart, isUnlocked })
 
 const decodeQuoteData = (text) => {
   try {
@@ -336,10 +330,11 @@ React.useEffect(() => {
     const events = ["mousemove", "mousedown", "keydown", "touchstart", "scroll"];
     events.forEach((eventName) => window.addEventListener(eventName, resetAutoLock, { passive: true }));
     resetAutoLock();
-if (sharedQuote) {
+    if (sharedQuote) {
   return <QuoteViewer quote={sharedQuote} money={money} />;
 }
-    return () => {
+
+return () => {
       window.clearTimeout(lockTimer);
       events.forEach((eventName) => window.removeEventListener(eventName, resetAutoLock));
     };
@@ -524,30 +519,7 @@ if (sharedQuote) {
     if (!isBrowser()) return;
     document.getElementById("quote-cart")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-  const shareQuoteOnline = async () => {
-  if (!cartItems.length) {
-    alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi chia sẻ báo giá");
-    return;
-  }
-
-  const data = {
-    cart,
-    customerName,
-    customerPhone,
-    customerAddress,
-    customerNote,
-    createdAt: new Date().toISOString(),
-  };
-
-  const encoded = encodeQuoteData(data);
-  const url = `${window.location.origin}${window.location.pathname}#quote=${encoded}`;
-
-  try {
-    await navigator.clipboard.writeText(url);
-    alert("Đã copy link báo giá online");
-  } catch {
-    prompt("Copy link báo giá:", url);
-  }
+  
 };
 const shareQuoteOnline = async () => {
   if (!cartItems.length) {
