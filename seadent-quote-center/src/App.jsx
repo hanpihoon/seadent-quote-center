@@ -263,8 +263,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 const [userRole, setUserRole] = React.useState("guest");
 const [salesMode, setSalesMode] = React.useState(false);
 const [sharedQuote, setSharedQuote] = React.useState(null);
-  const [sharedQuote, setSharedQuote] = React.useState(null);
-  const [sharedQuote, setSharedQuote] = React.useState(null);
+  
 
   React.useEffect(() => {
     if (!isBrowser()) return undefined;
