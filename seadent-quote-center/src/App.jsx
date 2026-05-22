@@ -1,6 +1,7 @@
 import React from "react";
 import "./App.css";
 import "./salesMode.css";
+import QuoteViewer from "./components/QuoteViewer";
 
 const BANNER_URL = `${window.location.origin}/banner-seadent.png?v=${Date.now()}`;
 const SITE_TITLE = "Seadent Quote Center";
@@ -250,6 +251,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [showWelcome, setShowWelcome] = React.useState(false);
   const [userRole, setUserRole] = React.useState("guest");
   const [salesMode, setSalesMode] = React.useState(false);
+  const [sharedQuote, setSharedQuote] = React.useState(null);
 
   React.useEffect(() => {
     if (!isBrowser()) return undefined;
@@ -292,6 +294,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
     updatedAt: new Date().toISOString(),
   });
 }, [cart, customerName, customerPhone, customerAddress, customerNote]);
+
 React.useEffect(() => {
   if (!isBrowser()) return;
 
@@ -333,7 +336,9 @@ React.useEffect(() => {
     const events = ["mousemove", "mousedown", "keydown", "touchstart", "scroll"];
     events.forEach((eventName) => window.addEventListener(eventName, resetAutoLock, { passive: true }));
     resetAutoLock();
-
+if (sharedQuote) {
+  return <QuoteViewer quote={sharedQuote} money={money} />;
+}
     return () => {
       window.clearTimeout(lockTimer);
       events.forEach((eventName) => window.removeEventListener(eventName, resetAutoLock));
@@ -546,28 +551,30 @@ React.useEffect(() => {
 };
 const shareQuoteOnline = async () => {
   if (!cartItems.length) {
-    alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi chia sẻ báo giá");
+    alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi tạo link xem báo giá");
     return;
   }
 
-  const data = {
-    cart,
+  const quoteData = {
+    quoteCode: `SQ-${new Date().getFullYear()}-${Date.now()}`,
     customerName,
     customerPhone,
     customerAddress,
     customerNote,
+    items: cartItems,
     createdAt: new Date().toISOString(),
   };
 
-  const encoded = encodeQuoteData(data);
-  const url = `${window.location.origin}${window.location.pathname}#quote=${encoded}`;
+  const encoded = encodeQuoteData(quoteData);
+  const url = `${window.location.origin}${window.location.pathname}#view=${encoded}`;
 
   try {
     await navigator.clipboard.writeText(url);
-    alert("Đã copy link báo giá online");
+    alert("Đã copy link xem báo giá");
   } catch {
-    prompt("Copy link báo giá:", url);
+    prompt("Copy link xem báo giá:", url);
   }
+};
 };
   const exportQuotePdf = () => {
     if (!isBrowser()) return;
@@ -853,7 +860,7 @@ const watermarkText = `${customerName || "SEADENT"} • ${customerPhone || "CONF
 </button>
 
 <button className="sq-btn" onClick={shareQuoteOnline}>
-  Share Online
+  Tạo link xem báo giá
 </button>
 <button
   className="sq-btn sq-btn-danger"
