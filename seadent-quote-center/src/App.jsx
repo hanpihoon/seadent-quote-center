@@ -558,6 +558,33 @@ return () => {
 };
 const shareQuoteOnline = async () => {
   if (!cartItems.length) {
+    alert("Vui lòng thêm sản phẩm");
+    return;
+  }
+
+  const quoteData = {
+    customerName,
+    customerPhone,
+    customerAddress,
+    customerNote,
+    items: cartItems,
+    total: cartTotal,
+    createdAt: new Date().toISOString(),
+  };
+
+  const encoded = encodeQuoteData(quoteData);
+
+  const url =
+    `${window.location.origin}${window.location.pathname}#view=${encoded}`;
+
+  try {
+    await navigator.clipboard.writeText(url);
+    alert("Đã copy link xem báo giá");
+  } catch {
+    prompt("Copy link:", url);
+  }
+};
+  if (!cartItems.length) {
     alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi tạo link xem báo giá");
     return;
   }
@@ -721,7 +748,7 @@ if (sharedQuote) {
     <>
       
       {showWelcome && <div className="welcome-toast">Chào mừng admin trở lại SEADENT Quote Center</div>}
-      {!isLoggedIn && (
+      {!isLoggedIn && !sharedQuote && (
         <div className="login-overlay">
           <div className="login-card">
             <img src="/logo.png" alt="SEADENT" className="login-logo" />
