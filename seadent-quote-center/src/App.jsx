@@ -206,8 +206,7 @@ const decodeQuoteData = (text) => {
   } catch {
     return null;
   }
-};const encodeQuoteData = ...
-const decodeQuoteData = ...
+};
 export default function App() {
   const initialDraft = React.useMemo(() => loadQuoteDraft(), []);
 
