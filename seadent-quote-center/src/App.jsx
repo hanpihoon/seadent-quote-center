@@ -168,7 +168,21 @@ function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart 
 }
 
 function CartCard({ item, updateQty, updateCartDiscount, removeFromCart, isUnlocked })
+const encodeQuoteData = (data) => {
+  try {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  } catch {
+    return "";
+  }
+};
 
+const decodeQuoteData = (text) => {
+  try {
+    return JSON.parse(decodeURIComponent(escape(atob(text))));
+  } catch {
+    return null;
+  }
+};
 const decodeQuoteData = (text) => {
   try {
     return JSON.parse(decodeURIComponent(escape(atob(text))));
@@ -245,6 +259,11 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [showWelcome, setShowWelcome] = React.useState(false);
   const [userRole, setUserRole] = React.useState("guest");
   const [salesMode, setSalesMode] = React.useState(false);
+  const [showWelcome, setShowWelcome] = React.useState(false);
+const [userRole, setUserRole] = React.useState("guest");
+const [salesMode, setSalesMode] = React.useState(false);
+const [sharedQuote, setSharedQuote] = React.useState(null);
+  const [sharedQuote, setSharedQuote] = React.useState(null);
   const [sharedQuote, setSharedQuote] = React.useState(null);
 
   React.useEffect(() => {
@@ -331,8 +350,6 @@ React.useEffect(() => {
     events.forEach((eventName) => window.addEventListener(eventName, resetAutoLock, { passive: true }));
     resetAutoLock();
     if (sharedQuote) {
-  return <QuoteViewer quote={sharedQuote} money={money} />;
-}
 
 return () => {
       window.clearTimeout(lockTimer);
@@ -345,6 +362,24 @@ return () => {
     const timer = window.setTimeout(() => setShowWelcome(false), 2200);
     return () => window.clearTimeout(timer);
   }, [showWelcome]);
+  React.useEffect(() => {
+  if (!isBrowser()) return;
+
+  const hash = window.location.hash || "";
+
+  if (!hash.startsWith("#view=")) return;
+
+  const encoded = hash.replace("#view=", "");
+
+  const data = decodeQuoteData(encoded);
+
+  if (!data) {
+    setSyncStatus("Link báo giá không hợp lệ");
+    return;
+  }
+
+  setSharedQuote(data);
+}, []);
 
   React.useEffect(() => {
     async function loadProducts() {
@@ -679,7 +714,9 @@ const watermarkText = `${customerName || "SEADENT"} • ${customerPhone || "CONF
       </script></body></html>`);
     win.document.close();
   };
-
+if (sharedQuote) {
+  return <QuoteViewer quote={sharedQuote} money={money} />;
+}
   return (
     <>
       
