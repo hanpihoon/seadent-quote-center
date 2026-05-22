@@ -476,7 +476,8 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
       alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi xuất PDF");
       return;
     }
-
+const quoteCode = `SQC-${Date.now()}`;
+const watermarkText = `${customerName || "SEADENT"} • ${customerPhone || "CONFIDENTIAL"} • ${quoteCode}`;
     const rows = cartItems.map((item, index) => `
       <tr>
         <td>${index + 1}</td><td>${item.name}</td><td>${item.category}</td>
