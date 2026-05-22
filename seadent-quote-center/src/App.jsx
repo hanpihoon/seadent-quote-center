@@ -476,7 +476,7 @@ const [isLoggedIn, setIsLoggedIn] = React.useState(false);
       alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi xuất PDF");
       return;
     }
-const quoteCode = `${quoteCode}`;
+const quoteCode = `SQC-${Date.now()}`;
 const watermarkText = `${customerName || "SEADENT"} • ${customerPhone || "CONFIDENTIAL"} • ${quoteCode}`;
     const rows = cartItems.map((item, index) => `
       <tr>
@@ -556,7 +556,7 @@ const watermarkText = `${customerName || "SEADENT"} • ${customerPhone || "CONF
 </div>
 
 <div class="pdf-content">
-      <div class="header"><div style="display:flex;gap:10px"><img src="${window.location.origin}/logo.png" style="width:54px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0934831516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> SQC-${Date.now()}</div></div>
+      <div class="header"><div style="display:flex;gap:10px"><img src="${window.location.origin}/logo.png" style="width:54px;object-fit:contain"/><div><div class="brand">CÔNG TY CỔ PHẦN SEADENT</div><div class="sub">VP.HCM: 13 Đặng Tất, Phường Tân Định, TP.HCM<br/>VP.HN: Tầng 6, 110-112 Bà Triệu, Hà Nội<br/>Hotline: 0934831516 | Email: info@seadent.com.vn | Website: seadent.com.vn</div></div></div><div class="meta"><b>Ngày:</b> ${new Date().toLocaleDateString("vi-VN")}<br/><b>Mã báo giá:</b> ${quoteCode}</div></div>
       <h2>BẢNG BÁO GIÁ</h2>
       <div class="customer"><b>Tên khách hàng:</b> ${customerName || "........................"}<br/><b>Số điện thoại:</b> ${customerPhone || "........................"}<br/><b>Địa chỉ:</b> ${customerAddress || "........................"}<br/><b>Ghi chú:</b> ${customerNote || "Không có"}</div>
       <table><thead><tr><th>#</th><th>Sản phẩm</th><th>Danh mục</th><th>Giá niêm yết</th><th>CK</th><th>Đơn giá sau CK</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>${rows}</tbody></table>
