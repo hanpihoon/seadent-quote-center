@@ -166,7 +166,21 @@ function ProductCard({ product, discount, isUnlocked, updateDiscount, addToCart 
   );
 }
 
-function CartCard({ item, updateQty, updateCartDiscount, removeFromCart, isUnlocked }) {
+function CartCard({ item, updateQty, updateCartDiscount, removeFromCart, isUnlocked })const encodeQuoteData = (data) => {
+  try {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  } catch {
+    return "";
+  }
+};
+
+const decodeQuoteData = (text) => {
+  try {
+    return JSON.parse(decodeURIComponent(escape(atob(text))));
+  } catch {
+    return null;
+  }
+}; {
   return (
     <div className="sq-card">
       <div className="sq-product-title">{item.name}</div>
@@ -288,7 +302,7 @@ React.useEffect(() => {
   const data = decodeQuoteData(encoded);
 
   if (!data) {
-    setSyncStatus("Link báo giá không hợp lệ hoặc đã bị lỗi.");
+    setSyncStatus("Link báo giá không hợp lệ.");
     return;
   }
 
@@ -297,9 +311,9 @@ React.useEffect(() => {
   setCustomerPhone(data.customerPhone || "");
   setCustomerAddress(data.customerAddress || "");
   setCustomerNote(data.customerNote || "");
-
   setSyncStatus("Đã mở báo giá từ link chia sẻ online");
 }, []);
+;
 
   // Không lưu trạng thái login để mỗi lần refresh đều yêu cầu đăng nhập
 
@@ -505,6 +519,31 @@ React.useEffect(() => {
     if (!isBrowser()) return;
     document.getElementById("quote-cart")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+  const shareQuoteOnline = async () => {
+  if (!cartItems.length) {
+    alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi chia sẻ báo giá");
+    return;
+  }
+
+  const data = {
+    cart,
+    customerName,
+    customerPhone,
+    customerAddress,
+    customerNote,
+    createdAt: new Date().toISOString(),
+  };
+
+  const encoded = encodeQuoteData(data);
+  const url = `${window.location.origin}${window.location.pathname}#quote=${encoded}`;
+
+  try {
+    await navigator.clipboard.writeText(url);
+    alert("Đã copy link báo giá online");
+  } catch {
+    prompt("Copy link báo giá:", url);
+  }
+};
 const shareQuoteOnline = async () => {
   if (!cartItems.length) {
     alert("Vui lòng thêm sản phẩm vào giỏ hàng trước khi chia sẻ báo giá");
@@ -816,7 +855,6 @@ const watermarkText = `${customerName || "SEADENT"} • ${customerPhone || "CONF
 <button className="sq-btn" onClick={shareQuoteOnline}>
   Share Online
 </button>
-
 <button
   className="sq-btn sq-btn-danger"
                 onClick={() => {
