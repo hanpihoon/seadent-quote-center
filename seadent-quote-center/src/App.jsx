@@ -355,7 +355,27 @@ return () => {
       events.forEach((eventName) => window.removeEventListener(eventName, resetAutoLock));
     };
   }, [isLoggedIn]);
+React.useEffect(() => {
+  if (!isBrowser()) return;
 
+  const hash = window.location.hash || "";
+
+  if (!hash.startsWith("#view=")) return;
+
+  try {
+    const encoded = hash.replace("#view=", "");
+
+    const decoded = decodeURIComponent(atob(encoded));
+
+    const data = JSON.parse(decoded);
+
+    setSharedQuote(data);
+
+  } catch (err) {
+    console.error(err);
+    setSyncStatus("Link báo giá không hợp lệ");
+  }
+}, []);
   React.useEffect(() => {
     if (!showWelcome || !isBrowser()) return undefined;
     const timer = window.setTimeout(() => setShowWelcome(false), 2200);
@@ -742,6 +762,74 @@ const watermarkText = `${customerName || "SEADENT"} • ${customerPhone || "CONF
   };
 if (sharedQuote) {
   return <QuoteViewer quote={sharedQuote} money={money} />;
+}
+if (sharedQuote) {
+  return (
+    <main className="sq-page">
+      <div className="sq-shell">
+
+        <section className="sq-panel">
+
+          <h1 style={{ textAlign: "center" }}>
+            BÁO GIÁ SEADENT
+          </h1>
+
+          <div className="sq-summary">
+
+            <div><b>Khách hàng:</b> {sharedQuote.customerName}</div>
+            <div><b>SĐT:</b> {sharedQuote.customerPhone}</div>
+            <div><b>Địa chỉ:</b> {sharedQuote.customerAddress}</div>
+
+          </div>
+
+          <div className="sq-card-grid" style={{ marginTop: 20 }}>
+
+            {(sharedQuote.items || []).map((item) => (
+
+              <div className="sq-card" key={item.id}>
+
+                <div className="sq-product-title">
+                  {item.name}
+                </div>
+
+                <div className="sq-line">
+                  <span>Đơn giá</span>
+                  <span>{money(item.finalPrice)}</span>
+                </div>
+
+                <div className="sq-line">
+                  <span>Số lượng</span>
+                  <span>{item.quantity}</span>
+                </div>
+
+                <div className="sq-line">
+                  <span>Thành tiền</span>
+
+                  <span className="sq-price">
+                    {money(item.finalPrice * item.quantity)}
+                  </span>
+                </div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+          <div
+            className="sq-summary"
+            style={{ marginTop: 20, textAlign: "center" }}
+          >
+
+            <h2>{money(sharedQuote.total || 0)}</h2>
+
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+  );
 }
   return (
     <>
