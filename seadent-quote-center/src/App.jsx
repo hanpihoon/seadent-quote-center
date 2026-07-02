@@ -17,8 +17,8 @@ const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "seadent";
 const GUEST_USERNAME = "guest";
 const GUEST_PASSWORD = "2026";
-// Auto lock sau 30 giây không thao tác
-const AUTO_LOCK_MS = 30 * 1000;
+// Auto lock sau 10 phút không thao tác
+const AUTO_LOCK_MS = 600 * 1000;
 
 
 const DEMO_PRODUCTS = [
